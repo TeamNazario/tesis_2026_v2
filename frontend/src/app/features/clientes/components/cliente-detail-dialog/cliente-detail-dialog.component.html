@@ -1,0 +1,92 @@
+<h2 mat-dialog-title>Detalle de cliente</h2>
+
+<mat-dialog-content class="detail-content">
+  <section class="summary-grid">
+    <article>
+      <h3>Informacion general</h3>
+      <p><strong>RUC:</strong> {{ cliente.ruc }}</p>
+      <p><strong>Razon social:</strong> {{ cliente.razonSocial }}</p>
+      <p><strong>Nombre comercial:</strong> {{ cliente.nombreComercial || '-' }}</p>
+      <p><strong>Tipo:</strong> {{ cliente.tipoCliente || '-' }}</p>
+      <p><strong>Estado:</strong> {{ cliente.estado?.nombre || 'Sin estado' }}</p>
+    </article>
+
+    <article>
+      <h3>Ubicacion</h3>
+      <p><strong>Direccion:</strong> {{ cliente.direccionFiscal || '-' }}</p>
+      <p><strong>Departamento:</strong> {{ cliente.departamento || '-' }}</p>
+      <p><strong>Provincia:</strong> {{ cliente.provincia || '-' }}</p>
+      <p><strong>Distrito:</strong> {{ cliente.distrito || '-' }}</p>
+      <p><strong>Ubigeo:</strong> {{ cliente.ubigeo || '-' }}</p>
+    </article>
+
+    <article>
+      <h3>Comercial</h3>
+      <p><strong>Telefono principal:</strong> {{ cliente.telefonoPrincipal || '-' }}</p>
+      <p><strong>Correo principal:</strong> {{ cliente.correoPrincipal || '-' }}</p>
+      <p><strong>Condicion SUNAT:</strong> {{ cliente.condicionSunat || '-' }}</p>
+      <p><strong>Estado SUNAT:</strong> {{ cliente.estadoSunat || '-' }}</p>
+      <p><strong>Observaciones:</strong> {{ cliente.observaciones || '-' }}</p>
+    </article>
+  </section>
+
+  <section class="contacts-panel">
+    <div class="contacts-header">
+      <h3>Contactos del cliente</h3>
+      <button mat-flat-button (click)="openCreateContact()">
+        <mat-icon>add</mat-icon>
+        Agregar contacto
+      </button>
+    </div>
+
+    <div class="filters">
+      <mat-form-field appearance="outline">
+        <mat-label>Buscar contacto</mat-label>
+        <input matInput #searchInput (input)="setSearch(searchInput.value)" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Estado</mat-label>
+        <mat-select [value]="contactStatus()" (valueChange)="setStatus($event)">
+          <mat-option value="ALL">Todos</mat-option>
+          <mat-option value="ACTIVE">Activo</mat-option>
+          <mat-option value="INACTIVE">Inactivo</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    @if (loading()) {
+      <div class="loading-inline">
+        <mat-spinner diameter="32"></mat-spinner>
+      </div>
+    } @else if (!filteredContactos().length) {
+      <p class="empty-message">Este cliente aun no tiene contactos registrados.</p>
+    } @else {
+      <div class="contacts-list">
+        @for (item of filteredContactos(); track item.id) {
+          <mat-card class="contact-card">
+            <mat-card-title>{{ item.nombreCompleto }}</mat-card-title>
+            <mat-card-subtitle>{{ item.correo || item.telefono || 'Sin dato de contacto' }}</mat-card-subtitle>
+            <mat-card-content>
+              <div class="chips">
+                <mat-chip>{{ getStatusLabel(item) }}</mat-chip>
+                @if (item.principal) {
+                  <mat-chip class="principal">Principal</mat-chip>
+                }
+              </div>
+            </mat-card-content>
+            <mat-card-actions align="end">
+              <button mat-button (click)="openEditContact(item)">Editar</button>
+              <button mat-button (click)="setPrincipal(item)">Marcar principal</button>
+              <button mat-button (click)="toggleContactoStatus(item)">{{ (item.estado?.id ?? 1) === 1 ? 'Desactivar' : 'Activar' }}</button>
+            </mat-card-actions>
+          </mat-card>
+        }
+      </div>
+    }
+  </section>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="close()">Cerrar</button>
+</mat-dialog-actions>

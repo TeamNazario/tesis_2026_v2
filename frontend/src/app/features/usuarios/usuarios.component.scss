@@ -1,0 +1,29 @@
+.split {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 1rem;
+}
+.panel {
+  padding: 1.2rem;
+  border-radius: 1rem;
+  background: #fff;
+}
+form {
+  display: grid;
+  gap: .8rem;
+}
+h2 {
+  margin: 0 0 1rem;
+  font-family: Manrope, sans-serif;
+}
+.table-panel {
+  overflow-x: auto;
+}
+table {
+  width: 100%;
+}
+@media (max-width: 900px) {
+  .split {
+    grid-template-columns: 1fr;
+  }
+}

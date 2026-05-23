@@ -1,0 +1,82 @@
+@use '@angular/material' as mat;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+
+html {
+  @include mat.theme((
+    color: (
+      primary: mat.$green-palette,
+      tertiary: mat.$rose-palette,
+    ),
+    typography: Inter,
+    density: 0,
+  ));
+}
+
+:root {
+  --bio-primary: #006e25;
+  --bio-primary-container: #28a745;
+  --bio-secondary: #103a63;
+  --bio-secondary-container: #959efd;
+  --bio-surface: #f4fcef;
+  --bio-surface-low: #eff6e9;
+  --bio-surface-lowest: #ffffff;
+  --bio-surface-high: #e3eade;
+  --bio-on-surface: #171d16;
+  --bio-on-surface-variant: #3e4a3c;
+  --bio-accent: #ab2d57;
+  --bio-error: #ba1a1a;
+  --bio-outline-variant: #bdcab9;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--bio-on-surface);
+  background: var(--bio-surface);
+  font-family: Inter, sans-serif;
+}
+
+button,
+input,
+textarea,
+select {
+  font-family: Inter, sans-serif;
+}
+
+.mat-mdc-raised-button,
+.mat-mdc-flat-button,
+.mat-mdc-stroked-button {
+  border-radius: .85rem !important;
+}
+
+.mat-mdc-table {
+  background: transparent !important;
+}
+
+.mat-mdc-header-cell {
+  color: var(--bio-on-surface-variant);
+  font-weight: 800;
+}
+
+.mat-mdc-cell {
+  color: var(--bio-on-surface);
+}
+
+.snack-success {
+  --mdc-snackbar-container-color: #006e25;
+  --mdc-snackbar-supporting-text-color: #ffffff;
+}
+
+.snack-error {
+  --mdc-snackbar-container-color: #ab2d57;
+  --mdc-snackbar-supporting-text-color: #ffffff;
+}

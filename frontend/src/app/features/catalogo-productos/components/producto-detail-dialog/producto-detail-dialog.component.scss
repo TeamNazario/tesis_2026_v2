@@ -1,0 +1,32 @@
+.detail-content {
+  min-width: min(840px, 92vw);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+article {
+  border-radius: 1rem;
+  padding: 1rem;
+  background: var(--bio-surface-low);
+}
+
+h3 {
+  margin: 0 0 0.75rem;
+  color: var(--bio-on-surface);
+  font-family: Manrope, sans-serif;
+}
+
+p {
+  margin: 0.35rem 0;
+  color: var(--bio-on-surface-variant);
+}
+
+@media (max-width: 860px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

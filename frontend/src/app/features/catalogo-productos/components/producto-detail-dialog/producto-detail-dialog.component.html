@@ -1,0 +1,33 @@
+<h2 mat-dialog-title>Detalle de producto</h2>
+<mat-dialog-content class="detail-content">
+  <section class="grid">
+    <article>
+      <h3>Informacion general</h3>
+      <p><strong>Codigo:</strong> {{ data.codigo }}</p>
+      <p><strong>Nombre:</strong> {{ data.nombre }}</p>
+      <p><strong>Presentacion:</strong> {{ data.presentacion || '-' }}</p>
+      <p><strong>Unidad de medida:</strong> {{ data.unidadMedida }}</p>
+      <p><strong>Estado:</strong> {{ data.estado?.nombre || 'Sin estado' }}</p>
+    </article>
+
+    <article>
+      <h3>Comercial y stock</h3>
+      <p><strong>Precio base:</strong> S/ {{ data.precioBase | number: '1.2-2' }}</p>
+      <p><strong>Stock fisico:</strong> {{ data.stockFisico }}</p>
+      <p><strong>Stock reservado:</strong> {{ data.stockReservado }}</p>
+      <p><strong>Stock disponible:</strong> {{ data.stockDisponible }}</p>
+      <p><strong>Stock de seguridad:</strong> {{ data.stockSeguridad }}</p>
+    </article>
+
+    <article>
+      <h3>Especificaciones tecnicas</h3>
+      <p><strong>Descripcion:</strong> {{ data.descripcion || '-' }}</p>
+      <p><strong>Concentracion AUS-32:</strong> {{ data.concentracionUreaAus32 ?? '-' }}</p>
+      <p><strong>Fecha creacion:</strong> {{ data.fechaCreacion || '-' }}</p>
+      <p><strong>Fecha actualizacion:</strong> {{ data.fechaActualizacion || '-' }}</p>
+    </article>
+  </section>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-flat-button (click)="close()">Cerrar</button>
+</mat-dialog-actions>

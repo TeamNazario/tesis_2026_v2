@@ -1,0 +1,51 @@
+<app-page-header title="Usuarios y vendedores" description="Administracion de accesos, roles y estado operativo del equipo comercial." />
+
+<section class="split">
+  <form class="panel" [formGroup]="form">
+    <h2>Ficha de usuario</h2>
+    <mat-form-field appearance="outline">
+      <mat-label>Nombres</mat-label>
+      <input matInput formControlName="nombres" />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Apellido paterno</mat-label>
+      <input matInput formControlName="apellidoPaterno" />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>DNI</mat-label>
+      <input matInput formControlName="nroDocumento" />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Correo</mat-label>
+      <input matInput formControlName="correo" />
+    </mat-form-field>
+    <button mat-stroked-button type="button">Preparado para crear/editar</button>
+  </form>
+
+  <div class="panel table-panel">
+    @if (usuarios().length) {
+      <table mat-table [dataSource]="usuarios()">
+        <ng-container matColumnDef="nombre">
+          <th mat-header-cell *matHeaderCellDef>Nombre</th>
+          <td mat-cell *matCellDef="let item">{{ item.nombres }} {{ item.apellidoPaterno }}</td>
+        </ng-container>
+        <ng-container matColumnDef="correo">
+          <th mat-header-cell *matHeaderCellDef>Correo</th>
+          <td mat-cell *matCellDef="let item">{{ item.correo }}</td>
+        </ng-container>
+        <ng-container matColumnDef="perfil">
+          <th mat-header-cell *matHeaderCellDef>Rol</th>
+          <td mat-cell *matCellDef="let item">{{ item.perfil?.nombre }}</td>
+        </ng-container>
+        <ng-container matColumnDef="estado">
+          <th mat-header-cell *matHeaderCellDef>Estado</th>
+          <td mat-cell *matCellDef="let item"><app-status-chip [label]="item.estado?.nombre || 'Sin estado'" /></td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    } @else {
+      <app-empty-state title="Sin usuarios" description="El backend aun no devolvio usuarios para administrar." />
+    }
+  </div>
+</section>

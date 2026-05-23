@@ -1,0 +1,192 @@
+﻿<app-page-header
+  title="Gestion de productos"
+  description="Administra el catalogo comercial y tecnico de productos BIOFLUID"
+>
+  <button mat-flat-button type="button" (click)="openCreateDialog()" [disabled]="isSaving()">
+    <mat-icon>add</mat-icon>
+    Nuevo producto
+  </button>
+</app-page-header>
+
+@if (isSaving()) {
+  <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+}
+
+<section class="filters-card" [formGroup]="filterForm">
+  <div class="search-row">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Buscar por nombre, codigo, presentacion o descripcion</mat-label>
+      <input matInput formControlName="search" />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <button mat-stroked-button type="button" (click)="clearFilters()">
+      <mat-icon>filter_alt_off</mat-icon>
+      Limpiar filtros
+    </button>
+  </div>
+
+  <div class="filters-grid">
+    <mat-form-field appearance="outline">
+      <mat-label>Estado</mat-label>
+      <mat-select formControlName="estado">
+        <mat-option value="ALL">Todos</mat-option>
+        <mat-option value="ACTIVE">Habilitado</mat-option>
+        <mat-option value="INACTIVE">Inhabilitado</mat-option>
+        <mat-option value="BLOCKED">Bloqueado</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Presentacion</mat-label>
+      <mat-select formControlName="presentacion">
+        <mat-option value="">Todas</mat-option>
+        @for (item of uniquePresentaciones(); track item) {
+          <mat-option [value]="item">{{ item }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Unidad de medida</mat-label>
+      <mat-select formControlName="unidadMedida">
+        <mat-option value="">Todas</mat-option>
+        @for (item of uniqueUnidades(); track item) {
+          <mat-option [value]="item">{{ item }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Precio minimo</mat-label>
+      <input matInput type="number" min="0" formControlName="minPrecio" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Precio maximo</mat-label>
+      <input matInput type="number" min="0" formControlName="maxPrecio" />
+    </mat-form-field>
+
+    <mat-checkbox formControlName="stockBajo">Solo stock bajo</mat-checkbox>
+  </div>
+</section>
+
+@if (hasError()) {
+  <app-empty-state
+    icon="error"
+    title="No se pudo cargar"
+    description="No se pudo cargar la lista de productos. Verifica la conexion o intenta nuevamente."
+  />
+} @else if (isLoading()) {
+  <section class="loading">
+    <mat-spinner diameter="44"></mat-spinner>
+    <p>Cargando productos...</p>
+  </section>
+} @else if (!products().length) {
+  <app-empty-state
+    title="No hay productos registrados"
+    description="No hay productos registrados todavia. Agrega el primer producto para iniciar la gestion del catalogo."
+  />
+} @else if (!filteredProducts().length) {
+  <app-empty-state title="Sin resultados" description="No se encontraron productos con los filtros aplicados." />
+} @else {
+  <section class="table-card">
+    <div class="table-wrapper">
+      <table mat-table [dataSource]="pageItems()">
+        <ng-container matColumnDef="codigo">
+          <th mat-header-cell *matHeaderCellDef>Codigo</th>
+          <td mat-cell *matCellDef="let item">{{ item.codigo }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="nombre">
+          <th mat-header-cell *matHeaderCellDef>Nombre del producto</th>
+          <td mat-cell *matCellDef="let item">{{ item.nombre }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="presentacion">
+          <th mat-header-cell *matHeaderCellDef>Presentacion</th>
+          <td mat-cell *matCellDef="let item">{{ item.presentacion || '-' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="unidadMedida">
+          <th mat-header-cell *matHeaderCellDef>Unidad</th>
+          <td mat-cell *matCellDef="let item">{{ item.unidadMedida }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="precioBase">
+          <th mat-header-cell *matHeaderCellDef>Precio base</th>
+          <td mat-cell *matCellDef="let item">S/ {{ item.precioBase | number: '1.2-2' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="stockDisponible">
+          <th mat-header-cell *matHeaderCellDef>Stock disponible</th>
+          <td mat-cell *matCellDef="let item">
+            {{ item.stockDisponible }}
+            <mat-chip class="stock-chip" [class.warn]="getStockBadge(item) === 'warn'" [class.critical]="getStockBadge(item) === 'critical'">
+              @if (getStockBadge(item) === 'critical') {
+                Sin stock
+              } @else if (getStockBadge(item) === 'warn') {
+                Stock bajo
+              } @else {
+                Stock ok
+              }
+            </mat-chip>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="estado">
+          <th mat-header-cell *matHeaderCellDef>Estado</th>
+          <td mat-cell *matCellDef="let item">
+            <mat-chip class="state-chip" [class.inactive]="!isEnabled(item)" [class.blocked]="isBlocked(item)">{{ getStatusLabel(item) }}</mat-chip>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="acciones">
+          <th mat-header-cell *matHeaderCellDef>Acciones</th>
+          <td mat-cell *matCellDef="let item">
+            <button mat-icon-button matTooltip="Ver detalle" (click)="openDetail(item)">
+              <mat-icon>visibility</mat-icon>
+            </button>
+            <button mat-icon-button matTooltip="Editar producto" (click)="openEditDialog(item)">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button [matTooltip]="api.isActive(item) ? 'Inhabilitar' : 'Habilitar'" (click)="toggleStatus(item)">
+              <mat-icon>{{ api.isActive(item) ? 'toggle_off' : 'toggle_on' }}</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    </div>
+
+    <mat-paginator
+      [length]="filteredProducts().length"
+      [pageSize]="pageSize()"
+      [pageIndex]="pageIndex()"
+      [pageSizeOptions]="pageSizeOptions"
+      (page)="onPageChange($event)"
+    />
+  </section>
+
+  <section class="cards-mobile">
+    @for (item of pageItems(); track item.id) {
+      <mat-card>
+        <mat-card-title>{{ item.nombre }}</mat-card-title>
+        <mat-card-subtitle>{{ item.codigo }} · {{ item.presentacion || '-' }}</mat-card-subtitle>
+        <mat-card-content>
+          <p><strong>Unidad:</strong> {{ item.unidadMedida }}</p>
+          <p><strong>Precio:</strong> S/ {{ item.precioBase | number: '1.2-2' }}</p>
+          <p><strong>Stock:</strong> {{ item.stockDisponible }}</p>
+          <mat-chip class="state-chip" [class.inactive]="!isEnabled(item)" [class.blocked]="isBlocked(item)">{{ getStatusLabel(item) }}</mat-chip>
+        </mat-card-content>
+        <mat-card-actions align="end">
+          <button mat-button (click)="openDetail(item)">Detalle</button>
+          <button mat-button (click)="openEditDialog(item)">Editar</button>
+          <button mat-button (click)="toggleStatus(item)">{{ api.isActive(item) ? 'Inhabilitar' : 'Habilitar' }}</button>
+        </mat-card-actions>
+      </mat-card>
+    }
+  </section>
+}

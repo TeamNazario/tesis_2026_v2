@@ -1,0 +1,120 @@
+<h2 mat-dialog-title>{{ title }}</h2>
+<mat-dialog-content class="form-content">
+  <form [formGroup]="form" class="grid">
+    <mat-form-field appearance="outline">
+      <mat-label>RUC</mat-label>
+      <input matInput formControlName="ruc" maxlength="11" />
+      @if (isConsultandoRuc) {
+        <mat-progress-spinner matSuffix mode="indeterminate" diameter="18"></mat-progress-spinner>
+      }
+      @if (form.controls.ruc.hasError('required')) {
+        <mat-error>El RUC es obligatorio.</mat-error>
+      }
+      @if (form.controls.ruc.hasError('pattern')) {
+        <mat-error>El RUC debe tener 11 digitos.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Razon Social</mat-label>
+      <input matInput formControlName="razonSocial" />
+      @if (form.controls.razonSocial.hasError('required')) {
+        <mat-error>La razon social es obligatoria.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Nombre comercial</mat-label>
+      <input matInput formControlName="nombreComercial" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Tipo de cliente</mat-label>
+      <mat-select formControlName="tipoCliente">
+        <mat-option value="Empresa">Empresa</mat-option>
+        <mat-option value="Persona Natural">Persona Natural</mat-option>
+        <mat-option value="Distribuidor">Distribuidor</mat-option>
+        <mat-option value="Grifo">Grifo</mat-option>
+        <mat-option value="Lubricentro">Lubricentro</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Telefono principal</mat-label>
+      <input matInput formControlName="telefonoPrincipal" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Correo principal</mat-label>
+      <input matInput formControlName="correoPrincipal" />
+      @if (form.controls.correoPrincipal.hasError('email')) {
+        <mat-error>Correo invalido.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Direccion fiscal</mat-label>
+      <input matInput formControlName="direccionFiscal" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Departamento</mat-label>
+      <input matInput formControlName="departamento" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Provincia</mat-label>
+      <input matInput formControlName="provincia" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Distrito</mat-label>
+      <input matInput formControlName="distrito" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Condicion SUNAT</mat-label>
+      <input matInput formControlName="condicionSunat" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Estado SUNAT</mat-label>
+      <input matInput formControlName="estadoSunat" />
+    </mat-form-field>
+    <div class="full sunat-chips">
+      @if (form.controls.estadoSunat.value) {
+        <mat-chip class="chip-state">{{ form.controls.estadoSunat.value }}</mat-chip>
+      }
+      @if (form.controls.condicionSunat.value) {
+        <mat-chip class="chip-condition">{{ form.controls.condicionSunat.value }}</mat-chip>
+      }
+    </div>
+    @if (rucInfoMessage) {
+      <p class="full feedback feedback-info">{{ rucInfoMessage }}</p>
+    }
+    @if (rucErrorMessage) {
+      <p class="full feedback feedback-error">{{ rucErrorMessage }}</p>
+    }
+    @if (rucAptoMensaje) {
+      <p class="full feedback feedback-warn">{{ rucAptoMensaje }}</p>
+    }
+
+    <mat-form-field appearance="outline">
+      <mat-label>Estado</mat-label>
+      <mat-select formControlName="estadoId">
+        <mat-option [value]="1">Activo</mat-option>
+        <mat-option [value]="2">Inactivo</mat-option>
+        <mat-option [value]="3">Pendiente</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Observaciones</mat-label>
+      <textarea matInput rows="3" formControlName="observaciones"></textarea>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancel()">Cancelar</button>
+  <button mat-flat-button type="button" (click)="submit()">{{ data.mode === 'create' ? 'Registrar' : 'Guardar' }}</button>
+</mat-dialog-actions>

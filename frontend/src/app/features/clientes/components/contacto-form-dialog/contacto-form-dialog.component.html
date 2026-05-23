@@ -1,0 +1,64 @@
+<h2 mat-dialog-title>{{ title }}</h2>
+<mat-dialog-content class="form-content">
+  <form [formGroup]="form" class="grid">
+    <mat-form-field appearance="outline">
+      <mat-label>Nombres</mat-label>
+      <input matInput formControlName="nombres" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Apellidos</mat-label>
+      <input matInput formControlName="apellidos" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Tipo documento</mat-label>
+      <mat-select formControlName="tipoDocumentoId">
+        <mat-option [value]="1">DNI</mat-option>
+        <mat-option [value]="2">CE</mat-option>
+        <mat-option [value]="3">Pasaporte</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Nro documento</mat-label>
+      <input matInput formControlName="nroDocumento" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Telefono</mat-label>
+      <input matInput formControlName="telefono" />
+      @if (form.controls.telefono.hasError('requiredChannel')) {
+        <mat-error>Ingresa telefono, WhatsApp o correo.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>WhatsApp</mat-label>
+      <input matInput formControlName="whatsapp" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Correo</mat-label>
+      <input matInput formControlName="correo" />
+    </mat-form-field>
+
+    <div class="toggles full">
+      <mat-checkbox formControlName="principal">Contacto principal</mat-checkbox>
+      <mat-checkbox formControlName="recibeCotizaciones">Recibe cotizaciones</mat-checkbox>
+      <mat-checkbox formControlName="recibeNotificaciones">Recibe notificaciones</mat-checkbox>
+    </div>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Estado</mat-label>
+      <mat-select formControlName="estadoId">
+        <mat-option [value]="1">Activo</mat-option>
+        <mat-option [value]="2">Inactivo</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancelar</button>
+  <button mat-flat-button (click)="submit()">Guardar</button>
+</mat-dialog-actions>

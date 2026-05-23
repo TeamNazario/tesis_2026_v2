@@ -1,0 +1,62 @@
+.sidebar {
+  height: 100%;
+  padding: 1rem;
+  background: #ffffff;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  margin-bottom: 1.5rem;
+}
+
+.mark {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: .9rem;
+  color: #ffffff;
+  background: #006e25;
+  font-family: Manrope, sans-serif;
+  font-weight: 900;
+}
+
+strong,
+span {
+  display: block;
+}
+
+strong {
+  font-family: Manrope, sans-serif;
+  color: var(--bio-on-surface);
+}
+
+span {
+  color: var(--bio-on-surface-variant);
+  font-size: .82rem;
+}
+
+nav {
+  display: grid;
+  gap: .35rem;
+}
+
+a {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  min-height: 3rem;
+  padding: 0 .85rem;
+  border-radius: .8rem;
+  color: var(--bio-on-surface-variant);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+a.active,
+a:hover {
+  color: #006e25;
+  background: #eff6e9;
+}

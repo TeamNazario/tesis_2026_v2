@@ -1,0 +1,60 @@
+<app-page-header
+  title="Dashboard gerencial"
+  description="Indicadores de eficiencia comercial, inventario y atencion asistida para la gestion de cotizaciones AUS-32."
+>
+  <form class="filters" [formGroup]="filters">
+    <mat-form-field appearance="outline">
+      <mat-label>Fecha inicio</mat-label>
+      <input matInput type="date" formControlName="fechaInicio" />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Fecha fin</mat-label>
+      <input matInput type="date" formControlName="fechaFin" />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Estado</mat-label>
+      <mat-select formControlName="estado">
+        <mat-option value="">Todos</mat-option>
+        <mat-option value="GENERADA">Generada</mat-option>
+        <mat-option value="CONFIRMADA">Confirmada</mat-option>
+        <mat-option value="VENCIDA">Vencida</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </form>
+</app-page-header>
+
+@if (error()) {
+  <app-empty-state icon="warning" title="Dashboard no disponible" [description]="error()" />
+} @else if (kpis(); as data) {
+  <section class="kpi-grid">
+    <app-kpi-card label="Cotizaciones hoy" [value]="data.cotizacionesHoy" detail="Actividad diaria" icon="today" />
+    <app-kpi-card label="Cotizaciones semana" [value]="data.cotizacionesSemana" detail="Ultimos 7 dias" icon="date_range" />
+    <app-kpi-card label="Cotizaciones mes" [value]="data.cotizacionesMes" detail="Mes actual" icon="calendar_month" />
+    <app-kpi-card label="Tiempo promedio" [value]="data.tiempoPromedioRespuestaSegundos + ' s'" detail="Referencia manual: 30 min" icon="timer" />
+    <app-kpi-card label="Chatbot" [value]="data.cotizacionesChatbot" detail="Cotizaciones automatizadas" icon="smart_toy" />
+    <app-kpi-card label="Manuales" [value]="data.cotizacionesManuales" detail="Gestion vendedor" icon="support_agent" />
+    <app-kpi-card label="Stock disponible" [value]="data.stockDisponible" detail="Fisico menos reservado" icon="inventory_2" />
+    <app-kpi-card label="Alertas stock bajo" [value]="data.alertasStockBajo" detail="Debajo de seguridad" icon="crisis_alert" />
+  </section>
+
+  <section class="insights">
+    <article>
+      <h2>Flujo de cotizaciones</h2>
+      <div class="bars">
+        <span style="--value: 70%">Generadas</span>
+        <span style="--value: 48%">Confirmadas</span>
+        <span style="--value: 18%">Vencidas</span>
+      </div>
+    </article>
+    <article>
+      <h2>Inventario AUS-32</h2>
+      <div class="inventory">
+        <div><strong>{{ data.stockFisico }}</strong><span>Fisico</span></div>
+        <div><strong>{{ data.stockReservado }}</strong><span>Reservado</span></div>
+        <div><strong>{{ data.stockDisponible }}</strong><span>Disponible</span></div>
+      </div>
+    </article>
+  </section>
+} @else {
+  <app-empty-state icon="hourglass_empty" title="Cargando indicadores" description="Consultando el backend Spring Boot." />
+}

@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, forkJoin, map } from 'rxjs';
 import { API_ENDPOINTS } from '../constants/api-endpoints';
+import { UsuarioResponse } from '../auth/models/auth.models';
 import { ReferenceResponse } from '../http/reference-response.model';
 import { ApiService, QueryParams } from './api.service';
 import {
@@ -18,27 +19,27 @@ export class DomainApiService {
   private readonly api = inject(ApiService);
 
   getClientes(params?: QueryParams): Observable<ClienteResponse[]> {
-    return this.api.get<ClienteResponse[]>(API_ENDPOINTS.clientes, params);
+    return this.api.get<ClienteResponse[]>(API_ENDPOINTS.v1.clientes, params);
   }
 
   createCliente(request: ClienteRequest): Observable<ClienteResponse> {
-    return this.api.post<ClienteResponse>(API_ENDPOINTS.clientes, request);
+    return this.api.post<ClienteResponse>(API_ENDPOINTS.v1.clientes, request);
   }
 
   updateCliente(id: number, request: ClienteRequest): Observable<ClienteResponse> {
-    return this.api.put<ClienteResponse>(`${API_ENDPOINTS.clientes}/${id}`, request);
+    return this.api.put<ClienteResponse>(`${API_ENDPOINTS.v1.clientes}/${id}`, request);
   }
 
-  getUsuarios(): Observable<unknown[]> {
-    return this.api.get<unknown[]>(API_ENDPOINTS.usuarios);
+  getUsuarios(): Observable<UsuarioResponse[]> {
+    return this.api.get<UsuarioResponse[]>(API_ENDPOINTS.usuarios);
   }
 
   getProductos(params?: QueryParams): Observable<ProductoResponse[]> {
-    return this.api.get<ProductoResponse[]>(API_ENDPOINTS.productos, params);
+    return this.api.get<ProductoResponse[]>(API_ENDPOINTS.v1.productos, params);
   }
 
   getCotizaciones(params?: QueryParams): Observable<CotizacionResponse[]> {
-    return this.api.get<CotizacionResponse[]>(API_ENDPOINTS.cotizaciones, params);
+    return this.api.get<CotizacionResponse[]>(API_ENDPOINTS.v1.cotizaciones, params);
   }
 
   getLogsInventario(params?: QueryParams): Observable<LogInventarioResponse[]> {
@@ -72,7 +73,7 @@ export class DomainApiService {
         const month = now.getMonth();
         const confirmed = cotizaciones.filter((item) => item.estadoCotizacion === 'CONFIRMADA');
         const vencidas = cotizaciones.filter((item) => new Date(item.fechaVencimiento) < now);
-        const chatbot = cotizaciones.filter((item) => item.origenCotizacion?.toUpperCase().includes('CHATBOT'));
+        const chatbot: CotizacionResponse[] = [];
         const tiempos = logsChatbot
           .map((item) => item.tiempoAtencionSegundos ?? 0)
           .filter((value) => value > 0);
@@ -90,7 +91,7 @@ export class DomainApiService {
           stockFisico: productos.reduce((sum, item) => sum + (item.stockFisico ?? 0), 0),
           stockReservado: productos.reduce((sum, item) => sum + (item.stockReservado ?? 0), 0),
           stockDisponible: productos.reduce((sum, item) => sum + (item.stockDisponible ?? 0), 0),
-          alertasStockBajo: productos.filter((item) => item.stockDisponible <= item.stockMinimoSeguridad).length,
+          alertasStockBajo: productos.filter((item) => item.stockDisponible <= item.stockMinimo).length,
           pdfsGenerados: logsChatbot.filter((item) => item.pdfGeneradoExitosamente).length,
         };
       }),
@@ -99,6 +100,6 @@ export class DomainApiService {
 
   downloadCotizacionPdf(id: number): Observable<Blob> {
     // TODO backend: confirmar endpoint real para PDF.
-    return this.api.download(`${API_ENDPOINTS.cotizaciones}/${id}/pdf`);
+    return this.api.download(`${API_ENDPOINTS.v1.cotizaciones}/${id}/pdf`);
   }
 }

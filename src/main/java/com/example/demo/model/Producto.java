@@ -12,6 +12,7 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "producto")
@@ -49,8 +50,34 @@ public class Producto {
     @Column(name = "stock_minimo_seguridad", nullable = false)
     public Integer stockMinimoSeguridad;
 
+    @Column(name = "peso", precision = 12, scale = 3)
+    public BigDecimal peso;
+
+    @Column(name = "volumen", precision = 12, scale = 3)
+    public BigDecimal volumen;
+
+    @Column(name = "cant_min_venta")
+    public Integer cantMinVenta;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_estado", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     public Estado estado;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_estado_producto")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    public EstadoProducto estadoProducto;
+
+    @Column(name = "usu_registro", length = 50)
+    public String usuRegistro;
+
+    @Column(name = "fec_registro")
+    public LocalDateTime fecRegistro;
+
+    @Column(name = "usu_actualiza", length = 50)
+    public String usuActualiza;
+
+    @Column(name = "fec_actualiza")
+    public LocalDateTime fecActualiza;
 }

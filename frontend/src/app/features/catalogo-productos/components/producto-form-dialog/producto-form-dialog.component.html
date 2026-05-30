@@ -26,13 +26,18 @@
     </mat-form-field>
 
     <mat-form-field appearance="outline">
-      <mat-label>Precio base</mat-label>
-      <input matInput type="number" formControlName="precioBase" min="0" />
+      <mat-label>Peso</mat-label>
+      <input matInput type="number" formControlName="peso" min="0" />
     </mat-form-field>
 
     <mat-form-field appearance="outline">
-      <mat-label>Stock de seguridad</mat-label>
-      <input matInput type="number" formControlName="stockSeguridad" min="0" />
+      <mat-label>Volumen</mat-label>
+      <input matInput type="number" formControlName="volumen" min="0" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Stock minimo</mat-label>
+      <input matInput type="number" formControlName="stockMinimo" min="0" />
     </mat-form-field>
 
     <mat-form-field appearance="outline">
@@ -49,16 +54,16 @@
     </mat-form-field>
 
     <mat-form-field appearance="outline">
-      <mat-label>Concentracion AUS-32</mat-label>
-      <input matInput type="number" formControlName="concentracionUreaAus32" min="0" />
+      <mat-label>Cantidad minima de venta</mat-label>
+      <input matInput type="number" formControlName="cantMinVenta" min="1" />
     </mat-form-field>
 
     <mat-form-field appearance="outline">
       <mat-label>Estado</mat-label>
-      <mat-select formControlName="estadoId">
-        <mat-option [value]="1">Habilitado</mat-option>
-        <mat-option [value]="2">Inhabilitado</mat-option>
-        <mat-option [value]="3">Bloqueado</mat-option>
+      <mat-select formControlName="idEstadoProducto">
+        @for (item of estadosProducto(); track item.id) {
+          <mat-option [value]="item.id">{{ item.descripcion }}</mat-option>
+        }
       </mat-select>
     </mat-form-field>
 

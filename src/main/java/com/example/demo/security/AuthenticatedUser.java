@@ -35,11 +35,15 @@ public class AuthenticatedUser implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return usuario.estado == null || usuario.estado.idEstado == null || usuario.estado.idEstado != 2;
+        return usuario.estadoUsuario == null
+                || usuario.estadoUsuario.idEstadoUsuario == null
+                || usuario.estadoUsuario.idEstadoUsuario != 3;
     }
 
     @Override
     public boolean isEnabled() {
-        return usuario.estado == null || usuario.estado.idEstado == null || usuario.estado.idEstado != 3;
+        return usuario.estadoUsuario == null
+                || usuario.estadoUsuario.idEstadoUsuario == null
+                || usuario.estadoUsuario.idEstadoUsuario != 2;
     }
 }

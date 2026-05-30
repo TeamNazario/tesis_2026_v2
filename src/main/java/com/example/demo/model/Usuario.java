@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -48,6 +49,9 @@ public class Usuario {
     @Column(name = "celular", length = 20)
     public String celular;
 
+    @Column(name = "fec_nacimiento")
+    public LocalDate fecNacimiento;
+
     @Column(name = "password_hash", nullable = false)
     public String passwordHash;
 
@@ -55,17 +59,17 @@ public class Usuario {
     public Integer intentosFallidos;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_estado", nullable = false)
+    @JoinColumn(name = "id_estado_usuario", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    public Estado estado;
+    public EstadoUsuario estadoUsuario;
 
-    @Column(name = "usuario_registro", length = 50)
+    @Column(name = "usu_registro", length = 50)
     public String usuarioRegistro;
 
     @Column(name = "fecha_registro")
     public LocalDateTime fechaRegistro;
 
-    @Column(name = "usuario_actualiza", length = 50)
+    @Column(name = "usu_actualiza", length = 50)
     public String usuarioActualiza;
 
     @Column(name = "fecha_actualiza")

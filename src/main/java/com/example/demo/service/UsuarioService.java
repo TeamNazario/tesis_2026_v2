@@ -4,11 +4,11 @@ import com.example.demo.dto.UsuarioRequest;
 import com.example.demo.dto.UsuarioResponse;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.mapper.UsuarioMapper;
-import com.example.demo.model.Estado;
+import com.example.demo.model.EstadoUsuario;
 import com.example.demo.model.Perfil;
 import com.example.demo.model.TipoDocumento;
 import com.example.demo.model.Usuario;
-import com.example.demo.repository.EstadoRepository;
+import com.example.demo.repository.EstadoUsuarioRepository;
 import com.example.demo.repository.PerfilRepository;
 import com.example.demo.repository.TipoDocumentoRepository;
 import com.example.demo.repository.UsuarioRepository;
@@ -21,21 +21,21 @@ public class UsuarioService extends CrudService<Usuario, Integer> {
     private final UsuarioRepository usuarioRepository;
     private final PerfilRepository perfilRepository;
     private final TipoDocumentoRepository tipoDocumentoRepository;
-    private final EstadoRepository estadoRepository;
+    private final EstadoUsuarioRepository estadoUsuarioRepository;
     private final UsuarioMapper mapper;
 
     public UsuarioService(
             UsuarioRepository repository,
             PerfilRepository perfilRepository,
             TipoDocumentoRepository tipoDocumentoRepository,
-            EstadoRepository estadoRepository,
+            EstadoUsuarioRepository estadoUsuarioRepository,
             UsuarioMapper mapper
     ) {
         super(repository, "Usuario");
         this.usuarioRepository = repository;
         this.perfilRepository = perfilRepository;
         this.tipoDocumentoRepository = tipoDocumentoRepository;
-        this.estadoRepository = estadoRepository;
+        this.estadoUsuarioRepository = estadoUsuarioRepository;
         this.mapper = mapper;
     }
 
@@ -60,7 +60,7 @@ public class UsuarioService extends CrudService<Usuario, Integer> {
                 request,
                 findPerfil(request.idPerfil()),
                 findTipoDocumento(request.idTipoDoc()),
-                findEstado(request.idEstado())
+                findEstadoUsuario(request.idEstado())
         );
         return mapper.toResponse(usuarioRepository.save(usuario));
     }
@@ -73,7 +73,7 @@ public class UsuarioService extends CrudService<Usuario, Integer> {
                 request,
                 findPerfil(request.idPerfil()),
                 findTipoDocumento(request.idTipoDoc()),
-                findEstado(request.idEstado())
+                findEstadoUsuario(request.idEstado())
         );
         return mapper.toResponse(usuarioRepository.save(usuario));
     }
@@ -101,8 +101,8 @@ public class UsuarioService extends CrudService<Usuario, Integer> {
                 .orElseThrow(() -> new ResourceNotFoundException("TipoDocumento", id));
     }
 
-    private Estado findEstado(Integer id) {
-        return estadoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Estado", id));
+    private EstadoUsuario findEstadoUsuario(Integer id) {
+        return estadoUsuarioRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("EstadoUsuario", id));
     }
 }

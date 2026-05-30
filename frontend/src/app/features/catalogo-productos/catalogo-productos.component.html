@@ -57,16 +57,6 @@
       </mat-select>
     </mat-form-field>
 
-    <mat-form-field appearance="outline">
-      <mat-label>Precio minimo</mat-label>
-      <input matInput type="number" min="0" formControlName="minPrecio" />
-    </mat-form-field>
-
-    <mat-form-field appearance="outline">
-      <mat-label>Precio maximo</mat-label>
-      <input matInput type="number" min="0" formControlName="maxPrecio" />
-    </mat-form-field>
-
     <mat-checkbox formControlName="stockBajo">Solo stock bajo</mat-checkbox>
   </div>
 </section>
@@ -113,9 +103,9 @@
           <td mat-cell *matCellDef="let item">{{ item.unidadMedida }}</td>
         </ng-container>
 
-        <ng-container matColumnDef="precioBase">
-          <th mat-header-cell *matHeaderCellDef>Precio base</th>
-          <td mat-cell *matCellDef="let item">S/ {{ item.precioBase | number: '1.2-2' }}</td>
+        <ng-container matColumnDef="cantMinVenta">
+          <th mat-header-cell *matHeaderCellDef>Min. venta</th>
+          <td mat-cell *matCellDef="let item">{{ item.cantMinVenta }}</td>
         </ng-container>
 
         <ng-container matColumnDef="stockDisponible">
@@ -177,7 +167,7 @@
         <mat-card-subtitle>{{ item.codigo }} · {{ item.presentacion || '-' }}</mat-card-subtitle>
         <mat-card-content>
           <p><strong>Unidad:</strong> {{ item.unidadMedida }}</p>
-          <p><strong>Precio:</strong> S/ {{ item.precioBase | number: '1.2-2' }}</p>
+          <p><strong>Min. venta:</strong> {{ item.cantMinVenta }}</p>
           <p><strong>Stock:</strong> {{ item.stockDisponible }}</p>
           <mat-chip class="state-chip" [class.inactive]="!isEnabled(item)" [class.blocked]="isBlocked(item)">{{ getStatusLabel(item) }}</mat-chip>
         </mat-card-content>

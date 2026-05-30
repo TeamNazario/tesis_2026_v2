@@ -27,6 +27,17 @@
   color: #171d16;
 }
 
+.estado-cliente-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.estado-label {
+  font-size: 0.875rem;
+  color: #3f4940;
+}
+
 .feedback {
   margin: 0;
   font-size: 0.875rem;

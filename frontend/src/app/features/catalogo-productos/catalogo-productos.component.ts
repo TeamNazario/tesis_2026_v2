@@ -1,4 +1,3 @@
-import { DecimalPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -17,7 +16,7 @@ import { ProductoFormDialogComponent } from './components/producto-form-dialog/p
 
 @Component({
   selector: 'app-catalogo-productos',
-  imports: [ReactiveFormsModule, MaterialModule, PageHeaderComponent, EmptyStateComponent, DecimalPipe],
+  imports: [ReactiveFormsModule, MaterialModule, PageHeaderComponent, EmptyStateComponent],
   templateUrl: './catalogo-productos.component.html',
   styleUrl: './catalogo-productos.component.scss',
 })
@@ -41,7 +40,7 @@ export class CatalogoProductosComponent implements OnInit, OnDestroy {
     'nombre',
     'presentacion',
     'unidadMedida',
-    'precioBase',
+    'cantMinVenta',
     'stockDisponible',
     'estado',
     'acciones',
@@ -57,8 +56,6 @@ export class CatalogoProductosComponent implements OnInit, OnDestroy {
     presentacion: [''],
     unidadMedida: [''],
     stockBajo: [false],
-    minPrecio: [null as number | null],
-    maxPrecio: [null as number | null],
   });
 
   readonly uniquePresentaciones = computed(() =>
@@ -95,8 +92,6 @@ export class CatalogoProductosComponent implements OnInit, OnDestroy {
       presentacion: '',
       unidadMedida: '',
       stockBajo: false,
-      minPrecio: null,
-      maxPrecio: null,
     });
   }
 
@@ -203,7 +198,7 @@ export class CatalogoProductosComponent implements OnInit, OnDestroy {
     if (product.stockDisponible <= 0) {
       return 'critical';
     }
-    if (product.stockDisponible <= product.stockSeguridad) {
+    if (product.stockDisponible <= product.stockMinimo) {
       return 'warn';
     }
     return 'ok';
@@ -235,8 +230,6 @@ export class CatalogoProductosComponent implements OnInit, OnDestroy {
       presentacion: raw.presentacion ?? '',
       unidadMedida: raw.unidadMedida ?? '',
       stockBajo: raw.stockBajo ?? false,
-      minPrecio: raw.minPrecio,
-      maxPrecio: raw.maxPrecio,
       page: this.pageIndex(),
       size: this.pageSize(),
       sort: 'nombre',

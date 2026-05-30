@@ -7,6 +7,7 @@ import com.example.demo.dto.PerfilResponse;
 import com.example.demo.dto.TipoDocumentoRequest;
 import com.example.demo.dto.TipoDocumentoResponse;
 import com.example.demo.model.Estado;
+import com.example.demo.model.EstadoPerfil;
 import com.example.demo.model.Perfil;
 import com.example.demo.model.TipoDocumento;
 import org.springframework.stereotype.Component;
@@ -47,16 +48,16 @@ public class CatalogoMapper {
         return new TipoDocumentoResponse(tipoDocumento.idTipoDoc, tipoDocumento.descTipoDoc);
     }
 
-    public Perfil toEntity(PerfilRequest request, Estado estado) {
+    public Perfil toEntity(PerfilRequest request, EstadoPerfil estadoPerfil) {
         Perfil perfil = new Perfil();
-        updateEntity(perfil, request, estado);
+        updateEntity(perfil, request, estadoPerfil);
         return perfil;
     }
 
-    public void updateEntity(Perfil perfil, PerfilRequest request, Estado estado) {
+    public void updateEntity(Perfil perfil, PerfilRequest request, EstadoPerfil estadoPerfil) {
         perfil.nombrePerfil = request.nombrePerfil();
         perfil.descPerfil = request.descPerfil();
-        perfil.estado = estado;
+        perfil.estadoPerfil = estadoPerfil;
     }
 
     public PerfilResponse toResponse(Perfil perfil) {
@@ -64,7 +65,7 @@ public class CatalogoMapper {
                 perfil.idPerfil,
                 perfil.nombrePerfil,
                 perfil.descPerfil,
-                referenceMapper.toReference(perfil.estado)
+                referenceMapper.toReference(perfil.estadoPerfil)
         );
     }
 }

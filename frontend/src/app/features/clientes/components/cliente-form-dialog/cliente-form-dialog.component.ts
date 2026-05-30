@@ -1,11 +1,15 @@
-import { Component, OnDestroy, inject } from '@angular/core';
+import { Component, OnDestroy, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Subject, catchError, debounceTime, distinctUntilChanged, filter, finalize, of, switchMap, takeUntil, tap } from 'rxjs';
+import { Subject, catchError, debounceTime, distinctUntilChanged, filter, finalize, forkJoin, of, switchMap, takeUntil, tap } from 'rxjs';
+import { UsuarioResponse } from '../../../../core/auth/models/auth.models';
 import { ClienteCreateRequest, ClienteResponseVm, ClienteUpdateRequest } from '../../../../core/models/cliente.models';
 import { RucConsultaResponse } from '../../../../core/models/documento.models';
+import { CatalogoItem } from '../../../../core/models/v1.models';
+import { CatalogoV1Service } from '../../../../core/services/catalogo-v1.service';
 import { DocumentoService } from '../../../../core/services/documento.service';
+import { DomainApiService } from '../../../../core/services/domain-api.service';
 import { MaterialModule } from '../../../../shared/material/material.module';
 
 interface ClienteFormDialogData {
@@ -24,9 +28,20 @@ export class ClienteFormDialogComponent implements OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly dialogRef = inject(MatDialogRef<ClienteFormDialogComponent>);
   private readonly documentoService = inject(DocumentoService);
+  private readonly catalogos = inject(CatalogoV1Service);
+  private readonly domainApi = inject(DomainApiService);
   private readonly destroy$ = new Subject<void>();
   private lastQueriedRuc = '';
+  private readonly vendedorPerfilId = 4;
+  private readonly usuarioHabilitadoEstadoId = 1;
 
+  readonly tiposCliente = signal<CatalogoItem[]>([]);
+  readonly estadosClienteContacto = signal<CatalogoItem[]>([]);
+  readonly vendedores = signal<UsuarioResponse[]>([]);
+  readonly isLoadingCatalogos = signal(false);
+  readonly catalogoError = signal<string | null>(null);
+  readonly vendedoresError = signal<string | null>(null);
+  readonly estadoActivoError = signal<string | null>(null);
   isConsultandoRuc = false;
   rucInfoMessage: string | null = null;
   rucErrorMessage: string | null = null;
@@ -35,45 +50,58 @@ export class ClienteFormDialogComponent implements OnDestroy {
   readonly form = this.fb.nonNullable.group({
     ruc: ['', [Validators.required, Validators.pattern(/^\d{11}$/)]],
     razonSocial: ['', [Validators.required, Validators.maxLength(200)]],
-    nombreComercial: ['', [Validators.maxLength(200)]],
-    tipoCliente: ['Empresa'],
+    idTipoCliente: [0, [Validators.required, Validators.min(1)]],
+    idVendedorAsignado: [0, [Validators.required, Validators.min(1)]],
     direccionFiscal: [''],
-    zonaDespacho: [''],
     departamento: [''],
     provincia: [''],
     distrito: [''],
-    telefonoPrincipal: ['', [Validators.pattern(/^\+?\d{6,15}$/)]],
-    correoPrincipal: ['', [Validators.email]],
-    observaciones: ['', [Validators.maxLength(500)]],
     condicionSunat: ['HABIDO', [Validators.required]],
     estadoSunat: ['ACTIVO', [Validators.required]],
     ubigeo: ['', [Validators.maxLength(6)]],
-    estadoId: [1, [Validators.required]],
+    idEstadoClienteContacto: [0, [Validators.required, Validators.min(1)]],
   });
 
   constructor() {
+    this.loadCatalogos();
+
     if (this.data.cliente) {
       this.form.patchValue({
         ruc: this.data.cliente.ruc,
         razonSocial: this.data.cliente.razonSocial,
-        nombreComercial: this.data.cliente.nombreComercial ?? '',
-        tipoCliente: this.data.cliente.tipoCliente ?? 'Empresa',
+        idTipoCliente: this.data.cliente.idTipoCliente ?? 0,
+        idVendedorAsignado: this.data.cliente.idVendedorAsignado ?? 0,
         direccionFiscal: this.data.cliente.direccionFiscal ?? '',
-        zonaDespacho: this.data.cliente.zonaDespacho ?? '',
         departamento: this.data.cliente.departamento ?? '',
         provincia: this.data.cliente.provincia ?? '',
         distrito: this.data.cliente.distrito ?? '',
-        telefonoPrincipal: this.data.cliente.telefonoPrincipal ?? '',
-        correoPrincipal: this.data.cliente.correoPrincipal ?? '',
-        observaciones: this.data.cliente.observaciones ?? '',
         condicionSunat: this.data.cliente.condicionSunat ?? 'HABIDO',
         estadoSunat: this.data.cliente.estadoSunat ?? 'ACTIVO',
         ubigeo: this.data.cliente.ubigeo ?? '',
-        estadoId: this.data.cliente.estado?.id ?? 1,
+        idEstadoClienteContacto: this.data.cliente.estado?.id ?? 0,
       });
     }
 
     this.bindRucAutoLookup();
+  }
+
+  get isCreateMode(): boolean {
+    return this.data.mode === 'create';
+  }
+
+  get estadoClienteNombre(): string {
+    const selectedId = this.form.controls.idEstadoClienteContacto.value;
+    if (!selectedId) {
+      return 'Sin estado';
+    }
+    return this.estadosClienteContacto().find((item) => item.id === selectedId)?.descripcion ?? 'Sin estado';
+  }
+
+  get canSubmit(): boolean {
+    if (this.isLoadingCatalogos()) {
+      return false;
+    }
+    return !this.catalogoError() && !this.vendedoresError() && !this.estadoActivoError();
   }
 
   private bindRucAutoLookup(): void {
@@ -183,32 +211,137 @@ export class ClienteFormDialogComponent implements OnDestroy {
 
   submit(): void {
     this.form.markAllAsTouched();
-    if (this.form.invalid) {
+    if (this.form.invalid || !this.canSubmit) {
       return;
     }
     const value = this.form.getRawValue();
     const payload: ClienteCreateRequest | ClienteUpdateRequest = {
       ruc: value.ruc,
       razonSocial: value.razonSocial,
-      nombreComercial: value.nombreComercial,
-      tipoCliente: value.tipoCliente,
+      idTipoCliente: value.idTipoCliente,
+      idVendedorAsignado: value.idVendedorAsignado,
       direccionFiscal: value.direccionFiscal,
-      zonaDespacho: value.zonaDespacho,
       departamento: value.departamento,
       provincia: value.provincia,
       distrito: value.distrito,
-      telefonoPrincipal: value.telefonoPrincipal,
-      correoPrincipal: value.correoPrincipal,
-      observaciones: value.observaciones,
       condicionSunat: value.condicionSunat,
       estadoSunat: value.estadoSunat,
       ubigeo: value.ubigeo,
-      estadoId: value.estadoId,
+      idEstadoClienteContacto: value.idEstadoClienteContacto,
     };
     this.dialogRef.close(payload);
   }
 
   cancel(): void {
     this.dialogRef.close();
+  }
+
+  private loadCatalogos(): void {
+    this.isLoadingCatalogos.set(true);
+    this.catalogoError.set(null);
+    this.vendedoresError.set(null);
+    this.estadoActivoError.set(null);
+
+    forkJoin({
+      tiposCliente: this.catalogos.tiposCliente().pipe(
+        catchError(() => {
+          this.catalogoError.set('No se pudieron cargar los tipos de cliente.');
+          return of([] as CatalogoItem[]);
+        }),
+      ),
+      estadosClienteContacto: this.catalogos.estadosClienteContacto().pipe(
+        catchError(() => {
+          this.estadoActivoError.set('No se pudo determinar el estado inicial del cliente.');
+          return of([] as CatalogoItem[]);
+        }),
+      ),
+      vendedores: this.domainApi.getUsuarios().pipe(
+        catchError(() => {
+          this.vendedoresError.set('No se pudieron cargar los vendedores disponibles.');
+          return of([] as UsuarioResponse[]);
+        }),
+      ),
+    })
+      .pipe(
+        finalize(() => this.isLoadingCatalogos.set(false)),
+        takeUntil(this.destroy$),
+      )
+      .subscribe({
+        next: ({ tiposCliente, estadosClienteContacto, vendedores }) => {
+          this.tiposCliente.set(tiposCliente);
+          this.estadosClienteContacto.set(estadosClienteContacto);
+          this.vendedores.set(this.filterVendedores(vendedores));
+          this.applyDefaultCatalogValues(tiposCliente, estadosClienteContacto, this.vendedores());
+        },
+      });
+  }
+
+  private applyDefaultCatalogValues(
+    tiposCliente: CatalogoItem[],
+    estadosClienteContacto: CatalogoItem[],
+    vendedores: UsuarioResponse[],
+  ): void {
+    if (!tiposCliente.length) {
+      this.catalogoError.set('No existen tipos de cliente activos configurados.');
+    }
+
+    if (!vendedores.length) {
+      this.vendedoresError.set('No existen vendedores habilitados para asignar al cliente.');
+    }
+
+    if (!this.form.controls.idTipoCliente.value && tiposCliente[0]) {
+      this.form.controls.idTipoCliente.setValue(tiposCliente[0].id);
+    }
+
+    const estadoActivo = this.findEstadoActivo(estadosClienteContacto);
+    if (!estadoActivo) {
+      this.estadoActivoError.set('No se pudo determinar el estado inicial del cliente.');
+    } else if (!this.form.controls.idEstadoClienteContacto.value || this.isCreateMode) {
+      this.form.controls.idEstadoClienteContacto.setValue(estadoActivo.id);
+    }
+
+    if (!this.form.controls.idVendedorAsignado.value && vendedores[0]) {
+      this.form.controls.idVendedorAsignado.setValue(vendedores[0].idUsuario);
+    }
+  }
+
+  private filterVendedores(usuarios: UsuarioResponse[]): UsuarioResponse[] {
+    const cleaned = usuarios.filter((usuario) => !!(usuario.nombres ?? '').trim());
+
+    // Regla principal (según tu BD): perfil=4 (Vendedor) y estado=1 (Habilitado).
+    const porId = cleaned.filter(
+      (usuario) => usuario.perfil?.id === this.vendedorPerfilId && usuario.estado?.id === this.usuarioHabilitadoEstadoId,
+    );
+    if (porId.length) {
+      this.vendedoresError.set(null);
+      return porId;
+    }
+
+    // Respaldo por nombre, por si cambian IDs o catálogos.
+    const porNombre = cleaned.filter((usuario) => {
+      const perfil = (usuario.perfil?.nombre ?? '').trim().toLowerCase();
+      const estado = (usuario.estado?.nombre ?? '').trim().toLowerCase();
+      const isVendedor = perfil.includes('vendedor');
+      const isHabilitado = estado.includes('habilitado') || estado.includes('activo');
+      return isVendedor && isHabilitado;
+    });
+    if (porNombre.length) {
+      this.vendedoresError.set(null);
+      return porNombre;
+    }
+
+    // Último fallback: al menos mostrar usuarios con perfil vendedor aunque estado no venga mapeado como esperamos.
+    const soloPerfil = cleaned.filter((usuario) => usuario.perfil?.id === this.vendedorPerfilId);
+    if (soloPerfil.length) {
+      this.vendedoresError.set('No se pudo filtrar por estado habilitado. Mostrando vendedores por perfil.');
+      return soloPerfil;
+    }
+
+    this.vendedoresError.set('No existen vendedores habilitados para asignar al cliente.');
+    return [];
+  }
+
+  private findEstadoActivo(estadosClienteContacto: CatalogoItem[]): CatalogoItem | undefined {
+    return estadosClienteContacto.find((item) => item.descripcion.trim().toLowerCase() === 'activo');
   }
 }

@@ -17,9 +17,9 @@ import { MaterialModule } from '../../shared/material/material.module';
           <article>
             <div class="heading">
               <h2>{{ item.nombreProducto }}</h2>
-              <app-status-chip [label]="item.stockDisponible <= item.stockMinimoSeguridad ? 'Stock bajo' : 'Disponible'" />
+              <app-status-chip [label]="item.stockDisponible <= item.stockMinimo ? 'Stock bajo' : 'Disponible'" />
             </div>
-            <p>{{ item.descripcionTecnica || 'Producto AUS-32' }}</p>
+            <p>{{ item.unidadMedida || 'Producto BIOFLUID' }}</p>
             <div class="stock">
               <span><strong>{{ item.stockFisico }}</strong>Fisico</span>
               <span><strong>{{ item.stockReservado }}</strong>Reservado</span>

@@ -3,7 +3,7 @@ package com.example.demo.mapper;
 import com.example.demo.dto.ClienteRequest;
 import com.example.demo.dto.ClienteResponse;
 import com.example.demo.model.Cliente;
-import com.example.demo.model.Estado;
+import com.example.demo.model.EstadoClienteContacto;
 import com.example.demo.model.Usuario;
 import org.springframework.stereotype.Component;
 
@@ -15,14 +15,23 @@ public class ClienteMapper {
         this.referenceMapper = referenceMapper;
     }
 
-    public Cliente toEntity(ClienteRequest request, Estado estado, Usuario vendedorAsignado) {
+    public Cliente toEntity(
+            ClienteRequest request,
+            EstadoClienteContacto estadoClienteContacto,
+            Usuario vendedorAsignado
+    ) {
         Cliente cliente = new Cliente();
-        apply(cliente, request, estado, vendedorAsignado);
+        apply(cliente, request, estadoClienteContacto, vendedorAsignado);
         return cliente;
     }
 
-    public void updateEntity(Cliente cliente, ClienteRequest request, Estado estado, Usuario vendedorAsignado) {
-        apply(cliente, request, estado, vendedorAsignado);
+    public void updateEntity(
+            Cliente cliente,
+            ClienteRequest request,
+            EstadoClienteContacto estadoClienteContacto,
+            Usuario vendedorAsignado
+    ) {
+        apply(cliente, request, estadoClienteContacto, vendedorAsignado);
     }
 
     public ClienteResponse toResponse(Cliente cliente) {
@@ -39,13 +48,18 @@ public class ClienteMapper {
                 cliente.distrito,
                 cliente.ubigeo,
                 referenceMapper.toReference(cliente.vendedorAsignado),
-                referenceMapper.toReference(cliente.estado),
+                referenceMapper.toReference(cliente.estadoClienteContacto),
                 cliente.usuarioRegistro,
                 cliente.fechaRegistro
         );
     }
 
-    private void apply(Cliente cliente, ClienteRequest request, Estado estado, Usuario vendedorAsignado) {
+    private void apply(
+            Cliente cliente,
+            ClienteRequest request,
+            EstadoClienteContacto estadoClienteContacto,
+            Usuario vendedorAsignado
+    ) {
         cliente.ruc = request.ruc();
         cliente.razonSocial = request.razonSocial();
         cliente.nombreComercial = request.nombreComercial();
@@ -57,7 +71,7 @@ public class ClienteMapper {
         cliente.distrito = request.distrito();
         cliente.ubigeo = request.ubigeo();
         cliente.vendedorAsignado = vendedorAsignado;
-        cliente.estado = estado;
+        cliente.estadoClienteContacto = estadoClienteContacto;
         cliente.usuarioRegistro = request.usuarioRegistro();
     }
 }

@@ -7,13 +7,14 @@ export interface ProductResponse {
   descripcion?: string;
   presentacion?: string;
   unidadMedida: string;
-  precioBase: number;
+  peso: number;
+  volumen: number;
   stockFisico: number;
   stockReservado: number;
   stockDisponible: number;
-  stockSeguridad: number;
+  stockMinimo: number;
+  cantMinVenta: number;
   estado?: ReferenceResponse;
-  concentracionUreaAus32?: number;
   fechaCreacion?: string;
   fechaActualizacion?: string;
 }
@@ -23,12 +24,13 @@ export interface ProductCreateRequest {
   descripcion?: string;
   presentacion?: string;
   unidadMedida: string;
-  precioBase: number;
+  peso: number;
+  volumen: number;
   stockFisico: number;
   stockReservado: number;
-  stockSeguridad: number;
-  concentracionUreaAus32: number;
-  estadoId: number;
+  stockMinimo: number;
+  cantMinVenta: number;
+  idEstadoProducto: number;
 }
 
 export interface ProductUpdateRequest extends ProductCreateRequest {}
@@ -39,14 +41,12 @@ export interface ProductFilter {
   presentacion: string;
   unidadMedida: string;
   stockBajo: boolean;
-  minPrecio: number | null;
-  maxPrecio: number | null;
   page: number;
   size: number;
-  sort: 'nombre' | 'precioBase' | 'stockDisponible' | 'fechaActualizacion';
+  sort: 'nombre' | 'stockDisponible' | 'fechaActualizacion';
   direction: 'asc' | 'desc';
 }
 
 export interface ProductStatusChangeRequest {
-  estadoId: number;
+  idEstadoProducto: number;
 }

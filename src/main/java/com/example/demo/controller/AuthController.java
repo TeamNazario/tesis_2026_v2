@@ -32,8 +32,14 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public AuthResponse register(@Valid @RequestBody RegisterRequest request) {
-        return authService.register(request);
+    public AuthResponse register(
+            @Valid @RequestBody RegisterRequest request,
+            @AuthenticationPrincipal AuthenticatedUser user
+    ) {
+        String usuarioRegistro = user != null && user.getUsuario() != null
+                ? user.getUsuario().correo
+                : null;
+        return authService.register(request, usuarioRegistro);
     }
 
     @GetMapping("/me")

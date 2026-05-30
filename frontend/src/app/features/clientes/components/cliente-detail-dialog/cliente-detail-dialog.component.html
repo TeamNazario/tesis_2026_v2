@@ -6,7 +6,6 @@
       <h3>Informacion general</h3>
       <p><strong>RUC:</strong> {{ cliente.ruc }}</p>
       <p><strong>Razon social:</strong> {{ cliente.razonSocial }}</p>
-      <p><strong>Nombre comercial:</strong> {{ cliente.nombreComercial || '-' }}</p>
       <p><strong>Tipo:</strong> {{ cliente.tipoCliente || '-' }}</p>
       <p><strong>Estado:</strong> {{ cliente.estado?.nombre || 'Sin estado' }}</p>
     </article>
@@ -22,11 +21,10 @@
 
     <article>
       <h3>Comercial</h3>
-      <p><strong>Telefono principal:</strong> {{ cliente.telefonoPrincipal || '-' }}</p>
-      <p><strong>Correo principal:</strong> {{ cliente.correoPrincipal || '-' }}</p>
+      <p><strong>Vendedor asignado:</strong> {{ cliente.vendedorAsignado || '-' }}</p>
       <p><strong>Condicion SUNAT:</strong> {{ cliente.condicionSunat || '-' }}</p>
       <p><strong>Estado SUNAT:</strong> {{ cliente.estadoSunat || '-' }}</p>
-      <p><strong>Observaciones:</strong> {{ cliente.observaciones || '-' }}</p>
+      <p><strong>Registro:</strong> {{ cliente.usuRegistro || '-' }}</p>
     </article>
   </section>
 
@@ -70,14 +68,13 @@
             <mat-card-content>
               <div class="chips">
                 <mat-chip>{{ getStatusLabel(item) }}</mat-chip>
-                @if (item.principal) {
-                  <mat-chip class="principal">Principal</mat-chip>
+                @if (item.tipoDocumento) {
+                  <mat-chip>{{ item.tipoDocumento }}</mat-chip>
                 }
               </div>
             </mat-card-content>
             <mat-card-actions align="end">
               <button mat-button (click)="openEditContact(item)">Editar</button>
-              <button mat-button (click)="setPrincipal(item)">Marcar principal</button>
               <button mat-button (click)="toggleContactoStatus(item)">{{ (item.estado?.id ?? 1) === 1 ? 'Desactivar' : 'Activar' }}</button>
             </mat-card-actions>
           </mat-card>

@@ -6,11 +6,11 @@ import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.mapper.ContactoClienteMapper;
 import com.example.demo.model.Cliente;
 import com.example.demo.model.ContactoCliente;
-import com.example.demo.model.Estado;
+import com.example.demo.model.EstadoClienteContacto;
 import com.example.demo.model.TipoDocumento;
 import com.example.demo.repository.ClienteRepository;
 import com.example.demo.repository.ContactoClienteRepository;
-import com.example.demo.repository.EstadoRepository;
+import com.example.demo.repository.EstadoClienteContactoRepository;
 import com.example.demo.repository.TipoDocumentoRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -21,21 +21,21 @@ public class ContactoClienteService extends CrudService<ContactoCliente, Integer
     private final ContactoClienteRepository contactoRepository;
     private final ClienteRepository clienteRepository;
     private final TipoDocumentoRepository tipoDocumentoRepository;
-    private final EstadoRepository estadoRepository;
+    private final EstadoClienteContactoRepository estadoClienteContactoRepository;
     private final ContactoClienteMapper mapper;
 
     public ContactoClienteService(
             ContactoClienteRepository repository,
             ClienteRepository clienteRepository,
             TipoDocumentoRepository tipoDocumentoRepository,
-            EstadoRepository estadoRepository,
+            EstadoClienteContactoRepository estadoClienteContactoRepository,
             ContactoClienteMapper mapper
     ) {
         super(repository, "ContactoCliente");
         this.contactoRepository = repository;
         this.clienteRepository = clienteRepository;
         this.tipoDocumentoRepository = tipoDocumentoRepository;
-        this.estadoRepository = estadoRepository;
+        this.estadoClienteContactoRepository = estadoClienteContactoRepository;
         this.mapper = mapper;
     }
 
@@ -70,7 +70,7 @@ public class ContactoClienteService extends CrudService<ContactoCliente, Integer
                 request,
                 findCliente(request.idCliente()),
                 findTipoDocumento(request.idTipoDoc()),
-                findEstado(request.idEstado())
+                findEstadoClienteContacto(request.idEstado())
         );
         return mapper.toResponse(contactoRepository.save(contacto));
     }
@@ -83,7 +83,7 @@ public class ContactoClienteService extends CrudService<ContactoCliente, Integer
                 request,
                 findCliente(request.idCliente()),
                 findTipoDocumento(request.idTipoDoc()),
-                findEstado(request.idEstado())
+                findEstadoClienteContacto(request.idEstado())
         );
         return mapper.toResponse(contactoRepository.save(contacto));
     }
@@ -111,8 +111,8 @@ public class ContactoClienteService extends CrudService<ContactoCliente, Integer
                 .orElseThrow(() -> new ResourceNotFoundException("TipoDocumento", id));
     }
 
-    private Estado findEstado(Integer id) {
-        return estadoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Estado", id));
+    private EstadoClienteContacto findEstadoClienteContacto(Integer id) {
+        return estadoClienteContactoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("EstadoClienteContacto", id));
     }
 }

@@ -4,24 +4,6 @@ export interface ClienteResponse {
   idCliente: number;
   ruc: string;
   razonSocial: string;
-  nombreComercial?: string;
-  condicionSunat?: string;
-  estadoSunat?: string;
-  direccion?: string;
-  departamento?: string;
-  provincia?: string;
-  distrito?: string;
-  ubigeo?: string;
-  vendedorAsignado?: ReferenceResponse;
-  estado?: ReferenceResponse;
-  usuarioRegistro?: string;
-  fechaRegistro?: string;
-}
-
-export interface ClienteRequest {
-  ruc: string;
-  razonSocial: string;
-  nombreComercial?: string;
   condicionSunat?: string;
   estadoSunat?: string;
   direccion?: string;
@@ -30,48 +12,76 @@ export interface ClienteRequest {
   distrito?: string;
   ubigeo?: string;
   idVendedorAsignado?: number;
-  idEstado: number;
-  usuarioRegistro?: string;
-  usuarioActualiza?: string;
+  vendedorAsignado?: string;
+  idTipoCliente?: number;
+  tipoCliente?: string;
+  idEstadoClienteContacto?: number;
+  estadoClienteContacto?: string;
+  usuRegistro?: string;
+  fecRegistro?: string;
+  usuActualiza?: string;
+  fecActualiza?: string;
+}
+
+export interface ClienteRequest {
+  ruc: string;
+  razonSocial: string;
+  condicionSunat?: string;
+  estadoSunat?: string;
+  direccion?: string;
+  departamento?: string;
+  provincia?: string;
+  distrito?: string;
+  ubigeo?: string;
+  idVendedorAsignado: number;
+  idTipoCliente: number;
+  idEstadoClienteContacto: number;
 }
 
 export interface ProductoResponse {
   idProducto: number;
   nombreProducto: string;
-  descripcionTecnica?: string;
   unidadMedida: string;
-  precioBaseUnitario: number;
-  concentracionUreaAus32?: number;
+  peso?: number;
+  volumen?: number;
   stockFisico: number;
   stockReservado: number;
   stockDisponible: number;
-  stockMinimoSeguridad: number;
-  estado?: ReferenceResponse;
+  stockMinimo: number;
+  cantMinVenta: number;
+  idEstadoProducto?: number;
+  estadoProducto?: string;
 }
 
 export interface CotizacionResponse {
   idCotizacion: number;
-  uuidPublico: string;
-  cliente: ReferenceResponse;
-  zona: ReferenceResponse;
-  vendedor?: ReferenceResponse;
+  idCliente: number;
+  cliente: string;
+  idVendedor: number;
+  vendedor: string;
   fechaEmision: string;
   fechaVencimiento: string;
+  moneda: string;
   subtotal: number;
   igv: number;
-  montoTotal: number;
-  origenCotizacion: string;
+  importeTotal: number;
+  direccionDespacho?: string;
+  depProvDis?: string;
+  flagCubierto?: boolean;
+  observaciones?: string;
+  idEstadoCotizacion: number;
   estadoCotizacion: string;
   pdfPath?: string;
   detalles?: CotizacionDetalleResponse[];
 }
 
 export interface CotizacionDetalleResponse {
-  idDetalle?: number;
-  producto?: ReferenceResponse;
-  cantidad?: number;
-  precioUnitario?: number;
-  subtotal?: number;
+  idDetalleCoti: number;
+  idCotizacion: number;
+  idProducto: number;
+  producto: string;
+  cantidad: number;
+  precioUni: number;
 }
 
 export interface LogInventarioResponse {

@@ -3,39 +3,45 @@
   <form [formGroup]="form" class="grid">
     <mat-form-field appearance="outline">
       <mat-label>Nombres</mat-label>
-      <input matInput formControlName="nombres" />
+      <input matInput formControlName="nombre" />
     </mat-form-field>
 
     <mat-form-field appearance="outline">
-      <mat-label>Apellidos</mat-label>
-      <input matInput formControlName="apellidos" />
+      <mat-label>Apellido paterno</mat-label>
+      <input matInput formControlName="apellidoPaterno" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Apellido materno</mat-label>
+      <input matInput formControlName="apellidoMaterno" />
     </mat-form-field>
 
     <mat-form-field appearance="outline">
       <mat-label>Tipo documento</mat-label>
       <mat-select formControlName="tipoDocumentoId">
-        <mat-option [value]="1">DNI</mat-option>
-        <mat-option [value]="2">CE</mat-option>
-        <mat-option [value]="3">Pasaporte</mat-option>
+        @for (item of tiposDocumento(); track item.id) {
+          <mat-option [value]="item.id">{{ item.descripcion }}</mat-option>
+        }
       </mat-select>
     </mat-form-field>
 
     <mat-form-field appearance="outline">
       <mat-label>Nro documento</mat-label>
       <input matInput formControlName="nroDocumento" />
-    </mat-form-field>
-
-    <mat-form-field appearance="outline">
-      <mat-label>Telefono</mat-label>
-      <input matInput formControlName="telefono" />
-      @if (form.controls.telefono.hasError('requiredChannel')) {
-        <mat-error>Ingresa telefono, WhatsApp o correo.</mat-error>
+      @if (form.controls.nroDocumento.hasError('dniLength')) {
+        <mat-error>El DNI debe tener 8 digitos.</mat-error>
+      }
+      @if (form.controls.nroDocumento.hasError('rucLength')) {
+        <mat-error>El RUC debe tener 11 digitos.</mat-error>
       }
     </mat-form-field>
 
     <mat-form-field appearance="outline">
-      <mat-label>WhatsApp</mat-label>
-      <input matInput formControlName="whatsapp" />
+      <mat-label>Celular</mat-label>
+      <input matInput formControlName="celular" />
+      @if (form.controls.celular.hasError('requiredChannel')) {
+        <mat-error>Ingresa celular o correo.</mat-error>
+      }
     </mat-form-field>
 
     <mat-form-field appearance="outline" class="full">
@@ -43,17 +49,12 @@
       <input matInput formControlName="correo" />
     </mat-form-field>
 
-    <div class="toggles full">
-      <mat-checkbox formControlName="principal">Contacto principal</mat-checkbox>
-      <mat-checkbox formControlName="recibeCotizaciones">Recibe cotizaciones</mat-checkbox>
-      <mat-checkbox formControlName="recibeNotificaciones">Recibe notificaciones</mat-checkbox>
-    </div>
-
     <mat-form-field appearance="outline">
       <mat-label>Estado</mat-label>
-      <mat-select formControlName="estadoId">
-        <mat-option [value]="1">Activo</mat-option>
-        <mat-option [value]="2">Inactivo</mat-option>
+      <mat-select formControlName="idEstadoClienteContacto">
+        @for (item of estadosClienteContacto(); track item.id) {
+          <mat-option [value]="item.id">{{ item.descripcion }}</mat-option>
+        }
       </mat-select>
     </mat-form-field>
   </form>

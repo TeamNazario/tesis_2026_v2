@@ -24,31 +24,26 @@
     </mat-form-field>
 
     <mat-form-field appearance="outline">
-      <mat-label>Nombre comercial</mat-label>
-      <input matInput formControlName="nombreComercial" />
-    </mat-form-field>
-
-    <mat-form-field appearance="outline">
       <mat-label>Tipo de cliente</mat-label>
-      <mat-select formControlName="tipoCliente">
-        <mat-option value="Empresa">Empresa</mat-option>
-        <mat-option value="Persona Natural">Persona Natural</mat-option>
-        <mat-option value="Distribuidor">Distribuidor</mat-option>
-        <mat-option value="Grifo">Grifo</mat-option>
-        <mat-option value="Lubricentro">Lubricentro</mat-option>
+      <mat-select formControlName="idTipoCliente">
+        @for (item of tiposCliente(); track item.id) {
+          <mat-option [value]="item.id">{{ item.descripcion }}</mat-option>
+        }
       </mat-select>
+      @if (form.controls.idTipoCliente.hasError('required') || form.controls.idTipoCliente.hasError('min')) {
+        <mat-error>Selecciona un tipo de cliente.</mat-error>
+      }
     </mat-form-field>
 
     <mat-form-field appearance="outline">
-      <mat-label>Telefono principal</mat-label>
-      <input matInput formControlName="telefonoPrincipal" />
-    </mat-form-field>
-
-    <mat-form-field appearance="outline">
-      <mat-label>Correo principal</mat-label>
-      <input matInput formControlName="correoPrincipal" />
-      @if (form.controls.correoPrincipal.hasError('email')) {
-        <mat-error>Correo invalido.</mat-error>
+      <mat-label>Vendedor asignado</mat-label>
+      <mat-select formControlName="idVendedorAsignado">
+        @for (item of vendedores(); track item.idUsuario) {
+          <mat-option [value]="item.idUsuario">{{ item.nombres }} {{ item.apellidoPaterno }}</mat-option>
+        }
+      </mat-select>
+      @if (form.controls.idVendedorAsignado.hasError('required') || form.controls.idVendedorAsignado.hasError('min')) {
+        <mat-error>Selecciona un vendedor asignado.</mat-error>
       }
     </mat-form-field>
 
@@ -99,22 +94,40 @@
       <p class="full feedback feedback-warn">{{ rucAptoMensaje }}</p>
     }
 
-    <mat-form-field appearance="outline">
-      <mat-label>Estado</mat-label>
-      <mat-select formControlName="estadoId">
-        <mat-option [value]="1">Activo</mat-option>
-        <mat-option [value]="2">Inactivo</mat-option>
-        <mat-option [value]="3">Pendiente</mat-option>
-      </mat-select>
-    </mat-form-field>
+    @if (isCreateMode) {
+      <div class="full estado-cliente-wrap">
+        <span class="estado-label">Estado del cliente</span>
+        <mat-chip class="chip-state">{{ estadoClienteNombre }}</mat-chip>
+      </div>
+    } @else {
+      <mat-form-field appearance="outline">
+        <mat-label>Estado</mat-label>
+        <mat-select formControlName="idEstadoClienteContacto">
+          @for (item of estadosClienteContacto(); track item.id) {
+            <mat-option [value]="item.id">{{ item.descripcion }}</mat-option>
+          }
+        </mat-select>
+        @if (form.controls.idEstadoClienteContacto.hasError('required') || form.controls.idEstadoClienteContacto.hasError('min')) {
+          <mat-error>Selecciona el estado del cliente.</mat-error>
+        }
+      </mat-form-field>
+    }
 
-    <mat-form-field appearance="outline" class="full">
-      <mat-label>Observaciones</mat-label>
-      <textarea matInput rows="3" formControlName="observaciones"></textarea>
-    </mat-form-field>
+    @if (isLoadingCatalogos()) {
+      <p class="full feedback feedback-info">Cargando catalogos del formulario...</p>
+    }
+    @if (catalogoError()) {
+      <p class="full feedback feedback-error">{{ catalogoError() }}</p>
+    }
+    @if (vendedoresError()) {
+      <p class="full feedback feedback-error">{{ vendedoresError() }}</p>
+    }
+    @if (estadoActivoError()) {
+      <p class="full feedback feedback-error">{{ estadoActivoError() }}</p>
+    }
   </form>
 </mat-dialog-content>
 <mat-dialog-actions align="end">
   <button mat-button type="button" (click)="cancel()">Cancelar</button>
-  <button mat-flat-button type="button" (click)="submit()">{{ data.mode === 'create' ? 'Registrar' : 'Guardar' }}</button>
+  <button mat-flat-button type="button" (click)="submit()" [disabled]="!canSubmit">{{ data.mode === 'create' ? 'Registrar' : 'Guardar' }}</button>
 </mat-dialog-actions>

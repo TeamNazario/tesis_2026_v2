@@ -36,6 +36,9 @@ public class CotizacionDetalle {
     @Column(name = "precio_unitario_aplicado", nullable = false, precision = 38, scale = 2)
     public BigDecimal precioUnitarioAplicado;
 
+    @Column(name = "precio_uni", precision = 18, scale = 2)
+    public BigDecimal precioUni;
+
     @Column(name = "subtotal_linea", nullable = false, precision = 38, scale = 2)
     public BigDecimal subtotalLinea;
 }

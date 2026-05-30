@@ -17,3 +17,9 @@ export interface RucConsultaResponse {
   mensajeValidacion?: string;
 }
 
+export interface DniConsultaResponse {
+  dni: string;
+  nombres: string;
+  apellidoPaterno: string;
+  apellidoMaterno?: string;
+}

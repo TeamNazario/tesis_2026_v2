@@ -5,10 +5,10 @@ import com.example.demo.dto.ClienteResponse;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.mapper.ClienteMapper;
 import com.example.demo.model.Cliente;
-import com.example.demo.model.Estado;
+import com.example.demo.model.EstadoClienteContacto;
 import com.example.demo.model.Usuario;
 import com.example.demo.repository.ClienteRepository;
-import com.example.demo.repository.EstadoRepository;
+import com.example.demo.repository.EstadoClienteContactoRepository;
 import com.example.demo.repository.UsuarioRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -17,19 +17,19 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class ClienteService extends CrudService<Cliente, Integer> {
     private final ClienteRepository clienteRepository;
-    private final EstadoRepository estadoRepository;
+    private final EstadoClienteContactoRepository estadoClienteContactoRepository;
     private final UsuarioRepository usuarioRepository;
     private final ClienteMapper clienteMapper;
 
     public ClienteService(
             ClienteRepository repository,
-            EstadoRepository estadoRepository,
+            EstadoClienteContactoRepository estadoClienteContactoRepository,
             UsuarioRepository usuarioRepository,
             ClienteMapper clienteMapper
     ) {
         super(repository, "Cliente");
         this.clienteRepository = repository;
-        this.estadoRepository = estadoRepository;
+        this.estadoClienteContactoRepository = estadoClienteContactoRepository;
         this.usuarioRepository = usuarioRepository;
         this.clienteMapper = clienteMapper;
     }
@@ -64,18 +64,18 @@ public class ClienteService extends CrudService<Cliente, Integer> {
 
     @Transactional
     public ClienteResponse create(ClienteRequest request) {
-        Estado estado = findEstado(request.idEstado());
+        EstadoClienteContacto estadoClienteContacto = findEstadoClienteContacto(request.idEstado());
         Usuario vendedor = findOptionalUsuario(request.idVendedorAsignado());
-        Cliente cliente = clienteMapper.toEntity(request, estado, vendedor);
+        Cliente cliente = clienteMapper.toEntity(request, estadoClienteContacto, vendedor);
         return clienteMapper.toResponse(clienteRepository.save(cliente));
     }
 
     @Transactional
     public ClienteResponse update(Integer id, ClienteRequest request) {
         Cliente cliente = findCliente(id);
-        Estado estado = findEstado(request.idEstado());
+        EstadoClienteContacto estadoClienteContacto = findEstadoClienteContacto(request.idEstado());
         Usuario vendedor = findOptionalUsuario(request.idVendedorAsignado());
-        clienteMapper.updateEntity(cliente, request, estado, vendedor);
+        clienteMapper.updateEntity(cliente, request, estadoClienteContacto, vendedor);
         return clienteMapper.toResponse(clienteRepository.save(cliente));
     }
 
@@ -92,9 +92,9 @@ public class ClienteService extends CrudService<Cliente, Integer> {
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente", id));
     }
 
-    private Estado findEstado(Integer id) {
-        return estadoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Estado", id));
+    private EstadoClienteContacto findEstadoClienteContacto(Integer id) {
+        return estadoClienteContactoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("EstadoClienteContacto", id));
     }
 
     private Usuario findOptionalUsuario(Integer id) {

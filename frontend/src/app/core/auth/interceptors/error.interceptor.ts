@@ -18,8 +18,10 @@ export const errorInterceptor: HttpInterceptorFn = (request, next) => {
         notifications.error(error.error?.message ?? 'Sesion expirada o credenciales invalidas.');
       } else if (error.status === 403) {
         notifications.error('No tienes permisos para acceder a este recurso.');
+      } else if ([400, 404, 409, 422].includes(error.status)) {
+        notifications.error(error.error?.message ?? 'No se pudo completar la solicitud. Revisa la informacion ingresada.');
       } else if (error.status >= 500) {
-        notifications.error('El servidor no pudo procesar la solicitud.');
+        notifications.error(error.error?.message ?? 'El servidor no pudo procesar la solicitud.');
       }
       return throwError(() => error);
     }),

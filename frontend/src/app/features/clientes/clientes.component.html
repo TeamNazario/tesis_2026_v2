@@ -12,7 +12,7 @@
 <section class="filters-card" [formGroup]="filtersForm">
   <div class="search-row">
     <mat-form-field appearance="outline" class="search-field">
-      <mat-label>Buscar por RUC, razon social, nombre comercial, telefono o correo</mat-label>
+      <mat-label>Buscar por RUC, razon social</mat-label>
       <input matInput formControlName="search" />
       <mat-icon matSuffix>search</mat-icon>
     </mat-form-field>
@@ -61,14 +61,6 @@
       </mat-select>
     </mat-form-field>
 
-    <mat-form-field appearance="outline">
-      <mat-label>Cotizaciones</mat-label>
-      <mat-select formControlName="conCotizaciones">
-        <mat-option value="ALL">Todos</mat-option>
-        <mat-option value="YES">Con cotizaciones</mat-option>
-        <mat-option value="NO">Sin cotizaciones</mat-option>
-      </mat-select>
-    </mat-form-field>
   </div>
 </section>
 
@@ -103,7 +95,7 @@
           <th mat-header-cell *matHeaderCellDef>Razon social</th>
           <td mat-cell *matCellDef="let item">
             <strong>{{ item.razonSocial }}</strong>
-            <div class="sub">{{ item.nombreComercial || 'Sin nombre comercial' }}</div>
+            <div class="sub">{{ item.vendedorAsignado || 'Sin vendedor asignado' }}</div>
           </td>
         </ng-container>
 

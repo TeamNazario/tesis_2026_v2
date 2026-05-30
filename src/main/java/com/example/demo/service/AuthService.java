@@ -5,11 +5,11 @@ import com.example.demo.dto.LoginRequest;
 import com.example.demo.dto.RegisterRequest;
 import com.example.demo.exception.BusinessValidationException;
 import com.example.demo.mapper.UsuarioMapper;
-import com.example.demo.model.Estado;
+import com.example.demo.model.EstadoUsuario;
 import com.example.demo.model.Perfil;
 import com.example.demo.model.TipoDocumento;
 import com.example.demo.model.Usuario;
-import com.example.demo.repository.EstadoRepository;
+import com.example.demo.repository.EstadoUsuarioRepository;
 import com.example.demo.repository.PerfilRepository;
 import com.example.demo.repository.TipoDocumentoRepository;
 import com.example.demo.repository.UsuarioRepository;
@@ -30,13 +30,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
     private static final int MAX_FAILED_ATTEMPTS = 3;
     private static final int ENABLED_STATUS_ID = 1;
-    private static final int BLOCKED_STATUS_ID = 2;
-    private static final int DISABLED_STATUS_ID = 3;
+    private static final int DISABLED_STATUS_ID = 2;
+    private static final int BLOCKED_STATUS_ID = 3;
 
     private final UsuarioRepository usuarioRepository;
     private final PerfilRepository perfilRepository;
     private final TipoDocumentoRepository tipoDocumentoRepository;
-    private final EstadoRepository estadoRepository;
+    private final EstadoUsuarioRepository estadoUsuarioRepository;
     private final PasswordEncoder passwordEncoder;
     private final TokenService tokenService;
     private final UsuarioMapper usuarioMapper;
@@ -45,7 +45,7 @@ public class AuthService {
             UsuarioRepository usuarioRepository,
             PerfilRepository perfilRepository,
             TipoDocumentoRepository tipoDocumentoRepository,
-            EstadoRepository estadoRepository,
+            EstadoUsuarioRepository estadoUsuarioRepository,
             PasswordEncoder passwordEncoder,
             TokenService tokenService,
             UsuarioMapper usuarioMapper
@@ -53,18 +53,21 @@ public class AuthService {
         this.usuarioRepository = usuarioRepository;
         this.perfilRepository = perfilRepository;
         this.tipoDocumentoRepository = tipoDocumentoRepository;
-        this.estadoRepository = estadoRepository;
+        this.estadoUsuarioRepository = estadoUsuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.tokenService = tokenService;
         this.usuarioMapper = usuarioMapper;
     }
 
     @Transactional
-    public AuthResponse register(RegisterRequest request) {
+    public AuthResponse register(RegisterRequest request, String usuarioRegistro) {
         if (usuarioRepository.findByCorreo(request.correo()).isPresent()) {
             Map<String, List<String>> fields = new LinkedHashMap<>();
             fields.put("correo", List.of("El correo ya se encuentra registrado."));
             throw new BusinessValidationException("No se pudo registrar el usuario.", fields);
+        }
+        if (usuarioRegistro == null || usuarioRegistro.isBlank()) {
+            throw new IllegalStateException("No se pudo identificar al usuario logeado para el registro.");
         }
 
         Perfil perfil = perfilRepository.findById(request.idPerfil())
@@ -72,13 +75,12 @@ public class AuthService {
         TipoDocumento tipoDocumento = tipoDocumentoRepository.findById(request.idTipoDoc())
                 .orElseThrow(() ->
                         new IllegalArgumentException("TipoDocumento no encontrado con id: " + request.idTipoDoc()));
-        Estado estado = estadoRepository.findById(request.idEstado())
-                .orElseThrow(() -> new IllegalArgumentException("Estado no encontrado con id: " + request.idEstado()));
+        EstadoUsuario estadoUsuario = findEstadoUsuario(request.idEstado());
 
         Usuario usuario = new Usuario();
         usuario.perfil = perfil;
         usuario.tipoDocumento = tipoDocumento;
-        usuario.estado = estado;
+        usuario.estadoUsuario = estadoUsuario;
         usuario.nroDocumento = request.nroDocumento();
         usuario.nombres = request.nombres();
         usuario.apellidoPaterno = request.apellidoPaterno();
@@ -87,10 +89,10 @@ public class AuthService {
         usuario.celular = request.celular();
         usuario.passwordHash = passwordEncoder.encode(request.password());
         usuario.intentosFallidos = 0;
-        usuario.usuarioRegistro = request.correo();
+        usuario.usuarioRegistro = usuarioRegistro;
         usuario.fechaRegistro = LocalDateTime.now();
-        usuario.usuarioActualiza = request.correo();
-        usuario.fechaActualiza = LocalDateTime.now();
+        usuario.usuarioActualiza = null;
+        usuario.fechaActualiza = null;
 
         Usuario saved = usuarioRepository.save(usuario);
         AuthenticatedUser userDetails = new AuthenticatedUser(
@@ -133,15 +135,16 @@ public class AuthService {
         }
 
         usuario.intentosFallidos = 0;
-        if (usuario.estado == null || usuario.estado.idEstado == null) {
-            usuario.estado = findEstado(ENABLED_STATUS_ID);
+        if (usuario.estadoUsuario == null || usuario.estadoUsuario.idEstadoUsuario == null) {
+            usuario.estadoUsuario = findEstadoUsuario(ENABLED_STATUS_ID);
         }
+        usuario.usuarioActualiza = request.correo();
         usuario.fechaActualiza = LocalDateTime.now();
-        usuarioRepository.save(usuario);
+        Usuario savedUsuario = usuarioRepository.save(usuario);
 
         AuthenticatedUser userDetails = new AuthenticatedUser(
-                usuario,
-                List.of(new SimpleGrantedAuthority("ROLE_" + resolveRole(usuario)))
+                savedUsuario,
+                List.of(new SimpleGrantedAuthority("ROLE_" + resolveRole(savedUsuario)))
         );
         String token = tokenService.generateToken(userDetails);
 
@@ -149,7 +152,7 @@ public class AuthService {
                 "Bearer",
                 token,
                 tokenService.getExpirationSeconds(),
-                usuarioMapper.toResponse(usuario)
+                usuarioMapper.toResponse(savedUsuario)
         );
     }
 
@@ -157,7 +160,7 @@ public class AuthService {
         int attempts = usuario.intentosFallidos == null ? 1 : usuario.intentosFallidos + 1;
         usuario.intentosFallidos = attempts;
         if (attempts >= MAX_FAILED_ATTEMPTS) {
-            usuario.estado = findEstado(BLOCKED_STATUS_ID);
+            usuario.estadoUsuario = findEstadoUsuario(BLOCKED_STATUS_ID);
         }
         usuario.usuarioActualiza = "auth-login";
         usuario.fechaActualiza = LocalDateTime.now();
@@ -165,15 +168,16 @@ public class AuthService {
     }
 
     private int resolveStatusId(Usuario usuario) {
-        if (usuario.estado == null || usuario.estado.idEstado == null) {
-            throw new IllegalStateException("El usuario no tiene un estado configurado.");
+        if (usuario.estadoUsuario != null && usuario.estadoUsuario.idEstadoUsuario != null) {
+            return usuario.estadoUsuario.idEstadoUsuario;
         }
-        return usuario.estado.idEstado;
+        throw new IllegalStateException("El usuario no tiene un estado configurado.");
     }
 
-    private Estado findEstado(int idEstado) {
-        return estadoRepository.findById(idEstado)
-                .orElseThrow(() -> new IllegalStateException("Estado no configurado con id: " + idEstado));
+    private EstadoUsuario findEstadoUsuario(int idEstadoUsuario) {
+        return estadoUsuarioRepository.findById(idEstadoUsuario)
+                .orElseThrow(() ->
+                        new IllegalStateException("EstadoUsuario no configurado con id: " + idEstadoUsuario));
     }
 
     private String resolveRole(Usuario usuario) {

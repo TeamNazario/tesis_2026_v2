@@ -16,4 +16,11 @@ export const API_ENDPOINTS = {
   tiposDocumento: '/tipos-documento',
   zonasDespacho: '/zonas-despacho',
   documentos: '/v1/documentos',
+  v1: {
+    catalogos: '/v1/catalogos',
+    clientes: '/v1/clientes',
+    productos: '/v1/productos',
+    cotizaciones: '/v1/cotizaciones',
+    preciosTipoCliente: '/v1/precios-tipo-cliente',
+  },
 } as const;

@@ -8,4 +8,5 @@ public interface ProductoRepository extends JpaRepository<Producto, Integer> {
     List<Producto> findByEstadoIdEstado(Integer idEstado);
 
     List<Producto> findByEstadoDescEstadoIgnoreCase(String descEstado);
+    List<Producto> findByNombreProductoContainingIgnoreCase(String nombreProducto);
 }

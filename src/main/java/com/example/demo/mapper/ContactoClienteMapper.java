@@ -4,7 +4,7 @@ import com.example.demo.dto.ContactoClienteRequest;
 import com.example.demo.dto.ContactoClienteResponse;
 import com.example.demo.model.Cliente;
 import com.example.demo.model.ContactoCliente;
-import com.example.demo.model.Estado;
+import com.example.demo.model.EstadoClienteContacto;
 import com.example.demo.model.TipoDocumento;
 import org.springframework.stereotype.Component;
 
@@ -20,10 +20,10 @@ public class ContactoClienteMapper {
             ContactoClienteRequest request,
             Cliente cliente,
             TipoDocumento tipoDocumento,
-            Estado estado
+            EstadoClienteContacto estadoClienteContacto
     ) {
         ContactoCliente contacto = new ContactoCliente();
-        updateEntity(contacto, request, cliente, tipoDocumento, estado);
+        updateEntity(contacto, request, cliente, tipoDocumento, estadoClienteContacto);
         return contacto;
     }
 
@@ -32,7 +32,7 @@ public class ContactoClienteMapper {
             ContactoClienteRequest request,
             Cliente cliente,
             TipoDocumento tipoDocumento,
-            Estado estado
+            EstadoClienteContacto estadoClienteContacto
     ) {
         contacto.cliente = cliente;
         contacto.tipoDocumento = tipoDocumento;
@@ -42,7 +42,7 @@ public class ContactoClienteMapper {
         contacto.apellidoMaterno = request.apellidoMaterno();
         contacto.correo = request.correo();
         contacto.celular = request.celular();
-        contacto.estado = estado;
+        contacto.estadoClienteContacto = estadoClienteContacto;
     }
 
     public ContactoClienteResponse toResponse(ContactoCliente contacto) {
@@ -56,7 +56,7 @@ public class ContactoClienteMapper {
                 contacto.apellidoMaterno,
                 contacto.correo,
                 contacto.celular,
-                referenceMapper.toReference(contacto.estado)
+                referenceMapper.toReference(contacto.estadoClienteContacto)
         );
     }
 }

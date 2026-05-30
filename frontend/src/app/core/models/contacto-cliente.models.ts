@@ -18,24 +18,22 @@ export interface ContactoClienteResponseVm {
   fechaCreacion?: string;
   fechaActualizacion?: string;
   tipoDocumentoId?: number;
+  tipoDocumento?: string;
   nroDocumento?: string;
+  idEstadoClienteContacto?: number;
+  estadoClienteContacto?: string;
 }
 
 export interface ContactoClienteCreateRequest {
   clienteId: number;
   tipoDocumentoId: number;
   nroDocumento: string;
-  nombres: string;
-  apellidos: string;
+  nombre: string;
+  apellidoPaterno: string;
   apellidoMaterno?: string;
-  telefono?: string;
-  whatsapp?: string;
+  celular?: string;
   correo?: string;
-  principal: boolean;
-  recibeCotizaciones: boolean;
-  recibeNotificaciones: boolean;
-  observaciones?: string;
-  estadoId: number;
+  idEstadoClienteContacto: number;
 }
 
 export interface ContactoClienteUpdateRequest extends ContactoClienteCreateRequest {}

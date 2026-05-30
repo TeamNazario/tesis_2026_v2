@@ -30,6 +30,6 @@ export class UsuariosComponent {
   });
 
   constructor() {
-    this.api.getUsuarios().subscribe({ next: (users) => this.usuarios.set(users as UsuarioResponse[]) });
+    this.api.getUsuarios().subscribe({ next: (users) => this.usuarios.set(users) });
   }
 }

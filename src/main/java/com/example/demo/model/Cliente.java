@@ -8,9 +8,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import java.time.LocalDateTime;
 
 @Entity
@@ -27,7 +27,7 @@ public class Cliente {
     @Column(name = "razon_social", nullable = false, length = 200)
     public String razonSocial;
 
-    @Column(name = "nombre_comercial", length = 200)
+    @Transient
     public String nombreComercial;
 
     @Column(name = "condicion_sunat", nullable = false, length = 50)
@@ -36,8 +36,7 @@ public class Cliente {
     @Column(name = "estado_sunat", nullable = false, length = 50)
     public String estadoSunat;
 
-    @Lob
-    @Column(name = "direccion")
+    @Column(name = "direccion", length = 255)
     public String direccion;
 
     @Column(name = "departamento", length = 50)
@@ -53,18 +52,35 @@ public class Cliente {
     public String ubigeo;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_vendedor_asignado")
+    @JoinColumn(name = "id_vendedor_asignado", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     public Usuario vendedorAsignado;
+    @Column(name = "id_vendedor_asignado", insertable = false, updatable = false)
+    public Integer idVendedorAsignado;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_estado", nullable = false)
+    @JoinColumn(name = "id_tipo_cliente", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    public Estado estado;
+    public TipoCliente tipoCliente;
+    @Column(name = "id_tipo_cliente", insertable = false, updatable = false)
+    public Integer idTipoCliente;
 
-    @Column(name = "usuario_registro", length = 50)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_estado_cliente_contacto", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    public EstadoClienteContacto estadoClienteContacto;
+    @Column(name = "id_estado_cliente_contacto", insertable = false, updatable = false)
+    public Integer idEstadoClienteContacto;
+
+    @Column(name = "usu_registro", length = 50)
     public String usuarioRegistro;
 
-    @Column(name = "fecha_registro")
+    @Column(name = "fec_registro")
     public LocalDateTime fechaRegistro;
+
+    @Column(name = "usu_actualiza", length = 50)
+    public String usuActualiza;
+
+    @Column(name = "fec_actualiza")
+    public LocalDateTime fecActualiza;
 }

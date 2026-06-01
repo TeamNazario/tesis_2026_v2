@@ -1,12 +1,9 @@
 package com.example.demo.mapper;
 
-import com.example.demo.dto.EstadoRequest;
-import com.example.demo.dto.EstadoResponse;
 import com.example.demo.dto.PerfilRequest;
 import com.example.demo.dto.PerfilResponse;
 import com.example.demo.dto.TipoDocumentoRequest;
 import com.example.demo.dto.TipoDocumentoResponse;
-import com.example.demo.model.Estado;
 import com.example.demo.model.EstadoPerfil;
 import com.example.demo.model.Perfil;
 import com.example.demo.model.TipoDocumento;
@@ -18,20 +15,6 @@ public class CatalogoMapper {
 
     public CatalogoMapper(ReferenceMapper referenceMapper) {
         this.referenceMapper = referenceMapper;
-    }
-
-    public Estado toEntity(EstadoRequest request) {
-        Estado estado = new Estado();
-        estado.descEstado = request.descEstado();
-        return estado;
-    }
-
-    public void updateEntity(Estado estado, EstadoRequest request) {
-        estado.descEstado = request.descEstado();
-    }
-
-    public EstadoResponse toResponse(Estado estado) {
-        return new EstadoResponse(estado.idEstado, estado.descEstado);
     }
 
     public TipoDocumento toEntity(TipoDocumentoRequest request) {

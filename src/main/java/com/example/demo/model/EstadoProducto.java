@@ -3,13 +3,13 @@ package com.example.demo.model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "estado_producto")
+@Table(name = "ESTADO_PRODUCTO")
 public class EstadoProducto {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_estado_producto")
+    @Column(name = "ID_ESTADO_PRODUCTO")
     public Integer idEstadoProducto;
 
-    @Column(name = "desc_estado_producto", nullable = false, length = 50)
+    @Column(name = "DESC_ESTADO_PRODUCTO", nullable = false, length = 50)
     public String descEstadoProducto;
 }

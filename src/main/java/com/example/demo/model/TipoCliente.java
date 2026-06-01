@@ -4,29 +4,31 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "tipo_cliente")
+@Table(name = "TIPO_CLIENTE")
 public class TipoCliente {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_tipo_cliente")
+    @Column(name = "ID_TIPO_CLIENTE")
     public Integer idTipoCliente;
 
-    @Column(name = "desc_tipo_cliente", nullable = false, length = 120)
+    @Column(name = "DESC_TIPO_CLIENTE", nullable = false, length = 200)
     public String descTipoCliente;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_estado_cliente_contacto", nullable = false)
+    @JoinColumn(name = "ID_ESTADO_CLIENTE_CONTACTO", nullable = false)
     public EstadoClienteContacto estadoClienteContacto;
+    @Column(name = "ID_ESTADO_CLIENTE_CONTACTO", insertable = false, updatable = false)
+    public Integer idEstadoClienteContacto;
 
-    @Column(name = "usu_registro", length = 50)
+    @Column(name = "USU_REGISTRO", length = 50)
     public String usuRegistro;
 
-    @Column(name = "fec_registro")
+    @Column(name = "FEC_REGISTRO")
     public LocalDateTime fecRegistro;
 
-    @Column(name = "usu_actualiza", length = 50)
+    @Column(name = "USU_ACTUALIZA", length = 50)
     public String usuActualiza;
 
-    @Column(name = "fec_actualiza")
+    @Column(name = "FEC_ACTUALIZA")
     public LocalDateTime fecActualiza;
 }

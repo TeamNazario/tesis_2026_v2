@@ -32,19 +32,23 @@ public class ContactoClienteV1Service {
     public ContactoClienteV1Response create(Integer clienteId, ContactoClienteCreateRequest request, String actor) {
         ContactoCliente c = new ContactoCliente();
         c.cliente = clienteRepository.findById(clienteId).orElseThrow(() -> new ResourceNotFoundException("Cliente", clienteId));
-        c.tipoDocumento = tipoDocumentoRepository.findById(request.idTipoDoc()).orElseThrow(() -> new ResourceNotFoundException("TipoDocumento", request.idTipoDoc()));
+        TipoDocumento tipoDocumento = tipoDocumentoRepository.findById(request.idTipoDoc()).orElseThrow(() -> new ResourceNotFoundException("TipoDocumento", request.idTipoDoc()));
+        c.tipoDocumento = tipoDocumento;
         c.nroDocumento = request.nroDocumento();
         c.nombre = request.nombre();
         c.apellidoPaterno = request.apellidoPaterno();
         c.apellidoMaterno = request.apellidoMaterno();
         c.correo = request.correo();
         c.celular = request.celular();
-        c.estadoClienteContacto = estadoClienteContactoRepository.findById(request.idEstadoClienteContacto()).orElseThrow(() -> new ResourceNotFoundException("EstadoClienteContacto", request.idEstadoClienteContacto()));
+        EstadoClienteContacto estadoClienteContacto = estadoClienteContactoRepository.findById(request.idEstadoClienteContacto()).orElseThrow(() -> new ResourceNotFoundException("EstadoClienteContacto", request.idEstadoClienteContacto()));
+        c.estadoClienteContacto = estadoClienteContacto;
         c.usuRegistro = actor;
         c.fecRegistro = LocalDateTime.now();
         c.usuActualiza = null;
         c.fecActualiza = null;
-        return saveAndMap(c);
+        ContactoCliente saved = contactoRepository.save(c);
+        return mapWithFallback(saved, request.idTipoDoc(), tipoDocumento.descTipoDoc, request.idEstadoClienteContacto(), estadoClienteContacto.desEstadoClienteContacto);
+    
     }
 
     @Transactional
@@ -56,17 +60,32 @@ public class ContactoClienteV1Service {
     ) {
         ContactoCliente c = contactoRepository.findById(contactoId).orElseThrow(() -> new ResourceNotFoundException("ContactoCliente", contactoId));
         if (!c.cliente.idCliente.equals(clienteId)) throw new ResourceNotFoundException("ContactoCliente", contactoId);
-        if (request.idTipoDoc() != null) c.tipoDocumento = tipoDocumentoRepository.findById(request.idTipoDoc()).orElseThrow(() -> new ResourceNotFoundException("TipoDocumento", request.idTipoDoc()));
+        Integer resolvedTipoDocId = c.tipoDocumento != null ? c.tipoDocumento.idTipoDoc : c.idTipoDoc;
+        String resolvedTipoDoc = c.tipoDocumento != null ? c.tipoDocumento.descTipoDoc : resolveTipoDocumento(resolvedTipoDocId);
+        if (request.idTipoDoc() != null) {
+            TipoDocumento tipoDocumento = tipoDocumentoRepository.findById(request.idTipoDoc()).orElseThrow(() -> new ResourceNotFoundException("TipoDocumento", request.idTipoDoc()));
+            c.tipoDocumento = tipoDocumento;
+            resolvedTipoDocId = tipoDocumento.idTipoDoc;
+            resolvedTipoDoc = tipoDocumento.descTipoDoc;
+        }
         if (request.nroDocumento() != null) c.nroDocumento = request.nroDocumento();
         if (request.nombre() != null) c.nombre = request.nombre();
         if (request.apellidoPaterno() != null) c.apellidoPaterno = request.apellidoPaterno();
         if (request.apellidoMaterno() != null) c.apellidoMaterno = request.apellidoMaterno();
         if (request.correo() != null) c.correo = request.correo();
         if (request.celular() != null) c.celular = request.celular();
-        if (request.idEstadoClienteContacto() != null) c.estadoClienteContacto = estadoClienteContactoRepository.findById(request.idEstadoClienteContacto()).orElseThrow(() -> new ResourceNotFoundException("EstadoClienteContacto", request.idEstadoClienteContacto()));
+        Integer resolvedEstadoId = c.estadoClienteContacto != null ? c.estadoClienteContacto.idEstadoClienteContacto : c.idEstadoClienteContacto;
+        String resolvedEstado = c.estadoClienteContacto != null ? c.estadoClienteContacto.desEstadoClienteContacto : resolveEstadoClienteContacto(resolvedEstadoId);
+        if (request.idEstadoClienteContacto() != null) {
+            EstadoClienteContacto estadoClienteContacto = estadoClienteContactoRepository.findById(request.idEstadoClienteContacto()).orElseThrow(() -> new ResourceNotFoundException("EstadoClienteContacto", request.idEstadoClienteContacto()));
+            c.estadoClienteContacto = estadoClienteContacto;
+            resolvedEstadoId = estadoClienteContacto.idEstadoClienteContacto;
+            resolvedEstado = estadoClienteContacto.desEstadoClienteContacto;
+        }
         c.usuActualiza = actor;
         c.fecActualiza = LocalDateTime.now();
-        return saveAndMap(c);
+        ContactoCliente saved = contactoRepository.save(c);
+        return mapWithFallback(saved, resolvedTipoDocId, resolvedTipoDoc, resolvedEstadoId, resolvedEstado);
     }
 
     @Transactional
@@ -83,6 +102,34 @@ public class ContactoClienteV1Service {
         ContactoCliente saved = contactoRepository.save(contacto);
         ContactoCliente hydrated = contactoRepository.findById(saved.idContacto).orElse(saved);
         return map(hydrated);
+    }
+
+    private ContactoClienteV1Response mapWithFallback(
+            ContactoCliente contacto,
+            Integer fallbackTipoDocId,
+            String fallbackTipoDoc,
+            Integer fallbackEstadoId,
+            String fallbackEstado
+    ) {
+        ContactoClienteV1Response mapped = saveAndMap(contacto);
+        Integer idTipoDoc = mapped.idTipoDoc() != null ? mapped.idTipoDoc() : fallbackTipoDocId;
+        String tipoDocumento = mapped.tipoDocumento() != null ? mapped.tipoDocumento() : fallbackTipoDoc;
+        Integer idEstadoClienteContacto = mapped.idEstadoClienteContacto() != null ? mapped.idEstadoClienteContacto() : fallbackEstadoId;
+        String estadoClienteContacto = mapped.estadoClienteContacto() != null ? mapped.estadoClienteContacto() : fallbackEstado;
+        return new ContactoClienteV1Response(
+                mapped.idContacto(),
+                mapped.idCliente(),
+                idTipoDoc,
+                tipoDocumento,
+                mapped.nroDocumento(),
+                mapped.nombre(),
+                mapped.apellidoPaterno(),
+                mapped.apellidoMaterno(),
+                mapped.correo(),
+                mapped.celular(),
+                idEstadoClienteContacto,
+                estadoClienteContacto
+        );
     }
 
     private ContactoClienteV1Response map(ContactoCliente c) {

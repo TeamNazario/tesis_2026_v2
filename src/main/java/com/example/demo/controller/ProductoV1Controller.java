@@ -1,13 +1,13 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.ProductoCreateRequest;
+import com.example.demo.dto.ProductoEstadoUpdateRequest;
 import com.example.demo.dto.ProductoUpdateRequest;
 import com.example.demo.dto.ProductoV1Response;
 import com.example.demo.security.AuthenticatedUser;
 import com.example.demo.service.ProductoV1Service;
 import jakarta.validation.Valid;
 import java.util.List;
-import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -48,10 +48,10 @@ public class ProductoV1Controller {
     @PatchMapping("/{id}/estado")
     public ProductoV1Response patchEstado(
             @PathVariable Integer id,
-            @RequestBody Map<String, Integer> body,
+            @Valid @RequestBody ProductoEstadoUpdateRequest request,
             @AuthenticationPrincipal AuthenticatedUser user
     ) {
-        return service.patchEstado(id, body.get("idEstadoProducto"), resolveActor(user));
+        return service.patchEstado(id, request.idEstadoProducto(), resolveActor(user));
     }
 
     private String resolveActor(AuthenticatedUser user) {

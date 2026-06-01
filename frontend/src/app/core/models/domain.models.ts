@@ -1,5 +1,3 @@
-import { ReferenceResponse } from '../http/reference-response.model';
-
 export interface ClienteResponse {
   idCliente: number;
   ruc: string;
@@ -82,30 +80,6 @@ export interface CotizacionDetalleResponse {
   producto: string;
   cantidad: number;
   precioUni: number;
-}
-
-export interface LogInventarioResponse {
-  idLogInventario: number;
-  producto: ReferenceResponse;
-  idUsuario?: number;
-  tipoMovimiento: string;
-  cantidad: number;
-  stockFisicoMomento: number;
-  stockReservadoMomento: number;
-  fechaEvento: string;
-}
-
-export interface LogEficienciaChatbotResponse {
-  idLogEficiencia: number;
-  sessionIdWhatsapp: string;
-  rucConsultado?: string;
-  intencionDetectada?: string;
-  timestampPrimerMensaje: string;
-  timestampFinProcesamiento?: string;
-  tiempoAtencionSegundos?: number;
-  apiSunatRespondio?: boolean;
-  pdfGeneradoExitosamente?: boolean;
-  payloadAuditoria?: string;
 }
 
 export interface DashboardKpis {

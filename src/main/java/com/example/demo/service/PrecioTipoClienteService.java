@@ -33,15 +33,12 @@ public class PrecioTipoClienteService {
 
     @Transactional(readOnly = true)
     public List<PrecioTipoClienteResponse> findByProductoId(Integer idProducto) {
-        return repository.findByProductoIdProducto(idProducto).stream().map(this::map).toList();
+        return repository.findByIdProducto(idProducto).stream().map(this::map).toList();
     }
 
     @Transactional(readOnly = true)
     public List<PrecioTipoClienteResponse> buscar(Integer idProducto, Integer idTipoCliente, Integer idEstadoProducto) {
-        return repository.findAll().stream()
-                .filter(p -> idProducto == null || (p.producto != null && idProducto.equals(p.producto.idProducto)))
-                .filter(p -> idTipoCliente == null || (p.tipoCliente != null && idTipoCliente.equals(p.tipoCliente.idTipoCliente)))
-                .filter(p -> idEstadoProducto == null || (p.estadoProducto != null && idEstadoProducto.equals(p.estadoProducto.idEstadoProducto)))
+        return repository.buscar(idProducto, idTipoCliente, idEstadoProducto).stream()
                 .map(this::map)
                 .toList();
     }
@@ -73,11 +70,11 @@ public class PrecioTipoClienteService {
     }
 
     private PrecioTipoClienteResponse map(PrecioTipoCliente p) {
-        Integer idTipoCliente = p.tipoCliente != null ? p.tipoCliente.idTipoCliente : null;
+        Integer idTipoCliente = p.tipoCliente != null ? p.tipoCliente.idTipoCliente : p.idTipoCliente;
         String tipoCliente = p.tipoCliente != null ? p.tipoCliente.descTipoCliente : null;
-        Integer idEstadoProducto = p.estadoProducto != null ? p.estadoProducto.idEstadoProducto : null;
+        Integer idEstadoProducto = p.estadoProducto != null ? p.estadoProducto.idEstadoProducto : p.idEstadoProducto;
         String estadoProducto = p.estadoProducto != null ? p.estadoProducto.descEstadoProducto : null;
-        Integer idProducto = p.producto != null ? p.producto.idProducto : null;
+        Integer idProducto = p.producto != null ? p.producto.idProducto : p.idProducto;
         String producto = p.producto != null ? p.producto.nombreProducto : null;
         return new PrecioTipoClienteResponse(
                 p.idPrecio,

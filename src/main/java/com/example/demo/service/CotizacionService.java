@@ -11,13 +11,11 @@ import com.example.demo.model.Cotizacion;
 import com.example.demo.model.CotizacionDetalle;
 import com.example.demo.model.Producto;
 import com.example.demo.model.Usuario;
-import com.example.demo.model.ZonaDespacho;
 import com.example.demo.repository.ClienteRepository;
 import com.example.demo.repository.CotizacionDetalleRepository;
 import com.example.demo.repository.CotizacionRepository;
 import com.example.demo.repository.ProductoRepository;
 import com.example.demo.repository.UsuarioRepository;
-import com.example.demo.repository.ZonaDespachoRepository;
 import com.example.demo.util.ValidationErrors;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -33,7 +31,6 @@ public class CotizacionService extends CrudService<Cotizacion, Integer> {
     private final CotizacionRepository cotizacionRepository;
     private final CotizacionDetalleRepository detalleRepository;
     private final ClienteRepository clienteRepository;
-    private final ZonaDespachoRepository zonaDespachoRepository;
     private final UsuarioRepository usuarioRepository;
     private final ProductoRepository productoRepository;
     private final CotizacionMapper cotizacionMapper;
@@ -43,7 +40,6 @@ public class CotizacionService extends CrudService<Cotizacion, Integer> {
             CotizacionRepository repository,
             CotizacionDetalleRepository detalleRepository,
             ClienteRepository clienteRepository,
-            ZonaDespachoRepository zonaDespachoRepository,
             UsuarioRepository usuarioRepository,
             ProductoRepository productoRepository,
             CotizacionMapper cotizacionMapper,
@@ -53,7 +49,6 @@ public class CotizacionService extends CrudService<Cotizacion, Integer> {
         this.cotizacionRepository = repository;
         this.detalleRepository = detalleRepository;
         this.clienteRepository = clienteRepository;
-        this.zonaDespachoRepository = zonaDespachoRepository;
         this.usuarioRepository = usuarioRepository;
         this.productoRepository = productoRepository;
         this.cotizacionMapper = cotizacionMapper;
@@ -103,7 +98,6 @@ public class CotizacionService extends CrudService<Cotizacion, Integer> {
         Cotizacion cotizacion = cotizacionMapper.toEntity(
                 request,
                 findCliente(request.idCliente()),
-                findZona(request.idZona()),
                 findOptionalUsuario(request.idVendedor())
         );
         cotizacion.uuidPublico = UUID.randomUUID().toString();
@@ -125,7 +119,6 @@ public class CotizacionService extends CrudService<Cotizacion, Integer> {
                 cotizacion,
                 request,
                 findCliente(request.idCliente()),
-                findZona(request.idZona()),
                 findOptionalUsuario(request.idVendedor())
         );
         List<CotizacionDetalle> unsavedDetalles = buildDetalles(cotizacion, request.detalles());
@@ -190,11 +183,6 @@ public class CotizacionService extends CrudService<Cotizacion, Integer> {
     private Cliente findCliente(Integer id) {
         return clienteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente", id));
-    }
-
-    private ZonaDespacho findZona(Integer id) {
-        return zonaDespachoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("ZonaDespacho", id));
     }
 
     private Usuario findOptionalUsuario(Integer id) {

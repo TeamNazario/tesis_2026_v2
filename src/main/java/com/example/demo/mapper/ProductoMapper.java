@@ -2,7 +2,7 @@ package com.example.demo.mapper;
 
 import com.example.demo.dto.ProductoRequest;
 import com.example.demo.dto.ProductoResponse;
-import com.example.demo.model.Estado;
+import com.example.demo.model.EstadoProducto;
 import com.example.demo.model.Producto;
 import org.springframework.stereotype.Component;
 
@@ -14,7 +14,7 @@ public class ProductoMapper {
         this.referenceMapper = referenceMapper;
     }
 
-    public Producto toEntity(ProductoRequest request, Estado estado) {
+    public Producto toEntity(ProductoRequest request, EstadoProducto estadoProducto) {
         Producto producto = new Producto();
         producto.nombreProducto = request.nombreProducto();
         producto.descripcionTecnica = request.descripcionTecnica();
@@ -24,11 +24,11 @@ public class ProductoMapper {
         producto.stockFisico = request.stockFisico();
         producto.stockReservado = request.stockReservado();
         producto.stockMinimoSeguridad = request.stockMinimoSeguridad();
-        producto.estado = estado;
+        producto.estadoProducto = estadoProducto;
         return producto;
     }
 
-    public void updateEntity(Producto producto, ProductoRequest request, Estado estado) {
+    public void updateEntity(Producto producto, ProductoRequest request, EstadoProducto estadoProducto) {
         producto.nombreProducto = request.nombreProducto();
         producto.descripcionTecnica = request.descripcionTecnica();
         producto.unidadMedida = request.unidadMedida();
@@ -37,7 +37,7 @@ public class ProductoMapper {
         producto.stockFisico = request.stockFisico();
         producto.stockReservado = request.stockReservado();
         producto.stockMinimoSeguridad = request.stockMinimoSeguridad();
-        producto.estado = estado;
+        producto.estadoProducto = estadoProducto;
     }
 
     public ProductoResponse toResponse(Producto producto) {
@@ -52,7 +52,7 @@ public class ProductoMapper {
                 producto.stockReservado,
                 stockDisponible(producto),
                 producto.stockMinimoSeguridad,
-                referenceMapper.toReference(producto.estado)
+                referenceMapper.toReference(producto.estadoProducto)
         );
     }
 

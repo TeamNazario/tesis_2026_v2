@@ -30,11 +30,6 @@ public class Cotizacion {
     public Cliente cliente;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_zona", nullable = false)
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    public ZonaDespacho zona;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_vendedor")
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     public Usuario vendedor;

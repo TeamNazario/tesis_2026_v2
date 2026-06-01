@@ -5,19 +5,6 @@ export interface LoginRequest {
   password: string;
 }
 
-export interface RegisterRequest {
-  idPerfil: number;
-  idTipoDoc: number;
-  idEstado: number;
-  nroDocumento: string;
-  nombres: string;
-  apellidoPaterno: string;
-  apellidoMaterno?: string;
-  correo: string;
-  celular?: string;
-  password: string;
-}
-
 export interface UsuarioResponse {
   idUsuario: number;
   perfil: ReferenceResponse;

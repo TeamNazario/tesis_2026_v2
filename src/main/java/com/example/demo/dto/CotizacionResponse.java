@@ -8,7 +8,6 @@ public record CotizacionResponse(
         Integer idCotizacion,
         String uuidPublico,
         ReferenceResponse cliente,
-        ReferenceResponse zona,
         ReferenceResponse vendedor,
         LocalDateTime fechaEmision,
         LocalDateTime fechaVencimiento,

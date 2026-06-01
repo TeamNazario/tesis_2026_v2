@@ -3,6 +3,11 @@ export interface CatalogoItem {
   descripcion: string;
 }
 
+export interface TipoClienteComboResponse {
+  idTipoCliente: number;
+  descTipoCliente: string;
+}
+
 export interface PageResponse<T> {
   content: T[];
   totalElements: number;

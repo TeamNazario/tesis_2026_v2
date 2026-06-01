@@ -42,6 +42,6 @@ public record ProductoRequest(
         Integer stockMinimoSeguridad,
 
         @NotNull(message = "El estado del producto es obligatorio.")
-        Integer idEstado
+        Integer idEstadoProducto
 ) {
 }

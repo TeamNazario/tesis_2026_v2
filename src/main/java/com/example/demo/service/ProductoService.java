@@ -4,9 +4,9 @@ import com.example.demo.dto.ProductoRequest;
 import com.example.demo.dto.ProductoResponse;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.mapper.ProductoMapper;
-import com.example.demo.model.Estado;
+import com.example.demo.model.EstadoProducto;
 import com.example.demo.model.Producto;
-import com.example.demo.repository.EstadoRepository;
+import com.example.demo.repository.EstadoProductoRepository;
 import com.example.demo.repository.ProductoRepository;
 import com.example.demo.util.ValidationErrors;
 import java.util.List;
@@ -16,17 +16,17 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class ProductoService extends CrudService<Producto, Integer> {
     private final ProductoRepository productoRepository;
-    private final EstadoRepository estadoRepository;
+    private final EstadoProductoRepository estadoProductoRepository;
     private final ProductoMapper productoMapper;
 
     public ProductoService(
             ProductoRepository repository,
-            EstadoRepository estadoRepository,
+            EstadoProductoRepository estadoProductoRepository,
             ProductoMapper productoMapper
     ) {
         super(repository, "Producto");
         this.productoRepository = repository;
-        this.estadoRepository = estadoRepository;
+        this.estadoProductoRepository = estadoProductoRepository;
         this.productoMapper = productoMapper;
     }
 
@@ -48,18 +48,18 @@ public class ProductoService extends CrudService<Producto, Integer> {
     }
 
     @Transactional(readOnly = true)
-    public List<ProductoResponse> findByEstado(Integer idEstado) {
-        if (!estadoRepository.existsById(idEstado)) {
-            throw new ResourceNotFoundException("Estado", idEstado);
+    public List<ProductoResponse> findByEstado(Integer idEstadoProducto) {
+        if (!estadoProductoRepository.existsById(idEstadoProducto)) {
+            throw new ResourceNotFoundException("EstadoProducto", idEstadoProducto);
         }
-        return productoRepository.findByEstadoIdEstado(idEstado).stream()
+        return productoRepository.findByEstadoProductoIdEstadoProducto(idEstadoProducto).stream()
                 .map(productoMapper::toResponse)
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public List<ProductoResponse> findActivos() {
-        return productoRepository.findByEstadoDescEstadoIgnoreCase("Habilitado").stream()
+        return productoRepository.findByEstadoProductoDescEstadoProductoIgnoreCase("Habilitado").stream()
                 .map(productoMapper::toResponse)
                 .toList();
     }
@@ -67,8 +67,8 @@ public class ProductoService extends CrudService<Producto, Integer> {
     @Transactional
     public ProductoResponse create(ProductoRequest request) {
         validateRequest(request);
-        Estado estado = findEstado(request.idEstado());
-        Producto producto = productoMapper.toEntity(request, estado);
+        EstadoProducto estadoProducto = findEstadoProducto(request.idEstadoProducto());
+        Producto producto = productoMapper.toEntity(request, estadoProducto);
         return productoMapper.toResponse(productoRepository.save(producto));
     }
 
@@ -76,8 +76,8 @@ public class ProductoService extends CrudService<Producto, Integer> {
     public ProductoResponse update(Integer id, ProductoRequest request) {
         validateRequest(request);
         Producto producto = findProducto(id);
-        Estado estado = findEstado(request.idEstado());
-        productoMapper.updateEntity(producto, request, estado);
+        EstadoProducto estadoProducto = findEstadoProducto(request.idEstadoProducto());
+        productoMapper.updateEntity(producto, request, estadoProducto);
         return productoMapper.toResponse(productoRepository.save(producto));
     }
 
@@ -94,9 +94,9 @@ public class ProductoService extends CrudService<Producto, Integer> {
                 .orElseThrow(() -> new ResourceNotFoundException("Producto", id));
     }
 
-    private Estado findEstado(Integer id) {
-        return estadoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Estado", id));
+    private EstadoProducto findEstadoProducto(Integer id) {
+        return estadoProductoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("EstadoProducto", id));
     }
 
     private void validateRequest(ProductoRequest request) {

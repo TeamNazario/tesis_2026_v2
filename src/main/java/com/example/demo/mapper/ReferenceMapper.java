@@ -2,23 +2,18 @@ package com.example.demo.mapper;
 
 import com.example.demo.dto.ReferenceResponse;
 import com.example.demo.model.Cliente;
-import com.example.demo.model.Estado;
 import com.example.demo.model.EstadoClienteContacto;
 import com.example.demo.model.EstadoPerfil;
+import com.example.demo.model.EstadoProducto;
 import com.example.demo.model.EstadoUsuario;
 import com.example.demo.model.Perfil;
 import com.example.demo.model.Producto;
 import com.example.demo.model.TipoDocumento;
 import com.example.demo.model.Usuario;
-import com.example.demo.model.ZonaDespacho;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ReferenceMapper {
-    public ReferenceResponse toReference(Estado estado) {
-        return estado == null ? null : new ReferenceResponse(estado.idEstado, estado.descEstado);
-    }
-
     public ReferenceResponse toReference(EstadoUsuario estadoUsuario) {
         return estadoUsuario == null
                 ? null
@@ -36,6 +31,12 @@ public class ReferenceMapper {
                         estadoClienteContacto.idEstadoClienteContacto,
                         estadoClienteContacto.desEstadoClienteContacto
                 );
+    }
+
+    public ReferenceResponse toReference(EstadoProducto estadoProducto) {
+        return estadoProducto == null
+                ? null
+                : new ReferenceResponse(estadoProducto.idEstadoProducto, estadoProducto.descEstadoProducto);
     }
 
     public ReferenceResponse toReference(TipoDocumento tipoDocumento) {
@@ -62,9 +63,4 @@ public class ReferenceMapper {
         return producto == null ? null : new ReferenceResponse(producto.idProducto, producto.nombreProducto);
     }
 
-    public ReferenceResponse toReference(ZonaDespacho zona) {
-        return zona == null
-                ? null
-                : new ReferenceResponse(zona.idZona, zona.departamento + " - " + zona.provincia);
-    }
 }

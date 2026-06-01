@@ -7,7 +7,6 @@ import com.example.demo.model.Cliente;
 import com.example.demo.model.Cotizacion;
 import com.example.demo.model.CotizacionDetalle;
 import com.example.demo.model.Usuario;
-import com.example.demo.model.ZonaDespacho;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
@@ -22,11 +21,10 @@ public class CotizacionMapper {
     public Cotizacion toEntity(
             CotizacionRequest request,
             Cliente cliente,
-            ZonaDespacho zona,
             Usuario vendedor
     ) {
         Cotizacion cotizacion = new Cotizacion();
-        updateEntity(cotizacion, request, cliente, zona, vendedor);
+        updateEntity(cotizacion, request, cliente, vendedor);
         return cotizacion;
     }
 
@@ -34,11 +32,9 @@ public class CotizacionMapper {
             Cotizacion cotizacion,
             CotizacionRequest request,
             Cliente cliente,
-            ZonaDespacho zona,
             Usuario vendedor
     ) {
         cotizacion.cliente = cliente;
-        cotizacion.zona = zona;
         cotizacion.vendedor = vendedor;
         cotizacion.fechaEmision = request.fechaEmision();
         cotizacion.fechaVencimiento = request.fechaVencimiento();
@@ -52,7 +48,6 @@ public class CotizacionMapper {
                 cotizacion.idCotizacion,
                 cotizacion.uuidPublico,
                 referenceMapper.toReference(cotizacion.cliente),
-                referenceMapper.toReference(cotizacion.zona),
                 referenceMapper.toReference(cotizacion.vendedor),
                 cotizacion.fechaEmision,
                 cotizacion.fechaVencimiento,

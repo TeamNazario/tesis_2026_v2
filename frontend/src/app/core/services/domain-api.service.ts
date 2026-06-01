@@ -9,8 +9,6 @@ import {
   ClienteResponse,
   CotizacionResponse,
   DashboardKpis,
-  LogEficienciaChatbotResponse,
-  LogInventarioResponse,
   ProductoResponse,
 } from '../models/domain.models';
 
@@ -42,20 +40,8 @@ export class DomainApiService {
     return this.api.get<CotizacionResponse[]>(API_ENDPOINTS.v1.cotizaciones, params);
   }
 
-  getLogsInventario(params?: QueryParams): Observable<LogInventarioResponse[]> {
-    return this.api.get<LogInventarioResponse[]>(API_ENDPOINTS.logsInventario, params);
-  }
-
-  getLogsEficienciaChatbot(params?: QueryParams): Observable<LogEficienciaChatbotResponse[]> {
-    return this.api.get<LogEficienciaChatbotResponse[]>(API_ENDPOINTS.logsEficienciaChatbot, params);
-  }
-
   getPerfiles(): Observable<ReferenceResponse[]> {
     return this.api.get<ReferenceResponse[]>(API_ENDPOINTS.perfiles);
-  }
-
-  getEstados(): Observable<ReferenceResponse[]> {
-    return this.api.get<ReferenceResponse[]>(API_ENDPOINTS.estados);
   }
 
   getDashboardKpis(): Observable<DashboardKpis> {
@@ -63,9 +49,8 @@ export class DomainApiService {
     return forkJoin({
       cotizaciones: this.getCotizaciones(),
       productos: this.getProductos(),
-      logsChatbot: this.getLogsEficienciaChatbot(),
     }).pipe(
-      map(({ cotizaciones, productos, logsChatbot }) => {
+      map(({ cotizaciones, productos }) => {
         const now = new Date();
         const today = now.toDateString();
         const weekAgo = new Date(now);
@@ -74,9 +59,7 @@ export class DomainApiService {
         const confirmed = cotizaciones.filter((item) => item.estadoCotizacion === 'CONFIRMADA');
         const vencidas = cotizaciones.filter((item) => new Date(item.fechaVencimiento) < now);
         const chatbot: CotizacionResponse[] = [];
-        const tiempos = logsChatbot
-          .map((item) => item.tiempoAtencionSegundos ?? 0)
-          .filter((value) => value > 0);
+        const tiempos: number[] = [];
         return {
           cotizacionesHoy: cotizaciones.filter((item) => new Date(item.fechaEmision).toDateString() === today).length,
           cotizacionesSemana: cotizaciones.filter((item) => new Date(item.fechaEmision) >= weekAgo).length,
@@ -92,7 +75,7 @@ export class DomainApiService {
           stockReservado: productos.reduce((sum, item) => sum + (item.stockReservado ?? 0), 0),
           stockDisponible: productos.reduce((sum, item) => sum + (item.stockDisponible ?? 0), 0),
           alertasStockBajo: productos.filter((item) => item.stockDisponible <= item.stockMinimo).length,
-          pdfsGenerados: logsChatbot.filter((item) => item.pdfGeneradoExitosamente).length,
+          pdfsGenerados: 0,
         };
       }),
     );

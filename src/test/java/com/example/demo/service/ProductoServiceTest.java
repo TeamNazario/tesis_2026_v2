@@ -11,9 +11,9 @@ import com.example.demo.dto.ProductoResponse;
 import com.example.demo.exception.BusinessValidationException;
 import com.example.demo.mapper.ProductoMapper;
 import com.example.demo.mapper.ReferenceMapper;
-import com.example.demo.model.Estado;
+import com.example.demo.model.EstadoProducto;
 import com.example.demo.model.Producto;
-import com.example.demo.repository.EstadoRepository;
+import com.example.demo.repository.EstadoProductoRepository;
 import com.example.demo.repository.ProductoRepository;
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -29,7 +29,7 @@ class ProductoServiceTest {
     private ProductoRepository productoRepository;
 
     @Mock
-    private EstadoRepository estadoRepository;
+    private EstadoProductoRepository estadoProductoRepository;
 
     private ProductoService service;
 
@@ -37,18 +37,18 @@ class ProductoServiceTest {
     void setUp() {
         service = new ProductoService(
                 productoRepository,
-                estadoRepository,
+                estadoProductoRepository,
                 new ProductoMapper(new ReferenceMapper())
         );
     }
 
     @Test
     void createCalculatesResponseAndPersistsProduct() {
-        Estado estado = new Estado();
-        estado.idEstado = 1;
-        estado.descEstado = "Activo";
+        EstadoProducto estadoProducto = new EstadoProducto();
+        estadoProducto.idEstadoProducto = 1;
+        estadoProducto.descEstadoProducto = "Habilitado";
 
-        when(estadoRepository.findById(1)).thenReturn(Optional.of(estado));
+        when(estadoProductoRepository.findById(1)).thenReturn(Optional.of(estadoProducto));
         when(productoRepository.save(any(Producto.class))).thenAnswer(invocation -> {
             Producto producto = invocation.getArgument(0);
             producto.idProducto = 10;
@@ -58,7 +58,7 @@ class ProductoServiceTest {
         ProductoResponse response = service.create(validRequest());
 
         assertThat(response.idProducto()).isEqualTo(10);
-        assertThat(response.estado().nombre()).isEqualTo("Activo");
+        assertThat(response.estado().nombre()).isEqualTo("Habilitado");
         verify(productoRepository).save(any(Producto.class));
     }
 

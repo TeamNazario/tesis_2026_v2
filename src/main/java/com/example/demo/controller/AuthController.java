@@ -2,7 +2,6 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.AuthResponse;
 import com.example.demo.dto.LoginRequest;
-import com.example.demo.dto.RegisterRequest;
 import com.example.demo.security.AuthenticatedUser;
 import com.example.demo.service.AuthService;
 import com.example.demo.mapper.UsuarioMapper;
@@ -29,17 +28,6 @@ public class AuthController {
     @PostMapping("/login")
     public AuthResponse login(@Valid @RequestBody LoginRequest request) {
         return authService.login(request);
-    }
-
-    @PostMapping("/register")
-    public AuthResponse register(
-            @Valid @RequestBody RegisterRequest request,
-            @AuthenticationPrincipal AuthenticatedUser user
-    ) {
-        String usuarioRegistro = user != null && user.getUsuario() != null
-                ? user.getUsuario().correo
-                : null;
-        return authService.register(request, usuarioRegistro);
     }
 
     @GetMapping("/me")

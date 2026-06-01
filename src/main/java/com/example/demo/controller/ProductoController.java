@@ -40,9 +40,9 @@ public class ProductoController {
         return service.findActivos();
     }
 
-    @GetMapping("/estado/{idEstado}")
-    public List<ProductoResponse> findByEstado(@PathVariable Integer idEstado) {
-        return service.findByEstado(idEstado);
+    @GetMapping("/estado/{idEstadoProducto}")
+    public List<ProductoResponse> findByEstado(@PathVariable Integer idEstadoProducto) {
+        return service.findByEstado(idEstadoProducto);
     }
 
     @PostMapping

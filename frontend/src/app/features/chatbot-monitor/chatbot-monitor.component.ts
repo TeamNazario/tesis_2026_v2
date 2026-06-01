@@ -1,6 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
-import { LogEficienciaChatbotResponse } from '../../core/models/domain.models';
-import { DomainApiService } from '../../core/services/domain-api.service';
+import { Component, signal } from '@angular/core';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { StatusChipComponent } from '../../shared/components/status-chip/status-chip.component';
@@ -57,11 +55,8 @@ import { MaterialModule } from '../../shared/material/material.module';
   `,
 })
 export class ChatbotMonitorComponent {
-  private readonly api = inject(DomainApiService);
-  readonly logs = signal<LogEficienciaChatbotResponse[]>([]);
+  readonly logs = signal<
+    { sessionIdWhatsapp: string; rucConsultado?: string; intencionDetectada?: string; tiempoAtencionSegundos?: number; pdfGeneradoExitosamente?: boolean }[]
+  >([]);
   readonly columns = ['session', 'ruc', 'intencion', 'tiempo', 'pdf'];
-
-  constructor() {
-    this.api.getLogsEficienciaChatbot().subscribe({ next: (logs) => this.logs.set(logs) });
-  }
 }

@@ -55,17 +55,6 @@ public class UsuarioService extends CrudService<Usuario, Integer> {
     }
 
     @Transactional
-    public UsuarioResponse create(UsuarioRequest request) {
-        Usuario usuario = mapper.toEntity(
-                request,
-                findPerfil(request.idPerfil()),
-                findTipoDocumento(request.idTipoDoc()),
-                findEstadoUsuario(request.idEstado())
-        );
-        return mapper.toResponse(usuarioRepository.save(usuario));
-    }
-
-    @Transactional
     public UsuarioResponse update(Integer id, UsuarioRequest request) {
         Usuario usuario = findUsuario(id);
         mapper.updateEntity(
@@ -76,14 +65,6 @@ public class UsuarioService extends CrudService<Usuario, Integer> {
                 findEstadoUsuario(request.idEstado())
         );
         return mapper.toResponse(usuarioRepository.save(usuario));
-    }
-
-    @Transactional
-    public void deleteById(Integer id) {
-        if (!usuarioRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Usuario", id);
-        }
-        usuarioRepository.deleteById(id);
     }
 
     private Usuario findUsuario(Integer id) {

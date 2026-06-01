@@ -243,7 +243,7 @@ export class ClienteFormDialogComponent implements OnDestroy {
     this.estadoActivoError.set(null);
 
     forkJoin({
-      tiposCliente: this.catalogos.tiposCliente().pipe(
+      tiposCliente: this.catalogos.tiposClienteActivos().pipe(
         catchError(() => {
           this.catalogoError.set('No se pudieron cargar los tipos de cliente.');
           return of([] as CatalogoItem[]);

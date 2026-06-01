@@ -12,9 +12,6 @@ public record CotizacionRequest(
         @NotNull(message = "El cliente es obligatorio.")
         Integer idCliente,
 
-        @NotNull(message = "La zona de despacho es obligatoria.")
-        Integer idZona,
-
         Integer idVendedor,
 
         LocalDateTime fechaEmision,

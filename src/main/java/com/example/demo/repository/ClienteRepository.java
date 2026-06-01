@@ -19,4 +19,5 @@ public interface ClienteRepository extends JpaRepository<Cliente, Integer> {
     Optional<Cliente> findByRuc(String ruc);
 
     boolean existsByRuc(String ruc);
+    boolean existsByTipoCliente_IdTipoCliente(Integer idTipoCliente);
 }

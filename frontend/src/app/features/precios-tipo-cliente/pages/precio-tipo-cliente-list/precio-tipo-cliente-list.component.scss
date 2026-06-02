@@ -4,7 +4,7 @@
 
 .metrics-grid {
   display: grid;
-  grid-template-columns: 1.2fr repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
   margin-bottom: 1rem;
 }
@@ -46,7 +46,7 @@
 
 .filters-card {
   display: grid;
-  grid-template-columns: 1fr 190px 190px 170px auto auto;
+  grid-template-columns: 1.2fr repeat(4, minmax(0, 1fr)) auto;
   align-items: center;
   gap: 0.8rem;
   margin-bottom: 1rem;
@@ -61,12 +61,6 @@
   font-weight: 900;
 }
 
-.stock-filter {
-  min-width: max-content;
-  color: var(--bio-on-surface-variant);
-  font-weight: 800;
-}
-
 .table-card {
   border-radius: 1.2rem;
   background: var(--bio-surface-lowest);
@@ -79,7 +73,7 @@
 
 table {
   width: 100%;
-  min-width: 1080px;
+  min-width: 1180px;
 }
 
 th {
@@ -91,48 +85,30 @@ td {
   padding-block: 0.65rem;
 }
 
-.code-pill {
-  display: inline-flex;
-  border: 1px solid rgba(0, 110, 37, 0.22);
-  border-radius: 999px;
-  padding: 0.25rem 0.65rem;
-  color: #006e25;
-  font-weight: 900;
-}
-
-.product-cell,
-.product-card__top {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+.product-cell {
+  display: grid;
+  gap: 0.2rem;
 }
 
 .product-cell strong,
-.product-card h3 {
+.price-card h3 {
   margin: 0;
   color: var(--bio-on-surface);
   font-family: Manrope, sans-serif;
 }
 
-.product-cell p,
-.product-card p,
-.stock-cell span {
-  margin: 0.2rem 0 0;
+.product-cell span,
+.price-card p,
+.card-details span {
   color: var(--bio-on-surface-variant);
 }
 
-.stock-cell {
-  display: grid;
-  gap: 0.25rem;
-}
-
-.stock-cell strong {
+.price-text {
+  font-size: 1.05rem;
   color: var(--bio-on-surface);
-  font-family: Manrope, sans-serif;
-  font-size: 1.2rem;
 }
 
-.stock-chip,
+.currency-chip,
 .state-chip {
   width: max-content;
   border-radius: 999px;
@@ -140,35 +116,21 @@ td {
   font-weight: 900;
 }
 
-.state-chip.active,
-.stock-chip {
+.currency-chip.ok,
+.state-chip.active {
   background: rgba(0, 110, 37, 0.15);
   color: #006e25;
 }
 
+.currency-chip.warn,
 .state-chip.inactive {
-  background: rgba(171, 45, 87, 0.12);
-  color: #ab2d57;
-}
-
-.state-chip.blocked {
-  background: rgba(177, 95, 0, 0.16);
-  color: #8a4b00;
-}
-
-.state-chip.unknown {
-  background: rgba(80, 88, 94, 0.14);
-  color: #50585e;
-}
-
-.stock-chip.warn {
   background: rgba(250, 173, 20, 0.22);
   color: #8a5a00;
 }
 
-.stock-chip.critical {
-  background: rgba(186, 26, 26, 0.15);
-  color: #ba1a1a;
+.state-chip.blocked {
+  background: rgba(171, 45, 87, 0.12);
+  color: #ab2d57;
 }
 
 .loading {
@@ -178,15 +140,11 @@ td {
   text-align: center;
 }
 
-.loading p {
-  color: var(--bio-on-surface-variant);
-}
-
 .cards-mobile {
   display: none;
 }
 
-.product-card {
+.price-card {
   border: 1px solid rgba(0, 110, 37, 0.1);
   border-radius: 1.2rem;
   background:
@@ -195,19 +153,26 @@ td {
   box-shadow: 0 16px 34px rgba(18, 34, 24, 0.06);
 }
 
+.price-card__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
 .card-meta,
-.card-status-row {
+.card-details {
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
   margin-top: 0.9rem;
 }
 
-.card-meta span {
+.card-meta span,
+.card-details span {
   border: 1px solid rgba(64, 72, 66, 0.22);
   border-radius: 999px;
   padding: 0.25rem 0.65rem;
-  color: var(--bio-on-surface-variant);
   font-size: 0.82rem;
   font-weight: 800;
 }

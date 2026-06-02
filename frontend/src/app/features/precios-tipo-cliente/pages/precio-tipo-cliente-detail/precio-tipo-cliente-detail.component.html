@@ -1,0 +1,113 @@
+<app-page-header [title]="title" [description]="description">
+  <button mat-stroked-button type="button" routerLink="/precios-tipo-cliente">
+    <mat-icon>arrow_back</mat-icon>
+    Volver
+  </button>
+</app-page-header>
+
+@if (isLoading()) {
+  <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+}
+
+@if (hasError()) {
+  <app-empty-state icon="error" title="No se pudo cargar" description="No se pudo cargar el detalle del precio solicitado." />
+} @else if (!price()) {
+  <app-empty-state title="Sin datos" description="El precio solicitado no existe o ya no esta disponible." />
+} @else {
+  @if (catalogError()) {
+    <section class="info-banner">
+      <mat-icon>info</mat-icon>
+      <p>{{ catalogError() }}</p>
+    </section>
+  }
+
+  <section class="detail-grid">
+    <article class="detail-card featured">
+      <span>Precio unitario</span>
+      <strong>{{ formatMoney(price()!.precioUnitario, price()!.moneda) }}</strong>
+      <p>{{ getCurrencyLabel(price()!.moneda) }}</p>
+    </article>
+    <article class="detail-card">
+      <span>Producto</span>
+      <strong>{{ productLabel }}</strong>
+      <p>{{ unidadMedida }}</p>
+    </article>
+    <article class="detail-card">
+      <span>Tipo de cliente</span>
+      <strong>{{ tipoClienteLabel }}</strong>
+      <p>Segmento comercial asociado</p>
+    </article>
+    <article class="detail-card">
+      <span>Estado</span>
+      <mat-chip
+        class="state-chip"
+        [class.active]="stateTone() === 'ok'"
+        [class.inactive]="stateTone() === 'warn'"
+        [class.blocked]="stateTone() === 'danger'"
+      >
+        {{ estadoLabel }}
+      </mat-chip>
+      <p>Estado del producto en la matriz de precios</p>
+    </article>
+  </section>
+
+  <section class="detail-shell">
+    <div class="detail-panel">
+      <h3>Información del precio</h3>
+      <div class="field-grid">
+        <div class="field">
+          <span>Producto</span>
+          <strong>{{ productLabel }}</strong>
+        </div>
+        <div class="field">
+          <span>Tipo de cliente</span>
+          <strong>{{ tipoClienteLabel }}</strong>
+        </div>
+        <div class="field">
+          <span>Moneda</span>
+          <strong>
+            <mat-chip class="currency-chip" [class.warn]="getCurrencyTone(price()!.moneda) === 'warn'" [class.ok]="getCurrencyTone(price()!.moneda) === 'ok'">
+              {{ getCurrencyLabel(price()!.moneda) }}
+            </mat-chip>
+          </strong>
+        </div>
+        <div class="field">
+          <span>Precio unitario</span>
+          <strong>{{ formatMoney(price()!.precioUnitario, price()!.moneda) }}</strong>
+        </div>
+      </div>
+    </div>
+
+    <aside class="detail-panel">
+      <h3>Auditoría</h3>
+      <div class="audit-list">
+        <div>
+          <span>Usuario de registro</span>
+          <strong>{{ price()!.usuRegistro || '-' }}</strong>
+        </div>
+        <div>
+          <span>Fecha de registro</span>
+          <strong>{{ price()!.fecRegistro || '-' }}</strong>
+        </div>
+        <div>
+          <span>Usuario de actualizacion</span>
+          <strong>{{ price()!.usuActualiza || '-' }}</strong>
+        </div>
+        <div>
+          <span>Fecha de actualizacion</span>
+          <strong>{{ price()!.fecActualiza || '-' }}</strong>
+        </div>
+      </div>
+    </aside>
+  </section>
+
+  <section class="actions-bar">
+    <button mat-stroked-button type="button" routerLink="/precios-tipo-cliente">Volver</button>
+    <button mat-stroked-button type="button" [routerLink]="['/precios-tipo-cliente']" [queryParams]="{ producto: price()!.idProducto }">
+      Ver precios del producto
+    </button>
+    @if (canManagePrices()) {
+      <button mat-flat-button type="button" [routerLink]="['/precios-tipo-cliente', price()!.idPrecio, 'editar']">Editar precio</button>
+    }
+  </section>
+}

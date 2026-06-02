@@ -1,0 +1,132 @@
+<app-page-header [title]="title" [description]="description">
+  <button mat-stroked-button type="button" routerLink="/precios-tipo-cliente">
+    <mat-icon>arrow_back</mat-icon>
+    Volver
+  </button>
+</app-page-header>
+
+@if (isLoading()) {
+  <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+}
+
+@if (hasError()) {
+  <app-empty-state icon="error" title="No se pudo cargar" description="No se pudo cargar la informacion del precio solicitado." />
+} @else {
+  @if (catalogError()) {
+    <section class="info-banner">
+      <mat-icon>info</mat-icon>
+      <p>{{ catalogError() }}</p>
+    </section>
+  }
+
+  @if (isEditMode && currentPrice()) {
+    <section class="summary-grid">
+      <article class="summary-card">
+        <span>Producto</span>
+        <strong>{{ selectedProductLabel }}</strong>
+      </article>
+      <article class="summary-card">
+        <span>Tipo de cliente</span>
+        <strong>{{ selectedTipoClienteLabel }}</strong>
+      </article>
+      <article class="summary-card">
+        <span>Estado</span>
+        <strong>{{ selectedStateLabel }}</strong>
+      </article>
+    </section>
+  }
+
+  <section class="form-shell">
+    <form class="price-form" [formGroup]="form">
+      <section class="form-section">
+        <h3>Producto y tipo de cliente</h3>
+        <div class="form-grid two-columns">
+          <mat-form-field appearance="outline">
+            <mat-label>Producto</mat-label>
+            <mat-select formControlName="idProducto">
+              <mat-option value="0">Selecciona un producto</mat-option>
+              @for (item of productos(); track item.id) {
+                <mat-option [value]="item.id">{{ item.nombre }}{{ item.unidadMedida ? ' · ' + item.unidadMedida : '' }}</mat-option>
+              }
+            </mat-select>
+            @if (controlError('idProducto')) {
+              <mat-error>{{ controlError('idProducto') }}</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Tipo de cliente</mat-label>
+            <mat-select formControlName="idTipoCliente">
+              <mat-option value="0">Selecciona un tipo de cliente</mat-option>
+              @for (item of tiposCliente(); track item.id) {
+                <mat-option [value]="item.id">{{ item.descripcion }}</mat-option>
+              }
+            </mat-select>
+            @if (controlError('idTipoCliente')) {
+              <mat-error>{{ controlError('idTipoCliente') }}</mat-error>
+            }
+          </mat-form-field>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <h3>Precio y moneda</h3>
+        <div class="form-grid two-columns">
+          <mat-form-field appearance="outline">
+            <mat-label>Precio unitario</mat-label>
+            <input matInput type="number" step="0.01" min="0.01" formControlName="precioUnitario" />
+            @if (controlError('precioUnitario')) {
+              <mat-error>{{ controlError('precioUnitario') }}</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Moneda</mat-label>
+            <mat-select formControlName="moneda">
+              <mat-option value="SOLES">Soles</mat-option>
+              <mat-option value="DOLARES">Dolares</mat-option>
+            </mat-select>
+            @if (controlError('moneda')) {
+              <mat-error>{{ controlError('moneda') }}</mat-error>
+            }
+          </mat-form-field>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <h3>Estado</h3>
+        <div class="form-grid single-column">
+          <mat-form-field appearance="outline">
+            <mat-label>Estado</mat-label>
+            <mat-select formControlName="idEstadoProducto">
+              <mat-option value="0">Selecciona un estado</mat-option>
+              @for (item of estadosProducto(); track item.id) {
+                <mat-option [value]="item.id">{{ item.descripcion }}</mat-option>
+              }
+            </mat-select>
+            @if (controlError('idEstadoProducto')) {
+              <mat-error>{{ controlError('idEstadoProducto') }}</mat-error>
+            }
+          </mat-form-field>
+        </div>
+      </section>
+    </form>
+
+    <aside class="help-card">
+      <h4>Buenas practicas</h4>
+      <ul>
+        <li>En edicion, producto y tipo de cliente quedan bloqueados para proteger la clave logica.</li>
+        <li>La moneda por defecto es SOLES.</li>
+        <li>El estado inicial se obtiene desde el catalogo del backend.</li>
+        <li>Se valida que no exista la combinacion producto + tipo de cliente antes de guardar.</li>
+      </ul>
+    </aside>
+  </section>
+
+  <section class="actions-bar">
+    <button mat-stroked-button type="button" routerLink="/precios-tipo-cliente">Cancelar</button>
+    <button mat-flat-button type="button" (click)="save()" [disabled]="form.invalid || isSaving()">
+      {{ isSaving() ? 'Guardando...' : (isEditMode ? 'Guardar cambios' : 'Registrar precio') }}
+    </button>
+  </section>
+}

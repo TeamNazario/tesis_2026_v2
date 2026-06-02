@@ -35,6 +35,11 @@ export const routes: Routes = [
           import('./features/catalogo-productos/catalogo-productos.component').then((m) => m.CatalogoProductosComponent),
       },
       {
+        path: 'precios-tipo-cliente',
+        loadChildren: () =>
+          import('./features/precios-tipo-cliente/precios-tipo-cliente.routes').then((m) => m.PRECIO_TIPO_CLIENTE_ROUTES),
+      },
+      {
         path: 'cotizaciones',
         loadComponent: () => import('./features/cotizaciones/cotizaciones.component').then((m) => m.CotizacionesComponent),
       },

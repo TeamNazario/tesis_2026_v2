@@ -41,6 +41,7 @@ export class SidebarComponent {
     { label: 'Usuarios', icon: 'group', route: '/usuarios' },
     { label: 'Inventario', icon: 'inventory_2', route: '/inventario' },
     { label: 'Productos', icon: 'science', route: '/catalogo-productos' },
+    { label: 'Precios por Tipo de Cliente', icon: 'price_change', route: '/precios-tipo-cliente' },
     { label: 'Cotizaciones', icon: 'request_quote', route: '/cotizaciones' },
     { label: 'Reportes', icon: 'bar_chart', route: '/reportes' },
     { label: 'Configuracion', icon: 'tune', route: '/configuracion' },

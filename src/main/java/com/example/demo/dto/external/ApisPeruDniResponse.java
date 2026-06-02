@@ -1,6 +1,6 @@
 package com.example.demo.dto.external;
 
-import tools.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonAlias;
 
 public record ApisPeruDniResponse(
         String dni,

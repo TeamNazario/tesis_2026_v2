@@ -10,14 +10,15 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "cotizacion_detalle")
+@Table(name = "detalle_cotizacion")
 public class CotizacionDetalle {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_detalle")
+    @Column(name = "id_detalle_coti")
     public Integer idDetalle;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -33,9 +34,9 @@ public class CotizacionDetalle {
     @Column(name = "cantidad", nullable = false)
     public Integer cantidad;
 
-    @Column(name = "precio_unitario_aplicado", nullable = false, precision = 38, scale = 2)
+    @Column(name = "precio_uni", nullable = false, precision = 10, scale = 2)
     public BigDecimal precioUnitarioAplicado;
 
-    @Column(name = "subtotal_linea", nullable = false, precision = 38, scale = 2)
+    @Transient
     public BigDecimal subtotalLinea;
 }

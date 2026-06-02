@@ -8,9 +8,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import java.time.LocalDateTime;
 
 @Entity
@@ -27,7 +27,7 @@ public class Cliente {
     @Column(name = "razon_social", nullable = false, length = 200)
     public String razonSocial;
 
-    @Column(name = "nombre_comercial", length = 200)
+    @Transient
     public String nombreComercial;
 
     @Column(name = "condicion_sunat", nullable = false, length = 50)
@@ -36,8 +36,7 @@ public class Cliente {
     @Column(name = "estado_sunat", nullable = false, length = 50)
     public String estadoSunat;
 
-    @Lob
-    @Column(name = "direccion")
+    @Column(name = "direccion", length = 255)
     public String direccion;
 
     @Column(name = "departamento", length = 50)
@@ -58,13 +57,13 @@ public class Cliente {
     public Usuario vendedorAsignado;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_estado", nullable = false)
+    @JoinColumn(name = "id_estado_cliente_contacto", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     public Estado estado;
 
-    @Column(name = "usuario_registro", length = 50)
+    @Column(name = "usu_registro", length = 50)
     public String usuarioRegistro;
 
-    @Column(name = "fecha_registro")
+    @Column(name = "fec_registro")
     public LocalDateTime fechaRegistro;
 }

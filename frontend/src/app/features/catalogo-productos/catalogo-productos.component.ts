@@ -11,7 +11,6 @@ import { ProductService } from '../../core/services/product.service';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { MaterialModule } from '../../shared/material/material.module';
-import { ConfirmStatusDialogComponent } from './components/confirm-status-dialog/confirm-status-dialog.component';
 import { ProductoDetailDialogComponent } from './components/producto-detail-dialog/producto-detail-dialog.component';
 import { ProductoFormDialogComponent } from './components/producto-form-dialog/producto-form-dialog.component';
 
@@ -155,35 +154,6 @@ export class CatalogoProductosComponent implements OnInit, OnDestroy {
       width: '900px',
       maxWidth: '95vw',
       data: product,
-    });
-  }
-
-  toggleStatus(product: ProductResponse): void {
-    const isActive = this.api.isActive(product);
-    const nextStatusId = isActive ? 2 : 1;
-    const nextStatusLabel = isActive ? 'Inhabilitado' : 'Habilitado';
-
-    const dialogRef = this.dialog.open(ConfirmStatusDialogComponent, {
-      width: '520px',
-      maxWidth: '95vw',
-      data: { productName: product.nombre, nextStatusLabel },
-    });
-
-    dialogRef.afterClosed().subscribe((confirmed) => {
-      if (!confirmed) {
-        return;
-      }
-      this.isSaving.set(true);
-      this.api
-        .changeProductStatus(product.id, nextStatusId)
-        .pipe(finalize(() => this.isSaving.set(false)))
-        .subscribe({
-          next: () => {
-            this.notifications.success('El estado del producto fue actualizado correctamente.');
-            this.loadProducts();
-          },
-          error: (error) => this.handleMutationError(error),
-        });
     });
   }
 

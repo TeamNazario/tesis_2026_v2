@@ -119,9 +119,12 @@
         </ng-container>
 
         <ng-container matColumnDef="stockDisponible">
-          <th mat-header-cell *matHeaderCellDef>Stock disponible</th>
+          <th mat-header-cell *matHeaderCellDef>Stock</th>
           <td mat-cell *matCellDef="let item">
-            {{ item.stockDisponible }}
+            <div class="stock-detail">
+              <strong>Disponible {{ item.stockDisponible }}</strong>
+              <span>Fisico {{ item.stockFisico }} · Reservado {{ item.stockReservado }}</span>
+            </div>
             <mat-chip class="stock-chip" [class.warn]="getStockBadge(item) === 'warn'" [class.critical]="getStockBadge(item) === 'critical'">
               @if (getStockBadge(item) === 'critical') {
                 Sin stock
@@ -150,9 +153,6 @@
             <button mat-icon-button matTooltip="Editar producto" (click)="openEditDialog(item)">
               <mat-icon>edit</mat-icon>
             </button>
-            <button mat-icon-button [matTooltip]="api.isActive(item) ? 'Inhabilitar' : 'Habilitar'" (click)="toggleStatus(item)">
-              <mat-icon>{{ api.isActive(item) ? 'toggle_off' : 'toggle_on' }}</mat-icon>
-            </button>
           </td>
         </ng-container>
 
@@ -178,13 +178,14 @@
         <mat-card-content>
           <p><strong>Unidad:</strong> {{ item.unidadMedida }}</p>
           <p><strong>Precio:</strong> S/ {{ item.precioBase | number: '1.2-2' }}</p>
-          <p><strong>Stock:</strong> {{ item.stockDisponible }}</p>
+          <p><strong>Stock disponible:</strong> {{ item.stockDisponible }}</p>
+          <p><strong>Stock fisico:</strong> {{ item.stockFisico }}</p>
+          <p><strong>Stock reservado:</strong> {{ item.stockReservado }}</p>
           <mat-chip class="state-chip" [class.inactive]="!isEnabled(item)" [class.blocked]="isBlocked(item)">{{ getStatusLabel(item) }}</mat-chip>
         </mat-card-content>
         <mat-card-actions align="end">
           <button mat-button (click)="openDetail(item)">Detalle</button>
           <button mat-button (click)="openEditDialog(item)">Editar</button>
-          <button mat-button (click)="toggleStatus(item)">{{ api.isActive(item) ? 'Inhabilitar' : 'Habilitar' }}</button>
         </mat-card-actions>
       </mat-card>
     }

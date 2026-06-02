@@ -48,7 +48,7 @@ public class ContactoCliente {
     public String celular;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_estado", nullable = false)
+    @JoinColumn(name = "id_estado_cliente_contacto", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     public Estado estado;
 }

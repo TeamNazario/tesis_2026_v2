@@ -5,5 +5,11 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface CotizacionRepository extends JpaRepository<Cotizacion, Integer> {
-    Optional<Cotizacion> findByUuidPublico(String uuidPublico);
+    default Optional<Cotizacion> findByUuidPublico(String uuidPublico) {
+        try {
+            return findById(Integer.parseInt(uuidPublico));
+        } catch (NumberFormatException ex) {
+            return Optional.empty();
+        }
+    }
 }

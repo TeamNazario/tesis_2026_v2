@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -21,7 +22,7 @@ public class Cotizacion {
     @Column(name = "id_cotizacion")
     public Integer idCotizacion;
 
-    @Column(name = "uuid_publico", nullable = false, length = 36)
+    @Transient
     public String uuidPublico;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -29,9 +30,7 @@ public class Cotizacion {
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     public Cliente cliente;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_zona", nullable = false)
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    @Transient
     public ZonaDespacho zona;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -51,14 +50,23 @@ public class Cotizacion {
     @Column(name = "igv", nullable = false, precision = 38, scale = 2)
     public BigDecimal igv;
 
-    @Column(name = "monto_total", nullable = false, precision = 38, scale = 2)
+    @Column(name = "importe_total", nullable = false, precision = 10, scale = 2)
     public BigDecimal montoTotal;
 
-    @Column(name = "origen_cotizacion", nullable = false, length = 10)
+    @Column(name = "moneda", nullable = false, length = 10)
+    public String moneda = "SOLES";
+
+    @Transient
     public String origenCotizacion;
 
-    @Column(name = "estado_cotizacion", nullable = false, length = 10)
+    @Column(name = "id_estado_cotizacion", nullable = false)
+    public Integer idEstadoCotizacion;
+
+    @Transient
     public String estadoCotizacion;
+
+    @Column(name = "flag_cubierto", nullable = false)
+    public Integer flagCubierto = 0;
 
     @Column(name = "pdf_path")
     public String pdfPath;

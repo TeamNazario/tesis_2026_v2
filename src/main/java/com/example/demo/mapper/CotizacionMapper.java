@@ -44,6 +44,7 @@ public class CotizacionMapper {
         cotizacion.fechaVencimiento = request.fechaVencimiento();
         cotizacion.origenCotizacion = request.origenCotizacion();
         cotizacion.estadoCotizacion = request.estadoCotizacion();
+        cotizacion.idEstadoCotizacion = parseEstadoCotizacion(request.estadoCotizacion());
         cotizacion.pdfPath = request.pdfPath();
     }
 
@@ -74,5 +75,16 @@ public class CotizacionMapper {
                 detalle.precioUnitarioAplicado,
                 detalle.subtotalLinea
         );
+    }
+
+    private Integer parseEstadoCotizacion(String estadoCotizacion) {
+        if (estadoCotizacion == null || estadoCotizacion.isBlank()) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(estadoCotizacion.trim());
+        } catch (NumberFormatException ex) {
+            return 1;
+        }
     }
 }

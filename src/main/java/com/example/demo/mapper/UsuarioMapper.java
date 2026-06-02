@@ -72,7 +72,9 @@ public class UsuarioMapper {
         usuario.apellidoMaterno = request.apellidoMaterno();
         usuario.correo = request.correo();
         usuario.celular = request.celular();
-        usuario.passwordHash = request.passwordHash();
+        if (request.passwordHash() != null && !request.passwordHash().isBlank()) {
+            usuario.passwordHash = request.passwordHash();
+        }
         usuario.intentosFallidos = request.intentosFallidos();
         usuario.estadoUsuario = estadoUsuario;
         usuario.usuarioRegistro = request.usuarioRegistro();

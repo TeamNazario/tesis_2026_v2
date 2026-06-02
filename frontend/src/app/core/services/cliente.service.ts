@@ -37,18 +37,6 @@ export class ClienteService {
     return this.clienteV1.patchEstado(id, idEstadoClienteContacto).pipe(map((item) => this.toVm(item)));
   }
 
-  getClienteCotizaciones(_id: number): Observable<never> {
-    throw new Error('TODO: Endpoint de cotizaciones por cliente no disponible en backend.');
-  }
-
-  validateRuc(_ruc: string): Observable<never> {
-    throw new Error('TODO: Endpoint de validacion RUC no disponible en backend.');
-  }
-
-  deleteCliente(_id: number): Observable<never> {
-    throw new Error('TODO: Endpoint de eliminacion de cliente no disponible en backend v1.');
-  }
-
   applyLocalSearch(items: ClienteResponseVm[], term: string, filter: ClienteFilter): ClienteResponseVm[] {
     const normalizedTerm = term.trim().toLowerCase();
     return items.filter((item) => {
@@ -70,13 +58,13 @@ export class ClienteService {
       if (filter.estado === 'ACTIVE' && !this.isActive(item)) {
         return false;
       }
-      if (filter.estado === 'INACTIVE' && this.isActive(item)) {
+      if (filter.estado === 'INACTIVE' && !this.isInactive(item)) {
+        return false;
+      }
+      if (filter.estado === 'BLOCKED' && !this.isBlocked(item)) {
         return false;
       }
       if (filter.tipoCliente && (item.tipoCliente ?? '') !== filter.tipoCliente) {
-        return false;
-      }
-      if (filter.zona && (item.zonaDespacho ?? '') !== filter.zona) {
         return false;
       }
       if (filter.departamento && (item.departamento ?? '') !== filter.departamento) {
@@ -105,11 +93,64 @@ export class ClienteService {
   }
 
   isActive(cliente: ClienteResponseVm): boolean {
-    const name = (cliente.estado?.nombre ?? '').toLowerCase();
-    return cliente.estado?.id === 1 || name.includes('activo') || name.includes('habilitado');
+    const statusId = this.getStatusId(cliente);
+    if (statusId === 1) {
+      return true;
+    }
+    if (statusId === 2 || statusId === 3) {
+      return false;
+    }
+    const label = this.normalizeStatus(cliente.estado?.nombre);
+    if (label) {
+      if (label.includes('inactivo') || label.includes('deshabilitado') || label.includes('bloqueado')) {
+        return false;
+      }
+      return label.includes('activo') || label.includes('habilitado');
+    }
+    return statusId === 1;
+  }
+
+  isInactive(cliente: ClienteResponseVm): boolean {
+    const statusId = this.getStatusId(cliente);
+    if (statusId === 2) {
+      return true;
+    }
+    const label = this.normalizeStatus(cliente.estado?.nombre);
+    return label.includes('inactivo') || label.includes('deshabilitado');
+  }
+
+  isBlocked(cliente: ClienteResponseVm): boolean {
+    const statusId = this.getStatusId(cliente);
+    if (statusId === 3) {
+      return true;
+    }
+    return this.normalizeStatus(cliente.estado?.nombre).includes('bloqueado');
+  }
+
+  getStatusClass(cliente: ClienteResponseVm): string {
+    if (this.isBlocked(cliente)) {
+      return 'blocked';
+    }
+    if (this.isInactive(cliente)) {
+      return 'inactive';
+    }
+    if (this.isActive(cliente)) {
+      return 'active';
+    }
+    return 'unknown';
   }
 
   getStatusLabel(cliente: ClienteResponseVm): string {
+    const statusId = this.getStatusId(cliente);
+    if (statusId === 1) {
+      return 'Activo';
+    }
+    if (statusId === 2) {
+      return 'Inactivo';
+    }
+    if (statusId === 3) {
+      return 'Bloqueado';
+    }
     return cliente.estado?.nombre?.trim() || 'Sin estado';
   }
 
@@ -124,7 +165,6 @@ export class ClienteService {
       vendedorAsignado: item.vendedorAsignado,
       idVendedorAsignado: item.idVendedorAsignado,
       direccionFiscal: item.direccion,
-      zonaDespacho: undefined,
       departamento: item.departamento,
       provincia: item.provincia,
       distrito: item.distrito,
@@ -180,9 +220,34 @@ export class ClienteService {
   }
 
   private toReference(id?: number, nombre?: string): ReferenceResponse | undefined {
-    if (!id && !nombre) {
+    if (id == null && !nombre) {
       return undefined;
     }
-    return { id: id ?? 0, nombre: nombre ?? 'Sin estado' };
+    return { id: id ?? 0, nombre: nombre?.trim() || this.getStatusLabelById(id) || 'Sin estado' };
+  }
+
+  private getStatusId(cliente: ClienteResponseVm): number | undefined {
+    return cliente.estado?.id && cliente.estado.id > 0 ? cliente.estado.id : undefined;
+  }
+
+  private getStatusLabelById(id?: number): string | undefined {
+    if (id === 1) {
+      return 'Activo';
+    }
+    if (id === 2) {
+      return 'Inactivo';
+    }
+    if (id === 3) {
+      return 'Bloqueado';
+    }
+    return undefined;
+  }
+
+  private normalizeStatus(value?: string): string {
+    return (value ?? '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
   }
 }

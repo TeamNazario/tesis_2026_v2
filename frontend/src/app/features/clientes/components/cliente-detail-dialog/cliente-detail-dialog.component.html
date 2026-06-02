@@ -63,19 +63,50 @@
       <div class="contacts-list">
         @for (item of filteredContactos(); track item.id) {
           <mat-card class="contact-card">
-            <mat-card-title>{{ item.nombreCompleto }}</mat-card-title>
-            <mat-card-subtitle>{{ item.correo || item.telefono || 'Sin dato de contacto' }}</mat-card-subtitle>
             <mat-card-content>
-              <div class="chips">
-                <mat-chip>{{ getStatusLabel(item) }}</mat-chip>
+              <div class="contact-card__top">
+                <div class="contact-avatar" aria-hidden="true">{{ getInitials(item) }}</div>
+                <div class="contact-identity">
+                  <h4>{{ item.nombreCompleto }}</h4>
+                  <p>{{ item.correo || 'Sin correo registrado' }}</p>
+                </div>
+                <mat-chip class="status-chip" [class.active]="getStatusClass(item) === 'active'" [class.inactive]="getStatusClass(item) === 'inactive'">
+                  {{ getStatusLabel(item) }}
+                </mat-chip>
+              </div>
+
+              <div class="contact-meta">
                 @if (item.tipoDocumento) {
-                  <mat-chip>{{ item.tipoDocumento }}</mat-chip>
+                  <span>{{ item.tipoDocumento }}{{ item.nroDocumento ? ': ' + item.nroDocumento : '' }}</span>
+                }
+                @if (item.principal) {
+                  <span class="highlight">Principal</span>
                 }
               </div>
+
+              <div class="contact-details">
+                <div>
+                  <mat-icon>call</mat-icon>
+                  <span>{{ item.telefono || item.whatsapp || 'Sin telefono' }}</span>
+                </div>
+              </div>
             </mat-card-content>
+
             <mat-card-actions align="end">
-              <button mat-button (click)="openEditContact(item)">Editar</button>
-              <button mat-button (click)="toggleContactoStatus(item)">{{ (item.estado?.id ?? 1) === 1 ? 'Desactivar' : 'Activar' }}</button>
+              <button mat-stroked-button type="button" (click)="openEditContact(item)">
+                <mat-icon>edit</mat-icon>
+                Editar
+              </button>
+              <button
+                mat-button
+                type="button"
+                class="status-action"
+                [class.activate]="(item.estado?.id ?? 1) !== 1"
+                (click)="toggleContactoStatus(item)"
+              >
+                <mat-icon>{{ (item.estado?.id ?? 1) === 1 ? 'block' : 'check_circle' }}</mat-icon>
+                {{ (item.estado?.id ?? 1) === 1 ? 'Desactivar' : 'Activar' }}
+              </button>
             </mat-card-actions>
           </mat-card>
         }

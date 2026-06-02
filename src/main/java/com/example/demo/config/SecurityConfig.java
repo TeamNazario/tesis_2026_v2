@@ -112,6 +112,8 @@ public class SecurityConfig {
                         .hasAnyRole("SISTEMAS", "GERENTE", "JEFE_VENTAS", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/usuarios/*")
                         .hasAnyRole("SISTEMAS", "GERENTE", "JEFE_VENTAS", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/usuarios")
+                        .hasAnyRole("SISTEMAS", "ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/usuarios/*")
                         .hasAnyRole("SISTEMAS", "ADMIN")
                         .requestMatchers("/api/estados/**").hasAnyRole("ADMIN", "ADMINISTRADOR")

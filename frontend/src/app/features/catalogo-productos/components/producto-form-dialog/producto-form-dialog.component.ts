@@ -62,6 +62,11 @@ export class ProductoFormDialogComponent {
     return this.data.mode === 'create' ? 'Nuevo producto' : 'Actualizar producto';
   }
 
+  get stockDisponiblePreview(): number {
+    const value = this.form.getRawValue();
+    return Math.max(0, value.stockFisico - value.stockReservado);
+  }
+
   save(): void {
     this.form.markAllAsTouched();
     if (this.form.invalid) {

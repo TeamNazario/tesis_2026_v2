@@ -123,6 +123,21 @@ export class ClienteDetailDialogComponent implements OnInit {
     return value || ((contacto.estado?.id ?? 1) === 1 ? 'Activo' : 'Inactivo');
   }
 
+  getStatusClass(contacto: ContactoClienteResponseVm): string {
+    return (contacto.estado?.id ?? 1) === 1 ? 'active' : 'inactive';
+  }
+
+  getInitials(contacto: ContactoClienteResponseVm): string {
+    const words = contacto.nombreCompleto
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+    return words
+      .slice(0, 2)
+      .map((word) => word.charAt(0).toUpperCase())
+      .join('');
+  }
+
   private loadContactos(): void {
     this.loading.set(true);
     this.contactoService

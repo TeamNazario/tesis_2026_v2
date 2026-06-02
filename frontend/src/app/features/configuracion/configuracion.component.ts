@@ -11,7 +11,7 @@ import { MaterialModule } from '../../shared/material/material.module';
       <h2>Reglas reflejadas en UI</h2>
       <mat-list>
         <mat-list-item>RUC obligatorio para brindar precios o generar cotizaciones.</mat-list-item>
-        <mat-list-item>Zona de despacho requerida antes de precio.</mat-list-item>
+        <mat-list-item>Tipo de cliente requerido para consultar precios vigentes.</mat-list-item>
         <mat-list-item>Vigencia de cotizacion: 24 horas.</mat-list-item>
         <mat-list-item>Stock disponible = stock fisico - stock reservado.</mat-list-item>
       </mat-list>

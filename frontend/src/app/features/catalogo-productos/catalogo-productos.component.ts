@@ -63,6 +63,9 @@ export class CatalogoProductosComponent implements OnInit, OnDestroy {
   );
 
   readonly uniqueUnidades = computed(() => Array.from(new Set(this.products().map((item) => item.unidadMedida))).sort());
+  readonly enabledCount = computed(() => this.products().filter((item) => this.api.isActive(item)).length);
+  readonly lowStockCount = computed(() => this.products().filter((item) => this.getStockBadge(item) !== 'ok').length);
+  readonly totalStockDisponible = computed(() => this.products().reduce((total, item) => total + item.stockDisponible, 0));
 
   ngOnInit(): void {
     this.loadProducts();
@@ -191,7 +194,17 @@ export class CatalogoProductosComponent implements OnInit, OnDestroy {
   }
 
   isBlocked(product: ProductResponse): boolean {
-    return product.estado?.id === 3;
+    return this.api.isBlocked(product);
+  }
+
+  getStatusClass(product: ProductResponse): string {
+    if (this.api.isBlocked(product)) {
+      return 'blocked';
+    }
+    if (this.api.isInactive(product)) {
+      return 'inactive';
+    }
+    return this.api.isActive(product) ? 'active' : 'unknown';
   }
 
   getStockBadge(product: ProductResponse): 'critical' | 'warn' | 'ok' {
@@ -202,6 +215,17 @@ export class CatalogoProductosComponent implements OnInit, OnDestroy {
       return 'warn';
     }
     return 'ok';
+  }
+
+  getStockLabel(product: ProductResponse): string {
+    const badge = this.getStockBadge(product);
+    if (badge === 'critical') {
+      return 'Sin stock';
+    }
+    if (badge === 'warn') {
+      return 'Stock bajo';
+    }
+    return 'Stock ok';
   }
 
   private loadProducts(): void {

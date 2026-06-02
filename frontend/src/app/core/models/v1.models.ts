@@ -118,6 +118,7 @@ export interface ProductoV1 {
   cantMinVenta: number;
   idEstadoProducto?: number;
   estadoProducto?: string;
+  descEstadoProducto?: string;
 }
 
 export interface ProductoV1CreateRequest {
@@ -162,16 +163,22 @@ export interface DetalleCotizacionV1 {
   idCotizacion: number;
   idProducto: number;
   producto: string;
+  nombreProducto?: string;
+  unidadMedida?: string;
   cantidad: number;
   precioUni: number;
+  subtotalDetalle?: number;
 }
 
 export interface CotizacionV1 {
   idCotizacion: number;
   idCliente: number;
   cliente: string;
+  razonSocialCliente?: string;
+  rucCliente?: string;
   idVendedor: number;
   vendedor: string;
+  nombreVendedor?: string;
   fechaEmision: string;
   fechaVencimiento: string;
   moneda: string;
@@ -184,6 +191,7 @@ export interface CotizacionV1 {
   observaciones?: string;
   idEstadoCotizacion: number;
   estadoCotizacion: string;
+  descEstadoCotizacion?: string;
   pdfPath?: string;
   detalles?: DetalleCotizacionV1[];
 }

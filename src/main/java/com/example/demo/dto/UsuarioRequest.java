@@ -36,7 +36,6 @@ public record UsuarioRequest(
         @Size(max = 20, message = "El celular no debe superar 20 caracteres.")
         String celular,
 
-        @NotBlank(message = "La contrasena hash es obligatoria.")
         @Size(max = 255, message = "La contrasena hash no debe superar 255 caracteres.")
         String passwordHash,
 

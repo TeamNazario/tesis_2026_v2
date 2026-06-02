@@ -42,7 +42,6 @@ export class SidebarComponent {
     { label: 'Inventario', icon: 'inventory_2', route: '/inventario' },
     { label: 'Productos', icon: 'science', route: '/catalogo-productos' },
     { label: 'Cotizaciones', icon: 'request_quote', route: '/cotizaciones' },
-    { label: 'Chatbot', icon: 'smart_toy', route: '/chatbot-monitor' },
     { label: 'Reportes', icon: 'bar_chart', route: '/reportes' },
     { label: 'Configuracion', icon: 'tune', route: '/configuracion' },
   ];

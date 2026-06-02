@@ -2,6 +2,7 @@ package com.example.demo.service;
 
 import com.example.demo.dto.UsuarioRequest;
 import com.example.demo.dto.UsuarioResponse;
+import com.example.demo.exception.BusinessValidationException;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.mapper.UsuarioMapper;
 import com.example.demo.model.EstadoUsuario;
@@ -12,7 +13,11 @@ import com.example.demo.repository.EstadoUsuarioRepository;
 import com.example.demo.repository.PerfilRepository;
 import com.example.demo.repository.TipoDocumentoRepository;
 import com.example.demo.repository.UsuarioRepository;
+import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,13 +28,15 @@ public class UsuarioService extends CrudService<Usuario, Integer> {
     private final TipoDocumentoRepository tipoDocumentoRepository;
     private final EstadoUsuarioRepository estadoUsuarioRepository;
     private final UsuarioMapper mapper;
+    private final PasswordEncoder passwordEncoder;
 
     public UsuarioService(
             UsuarioRepository repository,
             PerfilRepository perfilRepository,
             TipoDocumentoRepository tipoDocumentoRepository,
             EstadoUsuarioRepository estadoUsuarioRepository,
-            UsuarioMapper mapper
+            UsuarioMapper mapper,
+            PasswordEncoder passwordEncoder
     ) {
         super(repository, "Usuario");
         this.usuarioRepository = repository;
@@ -37,6 +44,7 @@ public class UsuarioService extends CrudService<Usuario, Integer> {
         this.tipoDocumentoRepository = tipoDocumentoRepository;
         this.estadoUsuarioRepository = estadoUsuarioRepository;
         this.mapper = mapper;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -55,16 +63,79 @@ public class UsuarioService extends CrudService<Usuario, Integer> {
     }
 
     @Transactional
-    public UsuarioResponse update(Integer id, UsuarioRequest request) {
-        Usuario usuario = findUsuario(id);
-        mapper.updateEntity(
-                usuario,
-                request,
+    public UsuarioResponse create(UsuarioRequest request) {
+        validateUnique(request.correo(), request.nroDocumento(), null);
+        if (request.passwordHash() == null || request.passwordHash().isBlank()) {
+            throw validation("passwordHash", "La contrasena es obligatoria para crear el usuario.");
+        }
+        Usuario usuario = mapper.toEntity(
+                withEncodedPassword(request),
                 findPerfil(request.idPerfil()),
                 findTipoDocumento(request.idTipoDoc()),
                 findEstadoUsuario(request.idEstado())
         );
+        usuario.intentosFallidos = request.intentosFallidos() == null ? 0 : request.intentosFallidos();
+        usuario.fechaRegistro = LocalDateTime.now();
         return mapper.toResponse(usuarioRepository.save(usuario));
+    }
+
+    @Transactional
+    public UsuarioResponse update(Integer id, UsuarioRequest request) {
+        Usuario usuario = findUsuario(id);
+        validateUnique(request.correo(), request.nroDocumento(), id);
+        mapper.updateEntity(
+                usuario,
+                request.passwordHash() == null || request.passwordHash().isBlank() ? request : withEncodedPassword(request),
+                findPerfil(request.idPerfil()),
+                findTipoDocumento(request.idTipoDoc()),
+                findEstadoUsuario(request.idEstado())
+        );
+        usuario.fechaActualiza = LocalDateTime.now();
+        return mapper.toResponse(usuarioRepository.save(usuario));
+    }
+
+    private UsuarioRequest withEncodedPassword(UsuarioRequest request) {
+        return new UsuarioRequest(
+                request.idPerfil(),
+                request.idTipoDoc(),
+                request.nroDocumento(),
+                request.nombres(),
+                request.apellidoPaterno(),
+                request.apellidoMaterno(),
+                request.correo(),
+                request.celular(),
+                passwordEncoder.encode(request.passwordHash()),
+                request.intentosFallidos(),
+                request.idEstado(),
+                request.usuarioRegistro(),
+                request.usuarioActualiza()
+        );
+    }
+
+    private void validateUnique(String correo, String nroDocumento, Integer currentId) {
+        Map<String, List<String>> fields = new LinkedHashMap<>();
+        usuarioRepository.findByCorreo(correo).ifPresent(usuario -> {
+            if (!usuario.idUsuario.equals(currentId)) {
+                fields.put("correo", List.of("Ya existe un usuario con ese correo."));
+            }
+        });
+        usuarioRepository.findAll().stream()
+                .filter(usuario -> usuario.nroDocumento != null && usuario.nroDocumento.equals(nroDocumento))
+                .findFirst()
+                .ifPresent(usuario -> {
+                    if (!usuario.idUsuario.equals(currentId)) {
+                        fields.put("nroDocumento", List.of("Ya existe un usuario con ese documento."));
+                    }
+                });
+        if (!fields.isEmpty()) {
+            throw new BusinessValidationException("No se pudo guardar el usuario.", fields);
+        }
+    }
+
+    private BusinessValidationException validation(String field, String message) {
+        Map<String, List<String>> fields = new LinkedHashMap<>();
+        fields.put(field, List.of(message));
+        return new BusinessValidationException(message, fields);
     }
 
     private Usuario findUsuario(Integer id) {

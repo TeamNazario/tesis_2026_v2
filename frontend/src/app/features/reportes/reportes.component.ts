@@ -1,6 +1,4 @@
-import { Component, inject } from '@angular/core';
-import { DomainApiService } from '../../core/services/domain-api.service';
-import { NotificationService } from '../../core/services/notification.service';
+import { Component } from '@angular/core';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { MaterialModule } from '../../shared/material/material.module';
 
@@ -13,20 +11,17 @@ import { MaterialModule } from '../../shared/material/material.module';
       <article>
         <mat-icon>request_quote</mat-icon>
         <h2>Cotizaciones</h2>
-        <p>Exportacion Excel/CSV pendiente de endpoint backend.</p>
-        <button mat-stroked-button (click)="todo()">Exportar</button>
+        <p>Resumen operativo basado en las cotizaciones vigentes del sistema.</p>
       </article>
       <article>
-        <mat-icon>smart_toy</mat-icon>
-        <h2>Chatbot</h2>
-        <p>Logs de eficiencia y autonomia resolutiva.</p>
-        <button mat-stroked-button (click)="todo()">Exportar</button>
+        <mat-icon>business</mat-icon>
+        <h2>Clientes</h2>
+        <p>Seguimiento de cartera, contactos y estados comerciales.</p>
       </article>
       <article>
         <mat-icon>inventory_2</mat-icon>
         <h2>Inventario</h2>
-        <p>Movimientos y disponibilidad por presentacion.</p>
-        <button mat-stroked-button (click)="todo()">Exportar</button>
+        <p>Disponibilidad calculada desde productos y stock vigente.</p>
       </article>
     </section>
   `,
@@ -58,12 +53,4 @@ import { MaterialModule } from '../../shared/material/material.module';
     }
   `,
 })
-export class ReportesComponent {
-  private readonly notifications = inject(NotificationService);
-  private readonly api = inject(DomainApiService);
-
-  todo(): void {
-    void this.api;
-    this.notifications.error('TODO backend: falta endpoint de exportacion Blob.');
-  }
-}
+export class ReportesComponent {}

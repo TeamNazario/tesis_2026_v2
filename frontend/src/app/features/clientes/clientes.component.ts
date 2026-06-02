@@ -14,7 +14,6 @@ import { PageHeaderComponent } from '../../shared/components/page-header/page-he
 import { MaterialModule } from '../../shared/material/material.module';
 import { ClienteDetailDialogComponent } from './components/cliente-detail-dialog/cliente-detail-dialog.component';
 import { ClienteFormDialogComponent } from './components/cliente-form-dialog/cliente-form-dialog.component';
-import { ConfirmStatusDialogComponent } from './components/confirm-status-dialog/confirm-status-dialog.component';
 
 @Component({
   selector: 'app-clientes',
@@ -48,7 +47,6 @@ export class ClientesComponent implements OnInit, OnDestroy {
     search: [''],
     estado: ['ALL'],
     tipoCliente: [''],
-    zona: [''],
     departamento: [''],
     provincia: [''],
     distrito: [''],
@@ -89,7 +87,6 @@ export class ClientesComponent implements OnInit, OnDestroy {
       search: '',
       estado: 'ALL',
       tipoCliente: '',
-      zona: '',
       departamento: '',
       provincia: '',
       distrito: '',
@@ -162,41 +159,12 @@ export class ClientesComponent implements OnInit, OnDestroy {
     });
   }
 
-  toggleClienteStatus(cliente: ClienteResponseVm): void {
-    const active = this.clienteService.isActive(cliente);
-    const nextStatusId = active ? 2 : 1;
-    const nextLabel = active ? 'Inactivo' : 'Activo';
-
-    const dialogRef = this.dialog.open(ConfirmStatusDialogComponent, {
-      width: '520px',
-      maxWidth: '95vw',
-      data: {
-        title: 'Confirmar cambio de estado',
-        message: `Se cambiara el estado del cliente ${cliente.razonSocial} a ${nextLabel}.`,
-      },
-    });
-
-    dialogRef.afterClosed().subscribe((confirmed) => {
-      if (!confirmed) {
-        return;
-      }
-
-      this.isSaving.set(true);
-      this.clienteService
-        .changeClienteStatus(cliente.id, nextStatusId)
-        .pipe(finalize(() => this.isSaving.set(false)))
-        .subscribe({
-          next: () => {
-            this.notifications.success('El estado del cliente fue actualizado correctamente.');
-            this.loadClientes();
-          },
-          error: (error) => this.handleMutationError(error),
-        });
-    });
-  }
-
   getStatusLabel(cliente: ClienteResponseVm): string {
     return this.clienteService.getStatusLabel(cliente);
+  }
+
+  getStatusClass(cliente: ClienteResponseVm): string {
+    return this.clienteService.getStatusClass(cliente);
   }
 
   private loadClientes(): void {
@@ -242,7 +210,6 @@ export class ClientesComponent implements OnInit, OnDestroy {
       search: raw.search ?? '',
       estado: (raw.estado as ClienteFilter['estado']) ?? 'ALL',
       tipoCliente: raw.tipoCliente ?? '',
-      zona: raw.zona ?? '',
       departamento: raw.departamento ?? '',
       provincia: raw.provincia ?? '',
       distrito: raw.distrito ?? '',

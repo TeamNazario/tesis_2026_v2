@@ -23,6 +23,22 @@ export interface UsuarioResponse {
   fechaActualiza?: string;
 }
 
+export interface UsuarioRequest {
+  idPerfil: number;
+  idTipoDoc: number;
+  nroDocumento: string;
+  nombres: string;
+  apellidoPaterno: string;
+  apellidoMaterno?: string;
+  correo: string;
+  celular?: string;
+  passwordHash?: string;
+  intentosFallidos: number;
+  idEstado: number;
+  usuarioRegistro?: string;
+  usuarioActualiza?: string;
+}
+
 export interface AuthResponse {
   tokenType: string;
   accessToken: string;

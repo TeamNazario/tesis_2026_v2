@@ -39,11 +39,6 @@ export const routes: Routes = [
         loadComponent: () => import('./features/cotizaciones/cotizaciones.component').then((m) => m.CotizacionesComponent),
       },
       {
-        path: 'chatbot-monitor',
-        loadComponent: () =>
-          import('./features/chatbot-monitor/chatbot-monitor.component').then((m) => m.ChatbotMonitorComponent),
-      },
-      {
         path: 'reportes',
         loadComponent: () => import('./features/reportes/reportes.component').then((m) => m.ReportesComponent),
       },

@@ -48,14 +48,6 @@ export class ProductService {
       .pipe(map((item) => this.toVm(item)));
   }
 
-  deleteProduct(_id: number): Observable<never> {
-    throw new Error('TODO: Endpoint de eliminacion de producto no disponible en backend v1.');
-  }
-
-  getProductHistory(_id: number): Observable<never> {
-    throw new Error('TODO: Endpoint de historial de productos no implementado en backend.');
-  }
-
   applyLocalSearch(items: ProductVm[], term: string, filter: ProductFilter): ProductVm[] {
     const normalizedTerm = term.trim().toLowerCase();
     return items.filter((item) => {
@@ -69,10 +61,10 @@ export class ProductService {
       if (filter.estado === 'ACTIVE' && !this.isActive(item)) {
         return false;
       }
-      if (filter.estado === 'INACTIVE' && this.isActive(item)) {
+      if (filter.estado === 'INACTIVE' && !this.isInactive(item)) {
         return false;
       }
-      if (filter.estado === 'BLOCKED' && item.estado?.id !== 3) {
+      if (filter.estado === 'BLOCKED' && !this.isBlocked(item)) {
         return false;
       }
       if (filter.presentacion && (item.presentacion ?? '') !== filter.presentacion) {
@@ -89,11 +81,45 @@ export class ProductService {
   }
 
   isActive(product: ProductVm): boolean {
-    const label = this.getStatusLabel(product).toLowerCase();
-    return product.estado?.id === 1 || label === 'activo' || label === 'habilitado';
+    const id = this.getStatusId(product);
+    if (id === 1) {
+      return true;
+    }
+    if (id === 2 || id === 3) {
+      return false;
+    }
+    const label = this.normalizeStatus(product.estado?.nombre);
+    return label === 'activo' || label === 'habilitado';
+  }
+
+  isInactive(product: ProductVm): boolean {
+    const id = this.getStatusId(product);
+    if (id === 2) {
+      return true;
+    }
+    const label = this.normalizeStatus(product.estado?.nombre);
+    return label === 'inactivo' || label === 'inhabilitado';
+  }
+
+  isBlocked(product: ProductVm): boolean {
+    const id = this.getStatusId(product);
+    if (id === 3) {
+      return true;
+    }
+    return this.normalizeStatus(product.estado?.nombre).includes('bloqueado');
   }
 
   getStatusLabel(product: ProductVm): string {
+    const id = this.getStatusId(product);
+    if (id === 1) {
+      return 'Habilitado';
+    }
+    if (id === 2) {
+      return 'Inhabilitado';
+    }
+    if (id === 3) {
+      return 'Bloqueado';
+    }
     return product.estado?.nombre?.trim() || 'Sin estado';
   }
 
@@ -112,7 +138,9 @@ export class ProductService {
       stockDisponible: item.stockDisponible,
       stockMinimo: item.stockMinimo,
       cantMinVenta: item.cantMinVenta,
-      estado: item.idEstadoProducto || item.estadoProducto ? { id: item.idEstadoProducto ?? 0, nombre: item.estadoProducto ?? 'Sin estado' } : undefined,
+      estado: item.idEstadoProducto || item.estadoProducto
+        ? { id: item.idEstadoProducto ?? 0, nombre: item.estadoProducto?.trim() || this.getStatusNameById(item.idEstadoProducto) || 'Sin estado' }
+        : undefined,
       fechaActualizacion: undefined,
       fechaCreacion: undefined,
     };
@@ -153,5 +181,30 @@ export class ProductService {
       return 'Cilindro';
     }
     return unidadMedida;
+  }
+
+  private getStatusId(product: ProductVm): number | undefined {
+    return product.estado?.id && product.estado.id > 0 ? product.estado.id : undefined;
+  }
+
+  private getStatusNameById(id?: number): string | undefined {
+    if (id === 1) {
+      return 'Habilitado';
+    }
+    if (id === 2) {
+      return 'Inhabilitado';
+    }
+    if (id === 3) {
+      return 'Bloqueado';
+    }
+    return undefined;
+  }
+
+  private normalizeStatus(value?: string): string {
+    return (value ?? '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
   }
 }

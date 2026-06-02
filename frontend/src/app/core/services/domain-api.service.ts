@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, forkJoin, map } from 'rxjs';
 import { API_ENDPOINTS } from '../constants/api-endpoints';
-import { UsuarioResponse } from '../auth/models/auth.models';
+import { UsuarioRequest, UsuarioResponse } from '../auth/models/auth.models';
 import { ReferenceResponse } from '../http/reference-response.model';
 import { ApiService, QueryParams } from './api.service';
 import {
@@ -30,6 +30,14 @@ export class DomainApiService {
 
   getUsuarios(): Observable<UsuarioResponse[]> {
     return this.api.get<UsuarioResponse[]>(API_ENDPOINTS.usuarios);
+  }
+
+  createUsuario(request: UsuarioRequest): Observable<UsuarioResponse> {
+    return this.api.post<UsuarioResponse>(API_ENDPOINTS.usuarios, request);
+  }
+
+  updateUsuario(id: number, request: UsuarioRequest): Observable<UsuarioResponse> {
+    return this.api.put<UsuarioResponse>(`${API_ENDPOINTS.usuarios}/${id}`, request);
   }
 
   getProductos(params?: QueryParams): Observable<ProductoResponse[]> {
@@ -79,10 +87,5 @@ export class DomainApiService {
         };
       }),
     );
-  }
-
-  downloadCotizacionPdf(id: number): Observable<Blob> {
-    // TODO backend: confirmar endpoint real para PDF.
-    return this.api.download(`${API_ENDPOINTS.v1.cotizaciones}/${id}/pdf`);
   }
 }

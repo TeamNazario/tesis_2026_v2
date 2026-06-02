@@ -49,14 +49,18 @@ export interface ProductoResponse {
   cantMinVenta: number;
   idEstadoProducto?: number;
   estadoProducto?: string;
+  descEstadoProducto?: string;
 }
 
 export interface CotizacionResponse {
   idCotizacion: number;
   idCliente: number;
   cliente: string;
+  razonSocialCliente?: string;
+  rucCliente?: string;
   idVendedor: number;
   vendedor: string;
+  nombreVendedor?: string;
   fechaEmision: string;
   fechaVencimiento: string;
   moneda: string;
@@ -69,6 +73,7 @@ export interface CotizacionResponse {
   observaciones?: string;
   idEstadoCotizacion: number;
   estadoCotizacion: string;
+  descEstadoCotizacion?: string;
   pdfPath?: string;
   detalles?: CotizacionDetalleResponse[];
 }
@@ -78,8 +83,11 @@ export interface CotizacionDetalleResponse {
   idCotizacion: number;
   idProducto: number;
   producto: string;
+  nombreProducto?: string;
+  unidadMedida?: string;
   cantidad: number;
   precioUni: number;
+  subtotalDetalle?: number;
 }
 
 export interface DashboardKpis {

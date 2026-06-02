@@ -10,7 +10,6 @@ export interface ClienteResponseVm {
   vendedorAsignado?: string;
   idVendedorAsignado?: number;
   direccionFiscal?: string;
-  zonaDespacho?: string;
   departamento?: string;
   provincia?: string;
   distrito?: string;
@@ -52,9 +51,8 @@ export interface ClienteUpdateRequest extends Omit<ClienteCreateRequest, 'ruc'> 
 
 export interface ClienteFilter {
   search: string;
-  estado: 'ALL' | 'ACTIVE' | 'INACTIVE';
+  estado: 'ALL' | 'ACTIVE' | 'INACTIVE' | 'BLOCKED';
   tipoCliente: string;
-  zona: string;
   departamento: string;
   provincia: string;
   distrito: string;

@@ -35,14 +35,6 @@ export class ContactoClienteService {
       .pipe(map((item) => this.toVm(item)));
   }
 
-  setContactoPrincipal(_contactoId: number): Observable<never> {
-    throw new Error('TODO: Endpoint de contacto principal no disponible en backend v1.');
-  }
-
-  deleteContacto(_contactoId: number): Observable<never> {
-    throw new Error('TODO: Endpoint de eliminacion de contacto no disponible en backend v1.');
-  }
-
   private toVm(item: ContactoClienteV1): ContactoClienteResponseVm {
     const apellidos = [item.apellidoPaterno, item.apellidoMaterno ?? ''].join(' ').replace(/\s+/g, ' ').trim();
     const fullName = [item.nombre, apellidos].join(' ').replace(/\s+/g, ' ').trim();

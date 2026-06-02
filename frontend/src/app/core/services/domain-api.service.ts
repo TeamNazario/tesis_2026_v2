@@ -64,7 +64,7 @@ export class DomainApiService {
         const weekAgo = new Date(now);
         weekAgo.setDate(now.getDate() - 7);
         const month = now.getMonth();
-        const confirmed = cotizaciones.filter((item) => item.estadoCotizacion === 'CONFIRMADA');
+        const confirmed = cotizaciones.filter((item) => (item.estadoCotizacion ?? item.descEstadoCotizacion ?? '').toUpperCase() === 'CONFIRMADA');
         const vencidas = cotizaciones.filter((item) => new Date(item.fechaVencimiento) < now);
         const chatbot: CotizacionResponse[] = [];
         const tiempos: number[] = [];

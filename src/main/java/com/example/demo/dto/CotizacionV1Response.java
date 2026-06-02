@@ -7,9 +7,11 @@ import java.util.List;
 public record CotizacionV1Response(
         Integer idCotizacion,
         Integer idCliente,
-        String cliente,
+        String rucCliente,
+        String razonSocialCliente,
+        String direccionCliente,
         Integer idVendedor,
-        String vendedor,
+        String nombreVendedor,
         LocalDateTime fechaEmision,
         LocalDateTime fechaVencimiento,
         String moneda,
@@ -18,10 +20,10 @@ public record CotizacionV1Response(
         BigDecimal importeTotal,
         String direccionDespacho,
         String depProvDis,
-        Boolean flagCubierto,
+        Integer flagCubierto,
         String observaciones,
         Integer idEstadoCotizacion,
-        String estadoCotizacion,
+        String descEstadoCotizacion,
         String pdfPath,
         List<DetalleCotizacionV1Response> detalles
 ) {}

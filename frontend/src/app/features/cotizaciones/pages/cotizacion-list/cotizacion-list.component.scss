@@ -1,0 +1,72 @@
+.filters-panel,
+.table-panel {
+  background: #fff;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.filters-panel {
+  display: grid;
+  grid-template-columns: minmax(260px, 1.5fr) repeat(5, minmax(160px, 1fr)) auto;
+  gap: 0.85rem;
+  align-items: start;
+  margin-bottom: 1rem;
+}
+
+.search-field {
+  min-width: 260px;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+  padding-top: 0.25rem;
+}
+
+.table-panel {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  min-width: 1160px;
+}
+
+th {
+  color: #2e3b2f;
+  font-weight: 700;
+}
+
+.loading-state {
+  min-height: 180px;
+  display: grid;
+  place-items: center;
+  gap: 0.75rem;
+  color: #4c574d;
+}
+
+@media (max-width: 1180px) {
+  .filters-panel {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .filter-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 720px) {
+  .filters-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-actions {
+    justify-content: stretch;
+  }
+
+  .filter-actions button {
+    flex: 1;
+  }
+}

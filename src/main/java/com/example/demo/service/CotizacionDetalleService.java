@@ -88,9 +88,7 @@ public class CotizacionDetalleService extends CrudService<CotizacionDetalle, Int
         if (request.precioUnitarioAplicado().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("El precio unitario aplicado debe ser mayor a 0.");
         }
-        detalle.precioUnitarioAplicado = request.precioUnitarioAplicado();
         detalle.precioUni = request.precioUnitarioAplicado();
-        detalle.subtotalLinea = request.precioUnitarioAplicado().multiply(BigDecimal.valueOf(request.cantidad()));
     }
 
     private CotizacionDetalle findDetalle(Integer id) {
@@ -114,14 +112,15 @@ public class CotizacionDetalleService extends CrudService<CotizacionDetalle, Int
         }
         List<CotizacionDetalle> detalles = detalleRepository.findByCotizacionIdCotizacion(cotizacion.idCotizacion);
         BigDecimal subtotal = detalles.stream()
-                .map(d -> d.subtotalLinea == null ? BigDecimal.ZERO : d.subtotalLinea)
+                .map(d -> d.precioUni == null || d.cantidad == null
+                        ? BigDecimal.ZERO
+                        : d.precioUni.multiply(BigDecimal.valueOf(d.cantidad)))
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .setScale(2, RoundingMode.HALF_UP);
         BigDecimal igv = subtotal.multiply(igvRate).setScale(2, RoundingMode.HALF_UP);
         cotizacion.subtotal = subtotal;
         cotizacion.igv = igv;
         cotizacion.importeTotal = subtotal.add(igv).setScale(2, RoundingMode.HALF_UP);
-        cotizacion.montoTotal = cotizacion.importeTotal;
         cotizacionRepository.save(cotizacion);
     }
 }

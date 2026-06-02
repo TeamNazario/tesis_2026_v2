@@ -55,11 +55,11 @@ export interface ProductoResponse {
 export interface CotizacionResponse {
   idCotizacion: number;
   idCliente: number;
-  cliente: string;
+  cliente?: string;
   razonSocialCliente?: string;
   rucCliente?: string;
   idVendedor: number;
-  vendedor: string;
+  vendedor?: string;
   nombreVendedor?: string;
   fechaEmision: string;
   fechaVencimiento: string;
@@ -72,7 +72,7 @@ export interface CotizacionResponse {
   flagCubierto?: boolean;
   observaciones?: string;
   idEstadoCotizacion: number;
-  estadoCotizacion: string;
+  estadoCotizacion?: string;
   descEstadoCotizacion?: string;
   pdfPath?: string;
   detalles?: CotizacionDetalleResponse[];

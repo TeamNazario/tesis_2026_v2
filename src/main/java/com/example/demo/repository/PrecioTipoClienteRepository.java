@@ -35,4 +35,22 @@ public interface PrecioTipoClienteRepository extends JpaRepository<PrecioTipoCli
             @Param("idTipoCliente") Integer idTipoCliente,
             @Param("idEstadoProducto") Integer idEstadoProducto
     );
+
+    @EntityGraph(attributePaths = {"tipoCliente", "estadoProducto", "producto"})
+    @Query("""
+            SELECT p
+            FROM PrecioTipoCliente p
+            JOIN FETCH p.tipoCliente tc
+            JOIN FETCH p.estadoProducto ep
+            JOIN FETCH p.producto pr
+            WHERE p.idProducto = :idProducto
+              AND p.idTipoCliente = :idTipoCliente
+              AND LOWER(p.moneda) IN :monedas
+              AND ep.idEstadoProducto = 1
+            """)
+    Optional<PrecioTipoCliente> findPrecioActivo(
+            @Param("idProducto") Integer idProducto,
+            @Param("idTipoCliente") Integer idTipoCliente,
+            @Param("monedas") List<String> monedas
+    );
 }

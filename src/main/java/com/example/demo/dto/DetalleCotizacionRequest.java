@@ -6,5 +6,5 @@ import java.math.BigDecimal;
 public record DetalleCotizacionRequest(
         @NotNull Integer idProducto,
         @NotNull @Positive Integer cantidad,
-        @NotNull @DecimalMin("0.01") BigDecimal precioUni
+        @DecimalMin("0.01") BigDecimal precioUni
 ) {}

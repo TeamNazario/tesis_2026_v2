@@ -13,12 +13,14 @@ public class CotizacionMapper {
     }
 
     public CotizacionDetalleResponse toDetalleResponse(CotizacionDetalle detalle) {
+        java.math.BigDecimal precio = detalle.precioUni == null ? java.math.BigDecimal.ZERO : detalle.precioUni;
+        java.math.BigDecimal subtotal = precio.multiply(java.math.BigDecimal.valueOf(detalle.cantidad == null ? 0 : detalle.cantidad));
         return new CotizacionDetalleResponse(
-                detalle.idDetalle,
+                detalle.idDetalleCoti,
                 referenceMapper.toReference(detalle.producto),
                 detalle.cantidad,
-                detalle.precioUnitarioAplicado,
-                detalle.subtotalLinea
+                precio,
+                subtotal
         );
     }
 }

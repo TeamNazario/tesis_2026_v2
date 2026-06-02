@@ -41,7 +41,7 @@ export const routes: Routes = [
       },
       {
         path: 'cotizaciones',
-        loadComponent: () => import('./features/cotizaciones/cotizaciones.component').then((m) => m.CotizacionesComponent),
+        loadChildren: () => import('./features/cotizaciones/cotizaciones.routes').then((m) => m.COTIZACIONES_ROUTES),
       },
       {
         path: 'reportes',

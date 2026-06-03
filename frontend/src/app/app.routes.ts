@@ -26,10 +26,6 @@ export const routes: Routes = [
         loadComponent: () => import('./features/usuarios/usuarios.component').then((m) => m.UsuariosComponent),
       },
       {
-        path: 'inventario',
-        loadComponent: () => import('./features/inventario/inventario.component').then((m) => m.InventarioComponent),
-      },
-      {
         path: 'catalogo-productos',
         loadComponent: () =>
           import('./features/catalogo-productos/catalogo-productos.component').then((m) => m.CatalogoProductosComponent),

@@ -1,4 +1,4 @@
-<app-page-header [title]="title" [description]="description">
+<app-page-header [title]="title">
   <button mat-stroked-button type="button" routerLink="/precios-tipo-cliente">
     <mat-icon>arrow_back</mat-icon>
     Volver
@@ -111,16 +111,6 @@
         </div>
       </section>
     </form>
-
-    <aside class="help-card">
-      <h4>Buenas practicas</h4>
-      <ul>
-        <li>En edicion, producto y tipo de cliente quedan bloqueados para proteger la clave logica.</li>
-        <li>La moneda por defecto es SOLES.</li>
-        <li>El estado inicial se obtiene desde el catalogo del backend.</li>
-        <li>Se valida que no exista la combinacion producto + tipo de cliente antes de guardar.</li>
-      </ul>
-    </aside>
   </section>
 
   <section class="actions-bar">

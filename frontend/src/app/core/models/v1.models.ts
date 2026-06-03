@@ -136,28 +136,6 @@ export interface ProductoV1CreateRequest {
 
 export interface ProductoV1UpdateRequest extends Partial<ProductoV1CreateRequest> {}
 
-export interface PrecioTipoClienteV1 {
-  idPrecio: number;
-  precioUnitario: number;
-  moneda: string;
-  idTipoCliente: number;
-  tipoCliente: string;
-  idEstadoProducto: number;
-  estadoProducto: string;
-  idProducto: number;
-  producto: string;
-}
-
-export interface PrecioTipoClienteV1CreateRequest {
-  precioUnitario: number;
-  moneda: string;
-  idTipoCliente: number;
-  idEstadoProducto: number;
-  idProducto: number;
-}
-
-export interface PrecioTipoClienteV1UpdateRequest extends Partial<PrecioTipoClienteV1CreateRequest> {}
-
 export interface DetalleCotizacionV1 {
   idDetalleCoti: number;
   idCotizacion: number;

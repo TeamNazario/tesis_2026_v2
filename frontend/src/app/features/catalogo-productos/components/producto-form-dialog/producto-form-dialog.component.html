@@ -4,9 +4,7 @@
   <form [formGroup]="form" class="form-shell">
     <section class="form-section identity-section">
       <div class="section-copy">
-        <span>Identidad comercial</span>
-        <h3>Datos visibles del producto</h3>
-        <p>Usa nombres claros y una presentacion reconocible para busqueda y venta.</p>
+        <span>Datos comercial del producto</span>
       </div>
 
       <div class="grid two">
@@ -34,18 +32,12 @@
           }
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="full">
-          <mat-label>Descripcion tecnica</mat-label>
-          <textarea matInput rows="3" formControlName="descripcion"></textarea>
-        </mat-form-field>
       </div>
     </section>
 
     <section class="form-section">
       <div class="section-copy">
         <span>Logistica</span>
-        <h3>Medidas operativas</h3>
-        <p>Estos datos ayudan a planificar despacho, almacenamiento y cotizaciones.</p>
       </div>
 
       <div class="grid three">
@@ -69,8 +61,6 @@
     <section class="form-section inventory-section">
       <div class="section-copy">
         <span>Inventario</span>
-        <h3>Disponibilidad y alertas</h3>
-        <p>El stock disponible se calcula como fisico menos reservado.</p>
       </div>
 
       <div class="inventory-grid">
@@ -102,8 +92,6 @@
     <section class="form-section">
       <div class="section-copy">
         <span>Estado</span>
-        <h3>Control del catalogo</h3>
-        <p>Define si el producto puede ser usado comercialmente.</p>
       </div>
 
       <mat-form-field appearance="outline">

@@ -17,9 +17,9 @@ export interface UsuarioResponse {
   celular?: string;
   intentosFallidos: number;
   estado: ReferenceResponse;
-  usuarioRegistro?: string;
+  usuarioRegistro?: string | null;
   fechaRegistro?: string;
-  usuarioActualiza?: string;
+  usuarioActualiza?: string | null;
   fechaActualiza?: string;
 }
 
@@ -35,8 +35,8 @@ export interface UsuarioRequest {
   passwordHash?: string;
   intentosFallidos: number;
   idEstado: number;
-  usuarioRegistro?: string;
-  usuarioActualiza?: string;
+  usuarioRegistro?: string | null;
+  usuarioActualiza?: string | null;
 }
 
 export interface AuthResponse {

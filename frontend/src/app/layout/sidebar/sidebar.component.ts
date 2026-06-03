@@ -16,8 +16,7 @@ interface NavItem {
       <div class="brand">
         <div class="mark">B32</div>
         <div>
-          <strong>BIOFLUID D32</strong>
-          <span>Precision Flow</span>
+          <strong>BIOFLUID D32 E.I.R.L.</strong>
         </div>
       </div>
 

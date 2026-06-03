@@ -76,14 +76,6 @@
       <mat-label>Estado SUNAT</mat-label>
       <input matInput formControlName="estadoSunat" />
     </mat-form-field>
-    <div class="full sunat-chips">
-      @if (form.controls.estadoSunat.value) {
-        <mat-chip class="chip-state">{{ form.controls.estadoSunat.value }}</mat-chip>
-      }
-      @if (form.controls.condicionSunat.value) {
-        <mat-chip class="chip-condition">{{ form.controls.condicionSunat.value }}</mat-chip>
-      }
-    </div>
     @if (rucInfoMessage) {
       <p class="full feedback feedback-info">{{ rucInfoMessage }}</p>
     }

@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { AuthService } from '../../../../core/auth/services/auth.service';
 import { UsuarioRequest, UsuarioResponse } from '../../../../core/auth/models/auth.models';
 import { CatalogoItem } from '../../../../core/models/v1.models';
 import { MaterialModule } from '../../../../shared/material/material.module';
@@ -22,6 +23,7 @@ interface UsuarioFormDialogData {
 export class UsuarioFormDialogComponent {
   private readonly fb = inject(FormBuilder);
   private readonly dialogRef = inject(MatDialogRef<UsuarioFormDialogComponent>);
+  private readonly authService = inject(AuthService);
   readonly data = inject<UsuarioFormDialogData>(MAT_DIALOG_DATA);
   readonly isCreateMode = this.data.mode === 'create';
 
@@ -48,6 +50,7 @@ export class UsuarioFormDialogComponent {
       return;
     }
     const raw = this.form.getRawValue();
+    const usuarioLogeado = this.authService.currentUser()?.correo?.trim() || null;
     const request: UsuarioRequest = {
       idPerfil: raw.idPerfil,
       idTipoDoc: raw.idTipoDoc,
@@ -60,8 +63,8 @@ export class UsuarioFormDialogComponent {
       passwordHash: raw.password.trim() || undefined,
       intentosFallidos: this.data.usuario?.intentosFallidos ?? 0,
       idEstado: raw.idEstado,
-      usuarioRegistro: this.data.usuario?.usuarioRegistro ?? 'frontend',
-      usuarioActualiza: 'frontend',
+      usuarioRegistro: this.isCreateMode ? usuarioLogeado : this.data.usuario?.usuarioRegistro ?? usuarioLogeado,
+      usuarioActualiza: this.isCreateMode ? null : usuarioLogeado,
     };
     this.dialogRef.close(request);
   }

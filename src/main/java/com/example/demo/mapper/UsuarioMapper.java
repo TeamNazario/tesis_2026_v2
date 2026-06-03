@@ -77,7 +77,5 @@ public class UsuarioMapper {
         }
         usuario.intentosFallidos = request.intentosFallidos();
         usuario.estadoUsuario = estadoUsuario;
-        usuario.usuarioRegistro = request.usuarioRegistro();
-        usuario.usuarioActualiza = request.usuarioActualiza();
     }
 }

@@ -63,7 +63,7 @@ public class UsuarioService extends CrudService<Usuario, Integer> {
     }
 
     @Transactional
-    public UsuarioResponse create(UsuarioRequest request) {
+    public UsuarioResponse create(UsuarioRequest request, String usuarioLogeado) {
         validateUnique(request.correo(), request.nroDocumento(), null);
         if (request.passwordHash() == null || request.passwordHash().isBlank()) {
             throw validation("passwordHash", "La contrasena es obligatoria para crear el usuario.");
@@ -76,11 +76,14 @@ public class UsuarioService extends CrudService<Usuario, Integer> {
         );
         usuario.intentosFallidos = request.intentosFallidos() == null ? 0 : request.intentosFallidos();
         usuario.fechaRegistro = LocalDateTime.now();
+        usuario.usuarioRegistro = usuarioLogeado;
+        usuario.usuarioActualiza = null;
+        usuario.fechaActualiza = null;
         return mapper.toResponse(usuarioRepository.save(usuario));
     }
 
     @Transactional
-    public UsuarioResponse update(Integer id, UsuarioRequest request) {
+    public UsuarioResponse update(Integer id, UsuarioRequest request, String usuarioLogeado) {
         Usuario usuario = findUsuario(id);
         validateUnique(request.correo(), request.nroDocumento(), id);
         mapper.updateEntity(
@@ -91,6 +94,7 @@ public class UsuarioService extends CrudService<Usuario, Integer> {
                 findEstadoUsuario(request.idEstado())
         );
         usuario.fechaActualiza = LocalDateTime.now();
+        usuario.usuarioActualiza = usuarioLogeado;
         return mapper.toResponse(usuarioRepository.save(usuario));
     }
 
@@ -107,8 +111,8 @@ public class UsuarioService extends CrudService<Usuario, Integer> {
                 passwordEncoder.encode(request.passwordHash()),
                 request.intentosFallidos(),
                 request.idEstado(),
-                request.usuarioRegistro(),
-                request.usuarioActualiza()
+                null,
+                null
         );
     }
 

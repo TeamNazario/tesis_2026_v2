@@ -56,8 +56,8 @@ export class ClienteFormDialogComponent implements OnDestroy {
     departamento: [''],
     provincia: [''],
     distrito: [''],
-    condicionSunat: ['HABIDO', [Validators.required]],
-    estadoSunat: ['ACTIVO', [Validators.required]],
+    condicionSunat: ['', [Validators.required]],
+    estadoSunat: ['', [Validators.required]],
     ubigeo: ['', [Validators.maxLength(6)]],
     idEstadoClienteContacto: [0, [Validators.required, Validators.min(1)]],
   });

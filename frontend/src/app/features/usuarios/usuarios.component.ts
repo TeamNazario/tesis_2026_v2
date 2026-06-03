@@ -141,6 +141,10 @@ export class UsuariosComponent implements OnInit {
   }
 
   private openUsuarioDialog(mode: 'create' | 'edit', usuario?: UsuarioResponse): void {
+    const tiposDocumento = mode === 'create'
+      ? this.filterTiposDocumentoParaAlta(this.tiposDocumento())
+      : this.tiposDocumento();
+
     const dialogRef = this.dialog.open(UsuarioFormDialogComponent, {
       width: '820px',
       maxWidth: '96vw',
@@ -148,7 +152,7 @@ export class UsuariosComponent implements OnInit {
         mode,
         usuario,
         perfiles: this.perfiles(),
-        tiposDocumento: this.tiposDocumento(),
+        tiposDocumento,
         estadosUsuario: this.estadosUsuario(),
       },
     });
@@ -183,5 +187,17 @@ export class UsuariosComponent implements OnInit {
   private isBlocked(usuario: UsuarioResponse): boolean {
     const label = (usuario.estado?.nombre ?? '').toLowerCase();
     return usuario.estado?.id === 3 || label.includes('bloqueado');
+  }
+
+  private filterTiposDocumentoParaAlta(tiposDocumento: CatalogoItem[]): CatalogoItem[] {
+    const allowedLabels = new Set(['DNI', 'CE']);
+    return tiposDocumento.filter((item) => allowedLabels.has(this.normalizeLabel(item.descripcion)));
+  }
+
+  private normalizeLabel(value: string): string {
+    return value
+      .trim()
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, '');
   }
 }

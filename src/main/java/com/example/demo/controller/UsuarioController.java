@@ -2,10 +2,12 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.UsuarioRequest;
 import com.example.demo.dto.UsuarioResponse;
+import com.example.demo.security.AuthenticatedUser;
 import com.example.demo.service.UsuarioService;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,13 +38,21 @@ public class UsuarioController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public UsuarioResponse create(@Valid @RequestBody UsuarioRequest request) {
-        return service.create(request);
+    public UsuarioResponse create(@Valid @RequestBody UsuarioRequest request, @AuthenticationPrincipal AuthenticatedUser user) {
+        return service.create(request, resolveAuditUser(user));
     }
 
     @PutMapping("/{id}")
-    public UsuarioResponse update(@PathVariable Integer id, @Valid @RequestBody UsuarioRequest request) {
-        return service.update(id, request);
+    public UsuarioResponse update(
+            @PathVariable Integer id,
+            @Valid @RequestBody UsuarioRequest request,
+            @AuthenticationPrincipal AuthenticatedUser user
+    ) {
+        return service.update(id, request, resolveAuditUser(user));
+    }
+
+    private String resolveAuditUser(AuthenticatedUser user) {
+        return user != null ? user.getUsername() : null;
     }
 
 }

@@ -16,8 +16,7 @@ interface NavItem {
       <div class="brand">
         <div class="mark">B32</div>
         <div>
-          <strong>BIOFLUID D32</strong>
-          <span>Precision Flow</span>
+          <strong>BIOFLUID D32 E.I.R.L.</strong>
         </div>
       </div>
 
@@ -39,10 +38,9 @@ export class SidebarComponent {
     { label: 'Dashboard', icon: 'space_dashboard', route: '/dashboard' },
     { label: 'Clientes', icon: 'business', route: '/clientes' },
     { label: 'Usuarios', icon: 'group', route: '/usuarios' },
-    { label: 'Inventario', icon: 'inventory_2', route: '/inventario' },
     { label: 'Productos', icon: 'science', route: '/catalogo-productos' },
+    { label: 'Precios por Tipo de Cliente', icon: 'price_change', route: '/precios-tipo-cliente' },
     { label: 'Cotizaciones', icon: 'request_quote', route: '/cotizaciones' },
-    { label: 'Chatbot', icon: 'smart_toy', route: '/chatbot-monitor' },
     { label: 'Reportes', icon: 'bar_chart', route: '/reportes' },
     { label: 'Configuracion', icon: 'tune', route: '/configuracion' },
   ];

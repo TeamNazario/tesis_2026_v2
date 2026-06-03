@@ -1,4 +1,3 @@
-import { DecimalPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -16,7 +15,7 @@ import { ProductoFormDialogComponent } from './components/producto-form-dialog/p
 
 @Component({
   selector: 'app-catalogo-productos',
-  imports: [ReactiveFormsModule, MaterialModule, PageHeaderComponent, EmptyStateComponent, DecimalPipe],
+  imports: [ReactiveFormsModule, MaterialModule, PageHeaderComponent, EmptyStateComponent],
   templateUrl: './catalogo-productos.component.html',
   styleUrl: './catalogo-productos.component.scss',
 })
@@ -40,7 +39,7 @@ export class CatalogoProductosComponent implements OnInit, OnDestroy {
     'nombre',
     'presentacion',
     'unidadMedida',
-    'precioBase',
+    'cantMinVenta',
     'stockDisponible',
     'estado',
     'acciones',
@@ -56,8 +55,6 @@ export class CatalogoProductosComponent implements OnInit, OnDestroy {
     presentacion: [''],
     unidadMedida: [''],
     stockBajo: [false],
-    minPrecio: [null as number | null],
-    maxPrecio: [null as number | null],
   });
 
   readonly uniquePresentaciones = computed(() =>
@@ -65,6 +62,8 @@ export class CatalogoProductosComponent implements OnInit, OnDestroy {
   );
 
   readonly uniqueUnidades = computed(() => Array.from(new Set(this.products().map((item) => item.unidadMedida))).sort());
+  readonly enabledCount = computed(() => this.products().filter((item) => this.api.isActive(item)).length);
+  readonly lowStockCount = computed(() => this.products().filter((item) => this.getStockBadge(item) !== 'ok').length);
 
   ngOnInit(): void {
     this.loadProducts();
@@ -94,8 +93,6 @@ export class CatalogoProductosComponent implements OnInit, OnDestroy {
       presentacion: '',
       unidadMedida: '',
       stockBajo: false,
-      minPrecio: null,
-      maxPrecio: null,
     });
   }
 
@@ -161,22 +158,35 @@ export class CatalogoProductosComponent implements OnInit, OnDestroy {
     return this.api.getStatusLabel(product);
   }
 
-  isEnabled(product: ProductResponse): boolean {
-    return product.estado?.id === 1;
-  }
-
-  isBlocked(product: ProductResponse): boolean {
-    return product.estado?.id === 3;
+  getStatusClass(product: ProductResponse): string {
+    if (this.api.isBlocked(product)) {
+      return 'blocked';
+    }
+    if (this.api.isInactive(product)) {
+      return 'inactive';
+    }
+    return this.api.isActive(product) ? 'active' : 'unknown';
   }
 
   getStockBadge(product: ProductResponse): 'critical' | 'warn' | 'ok' {
     if (product.stockDisponible <= 0) {
       return 'critical';
     }
-    if (product.stockDisponible <= product.stockSeguridad) {
+    if (product.stockDisponible <= product.stockMinimo) {
       return 'warn';
     }
     return 'ok';
+  }
+
+  getStockLabel(product: ProductResponse): string {
+    const badge = this.getStockBadge(product);
+    if (badge === 'critical') {
+      return 'Sin stock';
+    }
+    if (badge === 'warn') {
+      return 'Stock bajo';
+    }
+    return 'Stock ok';
   }
 
   private loadProducts(): void {
@@ -205,8 +215,6 @@ export class CatalogoProductosComponent implements OnInit, OnDestroy {
       presentacion: raw.presentacion ?? '',
       unidadMedida: raw.unidadMedida ?? '',
       stockBajo: raw.stockBajo ?? false,
-      minPrecio: raw.minPrecio,
-      maxPrecio: raw.maxPrecio,
       page: this.pageIndex(),
       size: this.pageSize(),
       sort: 'nombre',

@@ -1,19 +1,18 @@
 export const API_ENDPOINTS = {
   auth: {
     login: '/auth/login',
-    register: '/auth/register',
     me: '/auth/me',
   },
-  clientes: '/clientes',
-  contactosCliente: '/contactos-cliente',
   usuarios: '/usuarios',
-  productos: '/productos',
-  cotizaciones: '/cotizaciones',
-  logsInventario: '/logs-inventario',
-  logsEficienciaChatbot: '/logs-eficiencia-chatbot',
   perfiles: '/perfiles',
-  estados: '/estados',
   tiposDocumento: '/tipos-documento',
-  zonasDespacho: '/zonas-despacho',
   documentos: '/v1/documentos',
+  v1: {
+    catalogos: '/v1/catalogos',
+    clientes: '/v1/clientes',
+    tiposCliente: '/v1/tipos-cliente',
+    productos: '/v1/productos',
+    cotizaciones: '/v1/cotizaciones',
+    preciosTipoCliente: '/v1/precios-tipo-cliente',
+  },
 } as const;

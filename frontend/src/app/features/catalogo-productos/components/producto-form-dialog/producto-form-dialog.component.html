@@ -1,75 +1,112 @@
 <h2 mat-dialog-title>{{ dialogTitle }}</h2>
+
 <mat-dialog-content class="form-content">
-  <form [formGroup]="form" class="grid">
-    <mat-form-field appearance="outline">
-      <mat-label>Nombre del producto</mat-label>
-      <input matInput formControlName="nombre" />
-      @if (form.controls.nombre.hasError('required')) {
-        <mat-error>El nombre es obligatorio.</mat-error>
-      }
-    </mat-form-field>
+  <form [formGroup]="form" class="form-shell">
+    <section class="form-section identity-section">
+      <div class="section-copy">
+        <span>Datos comercial del producto</span>
+      </div>
 
-    <mat-form-field appearance="outline">
-      <mat-label>Presentacion</mat-label>
-      <input matInput formControlName="presentacion" placeholder="20L, Granel, IBC, Cilindro" />
-      @if (form.controls.presentacion.hasError('required')) {
-        <mat-error>La presentacion es obligatoria.</mat-error>
-      }
-    </mat-form-field>
+      <div class="grid two">
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Nombre del producto</mat-label>
+          <input matInput formControlName="nombre" />
+          @if (form.controls.nombre.hasError('required')) {
+            <mat-error>El nombre es obligatorio.</mat-error>
+          }
+        </mat-form-field>
 
-    <mat-form-field appearance="outline">
-      <mat-label>Unidad de medida</mat-label>
-      <input matInput formControlName="unidadMedida" />
-      @if (form.controls.unidadMedida.hasError('required')) {
-        <mat-error>La unidad de medida es obligatoria.</mat-error>
-      }
-    </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Presentacion</mat-label>
+          <input matInput formControlName="presentacion" placeholder="20L, Granel, IBC, Cilindro" />
+          @if (form.controls.presentacion.hasError('required')) {
+            <mat-error>La presentacion es obligatoria.</mat-error>
+          }
+        </mat-form-field>
 
-    <mat-form-field appearance="outline">
-      <mat-label>Precio base</mat-label>
-      <input matInput type="number" formControlName="precioBase" min="0" />
-    </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Unidad de medida</mat-label>
+          <input matInput formControlName="unidadMedida" placeholder="Litros, unidad, kg" />
+          @if (form.controls.unidadMedida.hasError('required')) {
+            <mat-error>La unidad de medida es obligatoria.</mat-error>
+          }
+        </mat-form-field>
 
-    <mat-form-field appearance="outline">
-      <mat-label>Stock de seguridad</mat-label>
-      <input matInput type="number" formControlName="stockSeguridad" min="0" />
-    </mat-form-field>
+      </div>
+    </section>
 
-    <mat-form-field appearance="outline">
-      <mat-label>Stock fisico</mat-label>
-      <input matInput type="number" formControlName="stockFisico" min="0" />
-    </mat-form-field>
+    <section class="form-section">
+      <div class="section-copy">
+        <span>Logistica</span>
+      </div>
 
-    <mat-form-field appearance="outline">
-      <mat-label>Stock reservado</mat-label>
-      <input matInput type="number" formControlName="stockReservado" min="0" />
-      @if (form.controls.stockReservado.hasError('stockRange')) {
-        <mat-error>El stock reservado no puede superar el stock fisico.</mat-error>
-      }
-    </mat-form-field>
+      <div class="grid three">
+        <mat-form-field appearance="outline">
+          <mat-label>Peso</mat-label>
+          <input matInput type="number" formControlName="peso" min="0" />
+        </mat-form-field>
 
-    <mat-form-field appearance="outline">
-      <mat-label>Concentracion AUS-32</mat-label>
-      <input matInput type="number" formControlName="concentracionUreaAus32" min="0" />
-    </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Volumen</mat-label>
+          <input matInput type="number" formControlName="volumen" min="0" />
+        </mat-form-field>
 
-    <mat-form-field appearance="outline">
-      <mat-label>Estado</mat-label>
-      <mat-select formControlName="estadoId">
-        <mat-option [value]="1">Habilitado</mat-option>
-        <mat-option [value]="2">Inhabilitado</mat-option>
-        <mat-option [value]="3">Bloqueado</mat-option>
-      </mat-select>
-    </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Cantidad minima de venta</mat-label>
+          <input matInput type="number" formControlName="cantMinVenta" min="1" />
+        </mat-form-field>
+      </div>
+    </section>
 
-    <mat-form-field appearance="outline" class="full">
-      <mat-label>Descripcion tecnica</mat-label>
-      <textarea matInput rows="3" formControlName="descripcion"></textarea>
-    </mat-form-field>
+    <section class="form-section inventory-section">
+      <div class="section-copy">
+        <span>Inventario</span>
+      </div>
+
+      <div class="inventory-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Stock fisico</mat-label>
+          <input matInput type="number" formControlName="stockFisico" min="0" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Stock reservado</mat-label>
+          <input matInput type="number" formControlName="stockReservado" min="0" />
+          @if (form.controls.stockReservado.hasError('stockRange')) {
+            <mat-error>El stock reservado no puede superar el stock fisico.</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Stock minimo</mat-label>
+          <input matInput type="number" formControlName="stockMinimo" min="0" />
+        </mat-form-field>
+
+        <div class="stock-preview">
+          <span>Disponible estimado</span>
+          <strong>{{ stockDisponiblePreview }}</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <div class="section-copy">
+        <span>Estado</span>
+      </div>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Estado</mat-label>
+        <mat-select formControlName="idEstadoProducto">
+          @for (item of estadosProducto(); track item.id) {
+            <mat-option [value]="item.id">{{ item.descripcion }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </section>
   </form>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button mat-button (click)="cancel()">Cancelar</button>
-  <button mat-flat-button (click)="save()">{{ data.mode === 'create' ? 'Registrar' : 'Guardar cambios' }}</button>
+  <button mat-button type="button" (click)="cancel()">Cancelar</button>
+  <button mat-flat-button type="button" (click)="save()">{{ data.mode === 'create' ? 'Registrar producto' : 'Guardar cambios' }}</button>
 </mat-dialog-actions>

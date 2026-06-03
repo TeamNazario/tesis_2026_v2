@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "contacto_cliente")
@@ -28,6 +29,8 @@ public class ContactoCliente {
     @JoinColumn(name = "id_tipo_doc", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     public TipoDocumento tipoDocumento;
+    @Column(name = "id_tipo_doc", insertable = false, updatable = false)
+    public Integer idTipoDoc;
 
     @Column(name = "nro_documento", nullable = false, length = 20)
     public String nroDocumento;
@@ -50,5 +53,19 @@ public class ContactoCliente {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_estado_cliente_contacto", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    public Estado estado;
+    public EstadoClienteContacto estadoClienteContacto;
+    @Column(name = "id_estado_cliente_contacto", insertable = false, updatable = false)
+    public Integer idEstadoClienteContacto;
+
+    @Column(name = "usu_registro", length = 50)
+    public String usuRegistro;
+
+    @Column(name = "fec_registro")
+    public LocalDateTime fecRegistro;
+
+    @Column(name = "usu_actualiza", length = 50)
+    public String usuActualiza;
+
+    @Column(name = "fec_actualiza")
+    public LocalDateTime fecActualiza;
 }

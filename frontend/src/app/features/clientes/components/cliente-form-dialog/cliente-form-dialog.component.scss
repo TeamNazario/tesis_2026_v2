@@ -13,18 +13,21 @@
   grid-column: 1 / -1;
 }
 
-.sunat-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: -0.25rem;
-}
-
-.chip-state,
-.chip-condition {
+.chip-state {
   border-radius: 999px;
   background: #eff6e9;
   color: #171d16;
+}
+
+.estado-cliente-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.estado-label {
+  font-size: 0.875rem;
+  color: #3f4940;
 }
 
 .feedback {

@@ -1,11 +1,14 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { forkJoin } from 'rxjs';
 import {
   ContactoClienteCreateRequest,
   ContactoClienteResponseVm,
   ContactoClienteUpdateRequest,
 } from '../../../../core/models/contacto-cliente.models';
+import { CatalogoItem } from '../../../../core/models/v1.models';
+import { CatalogoV1Service } from '../../../../core/services/catalogo-v1.service';
 import { MaterialModule } from '../../../../shared/material/material.module';
 
 interface ContactoFormDialogData {
@@ -24,36 +27,35 @@ export class ContactoFormDialogComponent {
   readonly data = inject<ContactoFormDialogData>(MAT_DIALOG_DATA);
   private readonly fb = inject(FormBuilder);
   private readonly dialogRef = inject(MatDialogRef<ContactoFormDialogComponent>);
+  private readonly catalogos = inject(CatalogoV1Service);
+
+  readonly tiposDocumento = signal<CatalogoItem[]>([]);
+  readonly estadosClienteContacto = signal<CatalogoItem[]>([]);
 
   readonly form = this.fb.nonNullable.group({
-    nombres: ['', [Validators.required, Validators.maxLength(100)]],
-    apellidos: ['', [Validators.required, Validators.maxLength(200)]],
+    nombre: ['', [Validators.required, Validators.maxLength(100)]],
+    apellidoPaterno: ['', [Validators.required, Validators.maxLength(100)]],
+    apellidoMaterno: ['', [Validators.maxLength(100)]],
     tipoDocumentoId: [1, [Validators.required]],
     nroDocumento: ['', [Validators.required, Validators.maxLength(20)]],
-    telefono: ['', [Validators.pattern(/^\+?\d{6,15}$/)]],
-    whatsapp: ['', [Validators.pattern(/^\+?\d{6,15}$/)]],
+    celular: ['', [Validators.pattern(/^\+?\d{6,15}$/)]],
     correo: ['', [Validators.email]],
-    principal: [false],
-    recibeCotizaciones: [true],
-    recibeNotificaciones: [true],
-    estadoId: [1, [Validators.required]],
-    observaciones: [''],
+    idEstadoClienteContacto: [1, [Validators.required]],
   });
 
   constructor() {
+    this.loadCatalogos();
+
     if (this.data.contacto) {
       this.form.patchValue({
-        nombres: this.data.contacto.nombres,
-        apellidos: this.data.contacto.apellidos,
+        nombre: this.data.contacto.nombres,
+        apellidoPaterno: this.data.contacto.apellidos.split(' ')[0] ?? '',
+        apellidoMaterno: this.data.contacto.apellidos.split(' ').slice(1).join(' '),
         tipoDocumentoId: this.data.contacto.tipoDocumentoId ?? 1,
         nroDocumento: this.data.contacto.nroDocumento ?? '',
-        telefono: this.data.contacto.telefono ?? '',
-        whatsapp: this.data.contacto.whatsapp ?? '',
+        celular: this.data.contacto.telefono ?? this.data.contacto.whatsapp ?? '',
         correo: this.data.contacto.correo ?? '',
-        principal: this.data.contacto.principal,
-        recibeCotizaciones: this.data.contacto.recibeCotizaciones,
-        recibeNotificaciones: this.data.contacto.recibeNotificaciones,
-        estadoId: this.data.contacto.estado?.id ?? 1,
+        idEstadoClienteContacto: this.data.contacto.estado?.id ?? 1,
       });
     }
   }
@@ -65,8 +67,11 @@ export class ContactoFormDialogComponent {
   submit(): void {
     this.form.markAllAsTouched();
     const raw = this.form.getRawValue();
-    if (!raw.telefono && !raw.whatsapp && !raw.correo) {
-      this.form.controls.telefono.setErrors({ requiredChannel: true });
+    if (!this.validateDocumento(raw.tipoDocumentoId, raw.nroDocumento)) {
+      return;
+    }
+    if (!raw.celular && !raw.correo) {
+      this.form.controls.celular.setErrors({ requiredChannel: true });
       return;
     }
     if (this.form.invalid) {
@@ -77,21 +82,50 @@ export class ContactoFormDialogComponent {
       clienteId: this.data.clienteId,
       tipoDocumentoId: raw.tipoDocumentoId,
       nroDocumento: raw.nroDocumento,
-      nombres: raw.nombres,
-      apellidos: raw.apellidos,
-      telefono: raw.telefono,
-      whatsapp: raw.whatsapp,
+      nombre: raw.nombre,
+      apellidoPaterno: raw.apellidoPaterno,
+      apellidoMaterno: raw.apellidoMaterno,
+      celular: raw.celular,
       correo: raw.correo,
-      principal: raw.principal,
-      recibeCotizaciones: raw.recibeCotizaciones,
-      recibeNotificaciones: raw.recibeNotificaciones,
-      estadoId: raw.estadoId,
-      observaciones: raw.observaciones,
+      idEstadoClienteContacto: raw.idEstadoClienteContacto,
     };
     this.dialogRef.close(payload);
   }
 
   cancel(): void {
     this.dialogRef.close();
+  }
+
+  private loadCatalogos(): void {
+    forkJoin({
+      tiposDocumento: this.catalogos.tiposDocumento(),
+      estadosClienteContacto: this.catalogos.estadosClienteContacto(),
+    }).subscribe(({ tiposDocumento, estadosClienteContacto }) => {
+      this.tiposDocumento.set(tiposDocumento);
+      this.estadosClienteContacto.set(estadosClienteContacto);
+      if (!this.form.controls.tipoDocumentoId.value && tiposDocumento[0]) {
+        this.form.controls.tipoDocumentoId.setValue(tiposDocumento[0].id);
+      }
+      if (!this.form.controls.idEstadoClienteContacto.value && estadosClienteContacto[0]) {
+        this.form.controls.idEstadoClienteContacto.setValue(estadosClienteContacto[0].id);
+      }
+    });
+  }
+
+  private validateDocumento(tipoDocumentoId: number, nroDocumento: string): boolean {
+    const tipoDocumento = this.tiposDocumento()
+      .find((item) => item.id === tipoDocumentoId)
+      ?.descripcion.toUpperCase();
+    const normalized = nroDocumento.trim();
+
+    if (tipoDocumento?.includes('DNI') && !/^\d{8}$/.test(normalized)) {
+      this.form.controls.nroDocumento.setErrors({ dniLength: true });
+      return false;
+    }
+    if (tipoDocumento?.includes('RUC') && !/^\d{11}$/.test(normalized)) {
+      this.form.controls.nroDocumento.setErrors({ rucLength: true });
+      return false;
+    }
+    return true;
   }
 }

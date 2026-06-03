@@ -1,7 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { CotizacionResponse } from '../../core/models/domain.models';
 import { DomainApiService } from '../../core/services/domain-api.service';
-import { FileDownloadService } from '../../core/services/file-download.service';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { StatusChipComponent } from '../../shared/components/status-chip/status-chip.component';
@@ -17,15 +16,15 @@ import { MaterialModule } from '../../shared/material/material.module';
         <table mat-table [dataSource]="cotizaciones()">
           <ng-container matColumnDef="cliente">
             <th mat-header-cell *matHeaderCellDef>Cliente</th>
-            <td mat-cell *matCellDef="let item">{{ item.cliente?.nombre }}</td>
+            <td mat-cell *matCellDef="let item">{{ item.cliente }}</td>
           </ng-container>
-          <ng-container matColumnDef="origen">
-            <th mat-header-cell *matHeaderCellDef>Origen</th>
-            <td mat-cell *matCellDef="let item">{{ item.origenCotizacion }}</td>
+          <ng-container matColumnDef="vendedor">
+            <th mat-header-cell *matHeaderCellDef>Vendedor</th>
+            <td mat-cell *matCellDef="let item">{{ item.vendedor }}</td>
           </ng-container>
           <ng-container matColumnDef="monto">
             <th mat-header-cell *matHeaderCellDef>Total</th>
-            <td mat-cell *matCellDef="let item">S/ {{ item.montoTotal }}</td>
+            <td mat-cell *matCellDef="let item">{{ item.moneda }} {{ item.importeTotal }}</td>
           </ng-container>
           <ng-container matColumnDef="estado">
             <th mat-header-cell *matHeaderCellDef>Estado</th>
@@ -34,7 +33,7 @@ import { MaterialModule } from '../../shared/material/material.module';
           <ng-container matColumnDef="acciones">
             <th mat-header-cell *matHeaderCellDef>Acciones</th>
             <td mat-cell *matCellDef="let item">
-              <button mat-icon-button matTooltip="Descargar PDF" (click)="downloadPdf(item)">
+              <button mat-icon-button matTooltip="Ver PDF" [disabled]="!item.pdfPath" (click)="openPdf(item)">
                 <mat-icon>picture_as_pdf</mat-icon>
               </button>
             </td>
@@ -61,17 +60,16 @@ import { MaterialModule } from '../../shared/material/material.module';
 })
 export class CotizacionesComponent {
   private readonly api = inject(DomainApiService);
-  private readonly downloads = inject(FileDownloadService);
   readonly cotizaciones = signal<CotizacionResponse[]>([]);
-  readonly columns = ['cliente', 'origen', 'monto', 'estado', 'acciones'];
+  readonly columns = ['cliente', 'vendedor', 'monto', 'estado', 'acciones'];
 
   constructor() {
     this.api.getCotizaciones().subscribe({ next: (items) => this.cotizaciones.set(items) });
   }
 
-  downloadPdf(item: CotizacionResponse): void {
-    this.api.downloadCotizacionPdf(item.idCotizacion).subscribe({
-      next: (blob) => this.downloads.save(blob, `cotizacion-${item.idCotizacion}.pdf`),
-    });
+  openPdf(item: CotizacionResponse): void {
+    if (item.pdfPath) {
+      globalThis.open(item.pdfPath, '_blank', 'noopener');
+    }
   }
 }

@@ -100,24 +100,14 @@ export class ClienteDetailDialogComponent implements OnInit {
   }
 
   setPrincipal(contacto: ContactoClienteResponseVm): void {
-    this.loading.set(true);
-    this.contactoService
-      .setContactoPrincipal(contacto.id)
-      .pipe(finalize(() => this.loading.set(false)))
-      .subscribe({
-        next: () => {
-          this.notifications.success('Contacto principal actualizado correctamente.');
-          this.loadContactos();
-        },
-        error: () => this.notifications.error('No se pudo actualizar el contacto principal.'),
-      });
+    this.notifications.error(`El backend v1 aun no expone la accion para marcar a ${contacto.nombreCompleto} como principal.`);
   }
 
   toggleContactoStatus(contacto: ContactoClienteResponseVm): void {
     const nextEstado = (contacto.estado?.id ?? 1) === 1 ? 2 : 1;
     this.loading.set(true);
     this.contactoService
-      .changeContactoStatus(contacto.id, nextEstado)
+      .changeContactoStatus(this.cliente.id, contacto.id, nextEstado)
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: () => {
@@ -131,6 +121,21 @@ export class ClienteDetailDialogComponent implements OnInit {
   getStatusLabel(contacto: ContactoClienteResponseVm): string {
     const value = contacto.estado?.nombre?.trim();
     return value || ((contacto.estado?.id ?? 1) === 1 ? 'Activo' : 'Inactivo');
+  }
+
+  getStatusClass(contacto: ContactoClienteResponseVm): string {
+    return (contacto.estado?.id ?? 1) === 1 ? 'active' : 'inactive';
+  }
+
+  getInitials(contacto: ContactoClienteResponseVm): string {
+    const words = contacto.nombreCompleto
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+    return words
+      .slice(0, 2)
+      .map((word) => word.charAt(0).toUpperCase())
+      .join('');
   }
 
   private loadContactos(): void {

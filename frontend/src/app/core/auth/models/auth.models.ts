@@ -5,19 +5,6 @@ export interface LoginRequest {
   password: string;
 }
 
-export interface RegisterRequest {
-  idPerfil: number;
-  idTipoDoc: number;
-  idEstado: number;
-  nroDocumento: string;
-  nombres: string;
-  apellidoPaterno: string;
-  apellidoMaterno?: string;
-  correo: string;
-  celular?: string;
-  password: string;
-}
-
 export interface UsuarioResponse {
   idUsuario: number;
   perfil: ReferenceResponse;
@@ -30,10 +17,26 @@ export interface UsuarioResponse {
   celular?: string;
   intentosFallidos: number;
   estado: ReferenceResponse;
-  usuarioRegistro?: string;
+  usuarioRegistro?: string | null;
   fechaRegistro?: string;
-  usuarioActualiza?: string;
+  usuarioActualiza?: string | null;
   fechaActualiza?: string;
+}
+
+export interface UsuarioRequest {
+  idPerfil: number;
+  idTipoDoc: number;
+  nroDocumento: string;
+  nombres: string;
+  apellidoPaterno: string;
+  apellidoMaterno?: string;
+  correo: string;
+  celular?: string;
+  passwordHash?: string;
+  intentosFallidos: number;
+  idEstado: number;
+  usuarioRegistro?: string | null;
+  usuarioActualiza?: string | null;
 }
 
 export interface AuthResponse {

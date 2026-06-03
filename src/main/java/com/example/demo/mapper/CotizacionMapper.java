@@ -1,14 +1,7 @@
 package com.example.demo.mapper;
 
 import com.example.demo.dto.CotizacionDetalleResponse;
-import com.example.demo.dto.CotizacionRequest;
-import com.example.demo.dto.CotizacionResponse;
-import com.example.demo.model.Cliente;
-import com.example.demo.model.Cotizacion;
 import com.example.demo.model.CotizacionDetalle;
-import com.example.demo.model.Usuario;
-import com.example.demo.model.ZonaDespacho;
-import java.util.List;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -44,7 +37,6 @@ public class CotizacionMapper {
         cotizacion.fechaVencimiento = request.fechaVencimiento();
         cotizacion.origenCotizacion = request.origenCotizacion();
         cotizacion.estadoCotizacion = request.estadoCotizacion();
-        cotizacion.idEstadoCotizacion = parseEstadoCotizacion(request.estadoCotizacion());
         cotizacion.pdfPath = request.pdfPath();
     }
 
@@ -68,12 +60,14 @@ public class CotizacionMapper {
     }
 
     public CotizacionDetalleResponse toDetalleResponse(CotizacionDetalle detalle) {
+        java.math.BigDecimal precio = detalle.precioUni == null ? java.math.BigDecimal.ZERO : detalle.precioUni;
+        java.math.BigDecimal subtotal = precio.multiply(java.math.BigDecimal.valueOf(detalle.cantidad == null ? 0 : detalle.cantidad));
         return new CotizacionDetalleResponse(
-                detalle.idDetalle,
+                detalle.idDetalleCoti,
                 referenceMapper.toReference(detalle.producto),
                 detalle.cantidad,
-                detalle.precioUnitarioAplicado,
-                detalle.subtotalLinea
+                precio,
+                subtotal
         );
     }
 

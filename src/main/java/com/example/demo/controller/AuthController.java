@@ -2,7 +2,6 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.AuthResponse;
 import com.example.demo.dto.LoginRequest;
-import com.example.demo.dto.RegisterRequest;
 import com.example.demo.security.AuthenticatedUser;
 import com.example.demo.service.AuthService;
 import com.example.demo.mapper.UsuarioMapper;
@@ -29,11 +28,6 @@ public class AuthController {
     @PostMapping("/login")
     public AuthResponse login(@Valid @RequestBody LoginRequest request) {
         return authService.login(request);
-    }
-
-    @PostMapping("/register")
-    public AuthResponse register(@Valid @RequestBody RegisterRequest request) {
-        return authService.register(request);
     }
 
     @GetMapping("/me")

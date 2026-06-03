@@ -43,7 +43,9 @@ public class TokenService {
         Long userId = null;
         if (userDetails instanceof AuthenticatedUser authenticatedUser) {
             Usuario usuario = authenticatedUser.getUsuario();
-            userId = usuario == null ? null : usuario.idUsuario.longValue();
+            if (usuario != null && usuario.idUsuario != null) {
+                userId = usuario.idUsuario.longValue();
+            }
         }
 
         List<String> authorities = userDetails.getAuthorities()

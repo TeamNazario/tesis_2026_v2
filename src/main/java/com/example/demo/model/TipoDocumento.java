@@ -15,6 +15,6 @@ public class TipoDocumento {
     @Column(name = "id_tipo_doc")
     public Integer idTipoDoc;
 
-    @Column(name = "desc_tipo_doc", nullable = false, length = 50)
+    @Column(name = "des_tipo_doc", nullable = false, length = 50)
     public String descTipoDoc;
 }

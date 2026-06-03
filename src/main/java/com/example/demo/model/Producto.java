@@ -11,46 +11,71 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "producto")
+@Table(name = "PRODUCTO")
 public class Producto {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_producto")
+    @Column(name = "ID_PRODUCTO")
     public Integer idProducto;
 
-    @Column(name = "nombre_producto", nullable = false, length = 150)
+    @Column(name = "NOMBRE_PRODUCTO", nullable = false, length = 150)
     public String nombreProducto;
 
+    @Transient
     @Lob
-    @Column(name = "descripcion_tecnica")
     public String descripcionTecnica;
 
-    @Column(name = "unidad_medida", nullable = false, length = 20)
+    @Column(name = "UNIDAD_MEDIDA", nullable = false, length = 20)
     public String unidadMedida;
 
-    @Column(name = "precio_base_unitario", nullable = false, precision = 38, scale = 2)
+    @Transient
     public BigDecimal precioBaseUnitario;
 
-    @Column(name = "concentración_urea_aus32", nullable = false, precision = 38, scale = 2)
+    @Transient
     public BigDecimal concentracionUreaAus32;
 
-    @Column(name = "stock_fisico", nullable = false)
+    @Column(name = "STOCK_FISICO", nullable = false)
     public Integer stockFisico;
 
-    @Column(name = "stock_reservado", nullable = false)
+    @Column(name = "STOCK_RESERVADO", nullable = false)
     public Integer stockReservado;
 
-    @Column(name = "stock_disponible", insertable = false, updatable = false)
+    @Column(name = "STOCK_DISPONIBLE")
     public Integer stockDisponible;
 
-    @Column(name = "stock_minimo_seguridad", nullable = false)
+    @Column(name = "STOCK_MINIMO", nullable = false)
     public Integer stockMinimoSeguridad;
 
+    @Column(name = "PESO", precision = 10, scale = 2)
+    public BigDecimal peso;
+
+    @Column(name = "VOLUMEN", precision = 10, scale = 2)
+    public BigDecimal volumen;
+
+    @Column(name = "CANT_MIN_VENTA")
+    public Integer cantMinVenta;
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_estado", nullable = false)
+    @JoinColumn(name = "ID_ESTADO_PRODUCTO", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    public Estado estado;
+    public EstadoProducto estadoProducto;
+    @Column(name = "ID_ESTADO_PRODUCTO", insertable = false, updatable = false)
+    public Integer idEstadoProducto;
+
+    @Column(name = "USU_REGISTRO", length = 50)
+    public String usuRegistro;
+
+    @Column(name = "FEC_REGISTRO")
+    public LocalDateTime fecRegistro;
+
+    @Column(name = "USU_ACTUALIZA", length = 50)
+    public String usuActualiza;
+
+    @Column(name = "FEC_ACTUALIZA")
+    public LocalDateTime fecActualiza;
 }

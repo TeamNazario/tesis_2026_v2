@@ -2,7 +2,7 @@ package com.example.demo.mapper;
 
 import com.example.demo.dto.UsuarioRequest;
 import com.example.demo.dto.UsuarioResponse;
-import com.example.demo.model.Estado;
+import com.example.demo.model.EstadoUsuario;
 import com.example.demo.model.Perfil;
 import com.example.demo.model.TipoDocumento;
 import com.example.demo.model.Usuario;
@@ -20,10 +20,10 @@ public class UsuarioMapper {
             UsuarioRequest request,
             Perfil perfil,
             TipoDocumento tipoDocumento,
-            Estado estado
+            EstadoUsuario estadoUsuario
     ) {
         Usuario usuario = new Usuario();
-        apply(usuario, request, perfil, tipoDocumento, estado);
+        apply(usuario, request, perfil, tipoDocumento, estadoUsuario);
         return usuario;
     }
 
@@ -32,9 +32,9 @@ public class UsuarioMapper {
             UsuarioRequest request,
             Perfil perfil,
             TipoDocumento tipoDocumento,
-            Estado estado
+            EstadoUsuario estadoUsuario
     ) {
-        apply(usuario, request, perfil, tipoDocumento, estado);
+        apply(usuario, request, perfil, tipoDocumento, estadoUsuario);
     }
 
     public UsuarioResponse toResponse(Usuario usuario) {
@@ -49,7 +49,7 @@ public class UsuarioMapper {
                 usuario.correo,
                 usuario.celular,
                 usuario.intentosFallidos,
-                referenceMapper.toReference(usuario.estado),
+                referenceMapper.toReference(usuario.estadoUsuario),
                 usuario.usuarioRegistro,
                 usuario.fechaRegistro,
                 usuario.usuarioActualiza,
@@ -62,7 +62,7 @@ public class UsuarioMapper {
             UsuarioRequest request,
             Perfil perfil,
             TipoDocumento tipoDocumento,
-            Estado estado
+            EstadoUsuario estadoUsuario
     ) {
         usuario.perfil = perfil;
         usuario.tipoDocumento = tipoDocumento;
@@ -72,10 +72,10 @@ public class UsuarioMapper {
         usuario.apellidoMaterno = request.apellidoMaterno();
         usuario.correo = request.correo();
         usuario.celular = request.celular();
-        usuario.passwordHash = request.passwordHash();
+        if (request.passwordHash() != null && !request.passwordHash().isBlank()) {
+            usuario.passwordHash = request.passwordHash();
+        }
         usuario.intentosFallidos = request.intentosFallidos();
-        usuario.estado = estado;
-        usuario.usuarioRegistro = request.usuarioRegistro();
-        usuario.usuarioActualiza = request.usuarioActualiza();
+        usuario.estadoUsuario = estadoUsuario;
     }
 }

@@ -42,6 +42,9 @@ table {
 
 .state-chip {
   border-radius: 999px;
+}
+
+.state-chip.active {
   background: rgba(0, 110, 37, 0.16);
   color: #006e25;
 }
@@ -49,6 +52,16 @@ table {
 .state-chip.inactive {
   background: rgba(171, 45, 87, 0.15);
   color: #ab2d57;
+}
+
+.state-chip.blocked {
+  background: rgba(177, 95, 0, 0.16);
+  color: #8a4b00;
+}
+
+.state-chip.unknown {
+  background: rgba(80, 88, 94, 0.14);
+  color: #50585e;
 }
 
 .loading {

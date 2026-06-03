@@ -17,7 +17,7 @@ public record CotizacionDetalleUpsertRequest(
         Integer cantidad,
 
         @NotNull(message = "El precio unitario aplicado es obligatorio.")
-        @DecimalMin(value = "0.00", message = "El precio unitario aplicado debe ser mayor o igual a 0.")
+        @DecimalMin(value = "0.01", message = "El precio unitario aplicado debe ser mayor a 0.")
         BigDecimal precioUnitarioAplicado
 ) {
 }

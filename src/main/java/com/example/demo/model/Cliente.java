@@ -52,18 +52,35 @@ public class Cliente {
     public String ubigeo;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_vendedor_asignado")
+    @JoinColumn(name = "id_vendedor_asignado", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     public Usuario vendedorAsignado;
+    @Column(name = "id_vendedor_asignado", insertable = false, updatable = false)
+    public Integer idVendedorAsignado;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_tipo_cliente", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    public TipoCliente tipoCliente;
+    @Column(name = "id_tipo_cliente", insertable = false, updatable = false)
+    public Integer idTipoCliente;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_estado_cliente_contacto", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    public Estado estado;
+    public EstadoClienteContacto estadoClienteContacto;
+    @Column(name = "id_estado_cliente_contacto", insertable = false, updatable = false)
+    public Integer idEstadoClienteContacto;
 
     @Column(name = "usu_registro", length = 50)
     public String usuarioRegistro;
 
     @Column(name = "fec_registro")
     public LocalDateTime fechaRegistro;
+
+    @Column(name = "usu_actualiza", length = 50)
+    public String usuActualiza;
+
+    @Column(name = "fec_actualiza")
+    public LocalDateTime fecActualiza;
 }

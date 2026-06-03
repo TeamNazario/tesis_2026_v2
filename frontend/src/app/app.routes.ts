@@ -26,22 +26,18 @@ export const routes: Routes = [
         loadComponent: () => import('./features/usuarios/usuarios.component').then((m) => m.UsuariosComponent),
       },
       {
-        path: 'inventario',
-        loadComponent: () => import('./features/inventario/inventario.component').then((m) => m.InventarioComponent),
-      },
-      {
         path: 'catalogo-productos',
         loadComponent: () =>
           import('./features/catalogo-productos/catalogo-productos.component').then((m) => m.CatalogoProductosComponent),
       },
       {
-        path: 'cotizaciones',
-        loadComponent: () => import('./features/cotizaciones/cotizaciones.component').then((m) => m.CotizacionesComponent),
+        path: 'precios-tipo-cliente',
+        loadChildren: () =>
+          import('./features/precios-tipo-cliente/precios-tipo-cliente.routes').then((m) => m.PRECIO_TIPO_CLIENTE_ROUTES),
       },
       {
-        path: 'chatbot-monitor',
-        loadComponent: () =>
-          import('./features/chatbot-monitor/chatbot-monitor.component').then((m) => m.ChatbotMonitorComponent),
+        path: 'cotizaciones',
+        loadChildren: () => import('./features/cotizaciones/cotizaciones.routes').then((m) => m.COTIZACIONES_ROUTES),
       },
       {
         path: 'reportes',

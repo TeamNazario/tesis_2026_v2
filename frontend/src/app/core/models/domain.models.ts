@@ -1,27 +1,7 @@
-import { ReferenceResponse } from '../http/reference-response.model';
-
 export interface ClienteResponse {
   idCliente: number;
   ruc: string;
   razonSocial: string;
-  nombreComercial?: string;
-  condicionSunat?: string;
-  estadoSunat?: string;
-  direccion?: string;
-  departamento?: string;
-  provincia?: string;
-  distrito?: string;
-  ubigeo?: string;
-  vendedorAsignado?: ReferenceResponse;
-  estado?: ReferenceResponse;
-  usuarioRegistro?: string;
-  fechaRegistro?: string;
-}
-
-export interface ClienteRequest {
-  ruc: string;
-  razonSocial: string;
-  nombreComercial?: string;
   condicionSunat?: string;
   estadoSunat?: string;
   direccion?: string;
@@ -30,72 +10,84 @@ export interface ClienteRequest {
   distrito?: string;
   ubigeo?: string;
   idVendedorAsignado?: number;
-  idEstado: number;
-  usuarioRegistro?: string;
-  usuarioActualiza?: string;
+  vendedorAsignado?: string;
+  idTipoCliente?: number;
+  tipoCliente?: string;
+  idEstadoClienteContacto?: number;
+  estadoClienteContacto?: string;
+  usuRegistro?: string;
+  fecRegistro?: string;
+  usuActualiza?: string;
+  fecActualiza?: string;
+}
+
+export interface ClienteRequest {
+  ruc: string;
+  razonSocial: string;
+  condicionSunat?: string;
+  estadoSunat?: string;
+  direccion?: string;
+  departamento?: string;
+  provincia?: string;
+  distrito?: string;
+  ubigeo?: string;
+  idVendedorAsignado: number;
+  idTipoCliente: number;
+  idEstadoClienteContacto: number;
 }
 
 export interface ProductoResponse {
   idProducto: number;
   nombreProducto: string;
-  descripcionTecnica?: string;
   unidadMedida: string;
-  precioBaseUnitario: number;
-  concentracionUreaAus32?: number;
+  peso?: number;
+  volumen?: number;
   stockFisico: number;
   stockReservado: number;
   stockDisponible: number;
-  stockMinimoSeguridad: number;
-  estado?: ReferenceResponse;
+  stockMinimo: number;
+  cantMinVenta: number;
+  idEstadoProducto?: number;
+  estadoProducto?: string;
+  descEstadoProducto?: string;
 }
 
 export interface CotizacionResponse {
   idCotizacion: number;
-  uuidPublico: string;
-  cliente: ReferenceResponse;
-  zona: ReferenceResponse;
-  vendedor?: ReferenceResponse;
+  idCliente: number;
+  cliente?: string;
+  razonSocialCliente?: string;
+  rucCliente?: string;
+  idVendedor: number;
+  vendedor?: string;
+  nombreVendedor?: string;
   fechaEmision: string;
   fechaVencimiento: string;
+  moneda: string;
   subtotal: number;
   igv: number;
-  montoTotal: number;
-  origenCotizacion: string;
-  estadoCotizacion: string;
+  importeTotal: number;
+  direccionDespacho?: string;
+  depProvDis?: string;
+  flagCubierto?: boolean;
+  observaciones?: string;
+  idEstadoCotizacion: number;
+  estadoCotizacion?: string;
+  descEstadoCotizacion?: string;
   pdfPath?: string;
   detalles?: CotizacionDetalleResponse[];
 }
 
 export interface CotizacionDetalleResponse {
-  idDetalle?: number;
-  producto?: ReferenceResponse;
-  cantidad?: number;
-  precioUnitario?: number;
-  subtotal?: number;
-}
-
-export interface LogInventarioResponse {
-  idLogInventario: number;
-  producto: ReferenceResponse;
-  idUsuario?: number;
-  tipoMovimiento: string;
+  idDetalleCoti: number;
+  idCotizacion: number;
+  idProducto: number;
+  producto: string;
+  nombreProducto?: string;
+  unidadMedida?: string;
   cantidad: number;
-  stockFisicoMomento: number;
-  stockReservadoMomento: number;
-  fechaEvento: string;
-}
-
-export interface LogEficienciaChatbotResponse {
-  idLogEficiencia: number;
-  sessionIdWhatsapp: string;
-  rucConsultado?: string;
-  intencionDetectada?: string;
-  timestampPrimerMensaje: string;
-  timestampFinProcesamiento?: string;
-  tiempoAtencionSegundos?: number;
-  apiSunatRespondio?: boolean;
-  pdfGeneradoExitosamente?: boolean;
-  payloadAuditoria?: string;
+  precioUni: number;
+  subtotalDetalle?: number;
 }
 
 export interface DashboardKpis {

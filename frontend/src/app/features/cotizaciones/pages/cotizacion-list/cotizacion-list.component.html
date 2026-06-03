@@ -1,0 +1,159 @@
+<app-page-header
+  title="Cotizaciones"
+  description="Gestiona, consulta y genera cotizaciones comerciales de BIOFLUID D32."
+>
+  <button mat-flat-button color="primary" routerLink="/cotizaciones/nueva">
+    <mat-icon>add</mat-icon>
+    Nueva cotizacion
+  </button>
+</app-page-header>
+
+<section class="filters-panel" [formGroup]="filtersForm">
+  <mat-form-field appearance="outline" class="search-field">
+    <mat-label>Buscar cliente o RUC</mat-label>
+    <input matInput formControlName="search" (keyup.enter)="loadCotizaciones()" />
+    <mat-icon matSuffix>search</mat-icon>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Cliente</mat-label>
+    <mat-select formControlName="idCliente">
+      <mat-option value="ALL">Todos</mat-option>
+      @for (cliente of clientes(); track cliente.idCliente) {
+        <mat-option [value]="cliente.idCliente">{{ clientLabel(cliente) }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Vendedor</mat-label>
+    <mat-select formControlName="idVendedor">
+      <mat-option value="ALL">Todos</mat-option>
+      @for (vendedor of vendedores(); track vendedor.idUsuario) {
+        <mat-option [value]="vendedor.idUsuario">{{ userLabel(vendedor) }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Estado</mat-label>
+    <mat-select formControlName="idEstadoCotizacion">
+      <mat-option value="ALL">Todos</mat-option>
+      @for (estado of estados(); track estado.id) {
+        <mat-option [value]="estado.id">{{ estado.descripcion }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Fecha inicio</mat-label>
+    <input matInput type="date" formControlName="fechaInicio" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Fecha fin</mat-label>
+    <input matInput type="date" formControlName="fechaFin" />
+  </mat-form-field>
+
+  <div class="filter-actions">
+    <button mat-flat-button color="primary" (click)="loadCotizaciones()">
+      <mat-icon>filter_alt</mat-icon>
+      Filtrar
+    </button>
+    <button mat-stroked-button (click)="clearFilters()">
+      <mat-icon>filter_alt_off</mat-icon>
+      Limpiar
+    </button>
+  </div>
+</section>
+
+<section class="table-panel">
+  @if (isLoading()) {
+    <div class="loading-state">
+      <mat-spinner diameter="36" />
+      <span>Cargando cotizaciones...</span>
+    </div>
+  } @else if (cotizaciones().length) {
+    <table mat-table [dataSource]="cotizaciones()">
+      <ng-container matColumnDef="numero">
+        <th mat-header-cell *matHeaderCellDef>Nro.</th>
+        <td mat-cell *matCellDef="let item">C001-{{ item.idCotizacion.toString().padStart(6, '0') }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="cliente">
+        <th mat-header-cell *matHeaderCellDef>Cliente</th>
+        <td mat-cell *matCellDef="let item">
+          <strong>{{ item.razonSocialCliente }}</strong>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="ruc">
+        <th mat-header-cell *matHeaderCellDef>RUC</th>
+        <td mat-cell *matCellDef="let item">{{ item.rucCliente }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="vendedor">
+        <th mat-header-cell *matHeaderCellDef>Vendedor</th>
+        <td mat-cell *matCellDef="let item">{{ item.nombreVendedor }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="fechaEmision">
+        <th mat-header-cell *matHeaderCellDef>Emision</th>
+        <td mat-cell *matCellDef="let item">{{ formatDate(item.fechaEmision) }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="fechaVencimiento">
+        <th mat-header-cell *matHeaderCellDef>Vencimiento</th>
+        <td mat-cell *matCellDef="let item">{{ formatDate(item.fechaVencimiento) }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="moneda">
+        <th mat-header-cell *matHeaderCellDef>Moneda</th>
+        <td mat-cell *matCellDef="let item">{{ item.moneda }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="importeTotal">
+        <th mat-header-cell *matHeaderCellDef>Total</th>
+        <td mat-cell *matCellDef="let item">
+          <strong>{{ formatMoney(item.importeTotal, item.moneda) }}</strong>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="estado">
+        <th mat-header-cell *matHeaderCellDef>Estado</th>
+        <td mat-cell *matCellDef="let item">
+          <app-status-chip [label]="item.descEstadoCotizacion" />
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="pdf">
+        <th mat-header-cell *matHeaderCellDef>PDF</th>
+        <td mat-cell *matCellDef="let item">
+          @if (item.pdfPath) {
+            <button mat-icon-button matTooltip="Descargar PDF" [disabled]="pdfLoadingId() === item.idCotizacion" (click)="downloadPdf(item)">
+              <mat-icon>download</mat-icon>
+            </button>
+          } @else {
+            <button mat-icon-button matTooltip="Generar PDF" [disabled]="pdfLoadingId() === item.idCotizacion" (click)="generatePdf(item)">
+              <mat-icon>picture_as_pdf</mat-icon>
+            </button>
+          }
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="acciones">
+        <th mat-header-cell *matHeaderCellDef>Acciones</th>
+        <td mat-cell *matCellDef="let item">
+          <button mat-icon-button matTooltip="Ver detalle" [routerLink]="['/cotizaciones', item.idCotizacion]">
+            <mat-icon>visibility</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columns"></tr>
+      <tr mat-row *matRowDef="let row; columns: columns"></tr>
+    </table>
+  } @else {
+    <app-empty-state title="Sin cotizaciones" description="Las cotizaciones apareceran cuando existan registros." />
+  }
+</section>

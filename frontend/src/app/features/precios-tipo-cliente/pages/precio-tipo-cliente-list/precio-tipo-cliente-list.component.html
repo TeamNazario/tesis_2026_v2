@@ -1,0 +1,225 @@
+<app-page-header
+  title="Precios por tipo de cliente"
+>
+  @if (canManagePrices()) {
+    <button mat-flat-button type="button" (click)="navigateCreate()">
+      <mat-icon>add</mat-icon>
+      Nuevo precio
+    </button>
+  }
+</app-page-header>
+
+@if (isLoading()) {
+  <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+}
+
+<section class="metrics-grid">
+  <article class="metric-card featured">
+    <span>Precios</span>
+    <strong>{{ filteredPrecios().length }}</strong>
+    <p>Configuraciones visibles con los filtros activos.</p>
+  </article>
+  <article class="metric-card">
+    <span>Productos</span>
+    <strong>{{ productos().length }}</strong>
+    <p>Catalogo disponible para asignar precios.</p>
+  </article>
+  <article class="metric-card">
+    <span>Tipos de cliente</span>
+    <strong>{{ tiposCliente().length }}</strong>
+    <p>Segmentos comerciales activos para la matriz de precios.</p>
+  </article>
+</section>
+
+<section class="filters-card" [formGroup]="filtersForm">
+  <mat-form-field appearance="outline" class="search-field">
+    <mat-label>Buscar precio, producto o tipo de cliente</mat-label>
+    <input matInput formControlName="search" />
+    <mat-icon matSuffix>search</mat-icon>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Producto</mat-label>
+    <mat-select formControlName="idProducto">
+      <mat-option value="ALL">Todos</mat-option>
+      @for (item of productos(); track item.id) {
+        <mat-option [value]="item.id">{{ item.nombre }}{{ item.unidadMedida ? ' · ' + item.unidadMedida : '' }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Tipo de cliente</mat-label>
+    <mat-select formControlName="idTipoCliente">
+      <mat-option value="ALL">Todos</mat-option>
+      @for (item of tiposCliente(); track item.id) {
+        <mat-option [value]="item.id">{{ item.descripcion }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Estado</mat-label>
+    <mat-select formControlName="idEstadoProducto">
+      <mat-option value="ALL">Todos</mat-option>
+      @for (item of estadosProducto(); track item.id) {
+        <mat-option [value]="item.id">{{ item.descripcion }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Moneda</mat-label>
+    <mat-select formControlName="moneda">
+      <mat-option value="ALL">Todas</mat-option>
+      <mat-option value="SOLES">Soles</mat-option>
+      <mat-option value="DOLARES">Dolares</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <button mat-stroked-button type="button" (click)="clearFilters()">
+    <mat-icon>filter_alt_off</mat-icon>
+    Limpiar filtros
+  </button>
+</section>
+
+@if (hasError()) {
+  <app-empty-state icon="error" title="No se pudo cargar" description="No se pudo cargar la lista de precios. Verifica la conexion o intenta nuevamente." />
+} @else if (!precios().length) {
+  <app-empty-state
+    title="No existen precios configurados."
+    description="Crea el primer precio para comenzar a administrar la matriz comercial."
+  />
+} @else if (!filteredPrecios().length) {
+  <app-empty-state
+    title="No se encontraron precios con los filtros aplicados."
+    description="Prueba con otra combinacion de producto, tipo de cliente o estado."
+  />
+} @else {
+  <section class="table-card">
+    <div class="table-wrapper">
+      <table
+        mat-table
+        [dataSource]="pageItems()"
+        matSort
+        [matSortActive]="sortState().active"
+        [matSortDirection]="sortState().direction"
+        (matSortChange)="onSortChange($event)"
+      >
+        <ng-container matColumnDef="producto">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="producto">Producto</th>
+          <td mat-cell *matCellDef="let item">
+            <div class="product-cell">
+              <strong>{{ getProductLabel(item) }}</strong>
+              <span>#{{ item.idProducto }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="unidadMedida">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="unidadMedida">Unidad</th>
+          <td mat-cell *matCellDef="let item">{{ getProductUnit(item) }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="tipoCliente">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="tipoCliente">Tipo de cliente</th>
+          <td mat-cell *matCellDef="let item">{{ getTipoClienteLabel(item) }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="precioUnitario">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="precioUnitario">Precio unitario</th>
+          <td mat-cell *matCellDef="let item">
+            <strong class="price-text">{{ formatMoney(item.precioUnitario, item.moneda) }}</strong>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="moneda">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="moneda">Moneda</th>
+          <td mat-cell *matCellDef="let item">
+            <mat-chip class="currency-chip" [class.warn]="getCurrencyTone(item.moneda) === 'warn'" [class.ok]="getCurrencyTone(item.moneda) === 'ok'">
+              {{ getCurrencyLabel(item.moneda) }}
+            </mat-chip>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="estado">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="estado">Estado</th>
+          <td mat-cell *matCellDef="let item">
+            <mat-chip
+              class="state-chip"
+              [class.active]="getEstadoTone(item) === 'ok'"
+              [class.inactive]="getEstadoTone(item) === 'warn'"
+              [class.blocked]="getEstadoTone(item) === 'danger'"
+            >
+              {{ getEstadoLabel(item) }}
+            </mat-chip>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="acciones">
+          <th mat-header-cell *matHeaderCellDef>Acciones</th>
+          <td mat-cell *matCellDef="let item">
+            <button mat-icon-button matTooltip="Ver detalle" [routerLink]="['/precios-tipo-cliente', item.idPrecio]">
+              <mat-icon>visibility</mat-icon>
+            </button>
+            <button mat-icon-button matTooltip="Consultar precios del producto" (click)="filterByProduct(item)">
+              <mat-icon>filter_alt</mat-icon>
+            </button>
+            @if (canManagePrices()) {
+              <button mat-icon-button matTooltip="Editar precio" [routerLink]="['/precios-tipo-cliente', item.idPrecio, 'editar']">
+                <mat-icon>edit</mat-icon>
+              </button>
+            }
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    </div>
+
+    <mat-paginator
+      [length]="filteredPrecios().length"
+      [pageSize]="pageSize()"
+      [pageIndex]="pageIndex()"
+      [pageSizeOptions]="pageSizeOptions"
+      (page)="onPageChange($event)"
+    />
+  </section>
+
+  <section class="cards-mobile">
+    @for (item of pageItems(); track item.idPrecio) {
+      <mat-card class="price-card">
+        <mat-card-content>
+          <div class="price-card__top">
+            <div>
+              <h3>{{ getProductLabel(item) }}</h3>
+              <p>{{ getTipoClienteLabel(item) }}</p>
+            </div>
+            <mat-chip class="currency-chip" [class.warn]="getCurrencyTone(item.moneda) === 'warn'" [class.ok]="getCurrencyTone(item.moneda) === 'ok'">
+              {{ getCurrencyLabel(item.moneda) }}
+            </mat-chip>
+          </div>
+
+          <div class="card-meta">
+            <span>{{ getProductUnit(item) }}</span>
+            <span>{{ formatMoney(item.precioUnitario, item.moneda) }}</span>
+            <span>{{ getEstadoLabel(item) }}</span>
+          </div>
+
+          <div class="card-details">
+            <span>Producto #{{ item.idProducto }}</span>
+            <span>Tipo #{{ item.idTipoCliente }}</span>
+          </div>
+        </mat-card-content>
+        <mat-card-actions align="end">
+          <button mat-button [routerLink]="['/precios-tipo-cliente', item.idPrecio]">Detalle</button>
+          <button mat-button (click)="filterByProduct(item)">Ver producto</button>
+          @if (canManagePrices()) {
+            <button mat-button [routerLink]="['/precios-tipo-cliente', item.idPrecio, 'editar']">Editar</button>
+          }
+        </mat-card-actions>
+      </mat-card>
+    }
+  </section>
+}

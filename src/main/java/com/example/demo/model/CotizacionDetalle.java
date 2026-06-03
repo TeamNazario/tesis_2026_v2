@@ -14,29 +14,29 @@ import jakarta.persistence.Transient;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "detalle_cotizacion")
+@Table(name = "cotizacion_detalle")
 public class CotizacionDetalle {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_detalle_coti")
+    @Column(name = "id_detalle")
     public Integer idDetalle;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_cotizacion", nullable = false)
+    @JoinColumn(name = "ID_COTIZACION", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     public Cotizacion cotizacion;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_producto", nullable = false)
+    @JoinColumn(name = "ID_PRODUCTO", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     public Producto producto;
 
-    @Column(name = "cantidad", nullable = false)
+    @Column(name = "CANTIDAD", nullable = false)
     public Integer cantidad;
 
-    @Column(name = "precio_uni", nullable = false, precision = 10, scale = 2)
+    @Column(name = "precio_unitario_aplicado", nullable = false, precision = 38, scale = 2)
     public BigDecimal precioUnitarioAplicado;
 
-    @Transient
+    @Column(name = "subtotal_linea", nullable = false, precision = 38, scale = 2)
     public BigDecimal subtotalLinea;
 }

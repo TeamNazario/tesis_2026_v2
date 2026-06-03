@@ -6,8 +6,10 @@ export interface ClienteResponseVm {
   razonSocial: string;
   nombreComercial?: string;
   tipoCliente?: string;
+  idTipoCliente?: number;
+  vendedorAsignado?: string;
+  idVendedorAsignado?: number;
   direccionFiscal?: string;
-  zonaDespacho?: string;
   departamento?: string;
   provincia?: string;
   distrito?: string;
@@ -22,22 +24,22 @@ export interface ClienteResponseVm {
   condicionSunat?: string;
   estadoSunat?: string;
   ubigeo?: string;
+  usuRegistro?: string;
+  fecRegistro?: string;
+  usuActualiza?: string;
+  fecActualiza?: string;
 }
 
 export interface ClienteCreateRequest {
   ruc: string;
   razonSocial: string;
-  nombreComercial?: string;
-  tipoCliente?: string;
+  idTipoCliente: number;
+  idVendedorAsignado: number;
   direccionFiscal?: string;
-  zonaDespacho?: string;
   departamento?: string;
   provincia?: string;
   distrito?: string;
-  telefonoPrincipal?: string;
-  correoPrincipal?: string;
-  observaciones?: string;
-  estadoId: number;
+  idEstadoClienteContacto: number;
   condicionSunat: string;
   estadoSunat: string;
   ubigeo?: string;
@@ -49,9 +51,8 @@ export interface ClienteUpdateRequest extends Omit<ClienteCreateRequest, 'ruc'> 
 
 export interface ClienteFilter {
   search: string;
-  estado: 'ALL' | 'ACTIVE' | 'INACTIVE';
+  estado: 'ALL' | 'ACTIVE' | 'INACTIVE' | 'BLOCKED';
   tipoCliente: string;
-  zona: string;
   departamento: string;
   provincia: string;
   distrito: string;

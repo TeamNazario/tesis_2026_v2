@@ -12,19 +12,13 @@
 
     <article>
       <h3>Comercial y stock</h3>
-      <p><strong>Precio base:</strong> S/ {{ data.precioBase | number: '1.2-2' }}</p>
       <p><strong>Stock fisico:</strong> {{ data.stockFisico }}</p>
       <p><strong>Stock reservado:</strong> {{ data.stockReservado }}</p>
       <p><strong>Stock disponible:</strong> {{ data.stockDisponible }}</p>
-      <p><strong>Stock de seguridad:</strong> {{ data.stockSeguridad }}</p>
-    </article>
-
-    <article>
-      <h3>Especificaciones tecnicas</h3>
-      <p><strong>Descripcion:</strong> {{ data.descripcion || '-' }}</p>
-      <p><strong>Concentracion AUS-32:</strong> {{ data.concentracionUreaAus32 ?? '-' }}</p>
-      <p><strong>Fecha creacion:</strong> {{ data.fechaCreacion || '-' }}</p>
-      <p><strong>Fecha actualizacion:</strong> {{ data.fechaActualizacion || '-' }}</p>
+      <p><strong>Stock minimo:</strong> {{ data.stockMinimo }}</p>
+      <p><strong>Cantidad minima venta:</strong> {{ data.cantMinVenta }}</p>
+      <p><strong>Peso:</strong> {{ data.peso | number: '1.2-2' }}</p>
+      <p><strong>Volumen:</strong> {{ data.volumen | number: '1.2-2' }}</p>
     </article>
   </section>
 </mat-dialog-content>

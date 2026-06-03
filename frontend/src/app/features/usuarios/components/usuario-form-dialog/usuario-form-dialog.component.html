@@ -1,0 +1,81 @@
+<h2 mat-dialog-title>{{ isCreateMode ? 'Nuevo usuario' : 'Editar usuario' }}</h2>
+
+<mat-dialog-content class="dialog-content" [formGroup]="form">
+  <section class="form-grid">
+    <mat-form-field appearance="outline">
+      <mat-label>Nombres</mat-label>
+      <input matInput formControlName="nombres" autocomplete="given-name" />
+      <mat-error>Ingresa los nombres.</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Apellido paterno</mat-label>
+      <input matInput formControlName="apellidoPaterno" autocomplete="family-name" />
+      <mat-error>Ingresa el apellido paterno.</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Apellido materno</mat-label>
+      <input matInput formControlName="apellidoMaterno" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Tipo de documento</mat-label>
+      <mat-select formControlName="idTipoDoc">
+        @for (item of data.tiposDocumento; track item.id) {
+          <mat-option [value]="item.id">{{ item.descripcion }}</mat-option>
+        }
+      </mat-select>
+      <mat-error>Selecciona un tipo de documento.</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Numero de documento</mat-label>
+      <input matInput formControlName="nroDocumento" />
+      <mat-error>Ingresa el documento.</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Celular</mat-label>
+      <input matInput formControlName="celular" autocomplete="tel" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Correo</mat-label>
+      <input matInput formControlName="correo" autocomplete="email" />
+      <mat-error>Ingresa un correo valido.</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Perfil</mat-label>
+      <mat-select formControlName="idPerfil">
+        @for (item of data.perfiles; track item.id) {
+          <mat-option [value]="item.id">{{ item.descripcion }}</mat-option>
+        }
+      </mat-select>
+      <mat-error>Selecciona un perfil.</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Estado</mat-label>
+      <mat-select formControlName="idEstado">
+        @for (item of data.estadosUsuario; track item.id) {
+          <mat-option [value]="item.id">{{ item.descripcion }}</mat-option>
+        }
+      </mat-select>
+      <mat-error>Selecciona un estado.</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>{{ isCreateMode ? 'Contrasena temporal' : 'Nueva contrasena opcional' }}</mat-label>
+      <input matInput type="password" formControlName="password" autocomplete="new-password" />
+      <mat-hint>{{ isCreateMode ? 'Minimo 8 caracteres.' : 'Dejalo vacio para conservar la contrasena actual.' }}</mat-hint>
+      <mat-error>La contrasena debe tener minimo 8 caracteres.</mat-error>
+    </mat-form-field>
+  </section>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="close()">Cancelar</button>
+  <button mat-flat-button type="button" (click)="save()">{{ isCreateMode ? 'Crear usuario' : 'Guardar cambios' }}</button>
+</mat-dialog-actions>

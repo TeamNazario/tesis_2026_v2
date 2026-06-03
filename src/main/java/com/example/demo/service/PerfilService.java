@@ -4,9 +4,9 @@ import com.example.demo.dto.PerfilRequest;
 import com.example.demo.dto.PerfilResponse;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.mapper.CatalogoMapper;
-import com.example.demo.model.Estado;
+import com.example.demo.model.EstadoPerfil;
 import com.example.demo.model.Perfil;
-import com.example.demo.repository.EstadoRepository;
+import com.example.demo.repository.EstadoPerfilRepository;
 import com.example.demo.repository.PerfilRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -15,17 +15,17 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class PerfilService extends CrudService<Perfil, Integer> {
     private final PerfilRepository perfilRepository;
-    private final EstadoRepository estadoRepository;
+    private final EstadoPerfilRepository estadoPerfilRepository;
     private final CatalogoMapper mapper;
 
     public PerfilService(
             PerfilRepository repository,
-            EstadoRepository estadoRepository,
+            EstadoPerfilRepository estadoPerfilRepository,
             CatalogoMapper mapper
     ) {
         super(repository, "Perfil");
         this.perfilRepository = repository;
-        this.estadoRepository = estadoRepository;
+        this.estadoPerfilRepository = estadoPerfilRepository;
         this.mapper = mapper;
     }
 
@@ -46,14 +46,14 @@ public class PerfilService extends CrudService<Perfil, Integer> {
 
     @Transactional
     public PerfilResponse create(PerfilRequest request) {
-        Perfil perfil = mapper.toEntity(request, findEstado(request.idEstado()));
+        Perfil perfil = mapper.toEntity(request, findEstadoPerfil(request.idEstado()));
         return mapper.toResponse(perfilRepository.save(perfil));
     }
 
     @Transactional
     public PerfilResponse update(Integer id, PerfilRequest request) {
         Perfil perfil = findPerfil(id);
-        mapper.updateEntity(perfil, request, findEstado(request.idEstado()));
+        mapper.updateEntity(perfil, request, findEstadoPerfil(request.idEstado()));
         return mapper.toResponse(perfilRepository.save(perfil));
     }
 
@@ -70,8 +70,8 @@ public class PerfilService extends CrudService<Perfil, Integer> {
                 .orElseThrow(() -> new ResourceNotFoundException("Perfil", id));
     }
 
-    private Estado findEstado(Integer id) {
-        return estadoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Estado", id));
+    private EstadoPerfil findEstadoPerfil(Integer id) {
+        return estadoPerfilRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("EstadoPerfil", id));
     }
 }

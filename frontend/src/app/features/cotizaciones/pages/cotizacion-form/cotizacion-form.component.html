@@ -18,13 +18,29 @@
       <h2>Datos generales</h2>
       <div class="form-grid">
         <mat-form-field appearance="outline">
-          <mat-label>Cliente</mat-label>
-          <mat-select formControlName="idCliente">
-            <mat-option [value]="0">Seleccionar</mat-option>
+          <mat-label>Buscar cliente por RUC o razon social</mat-label>
+          <input
+            matInput
+            type="search"
+            [formControl]="clienteSearch"
+            [matAutocomplete]="clienteAutocomplete"
+          />
+          <mat-icon matPrefix>search</mat-icon>
+          @if (isSearchingClientes()) {
+            <mat-spinner matSuffix diameter="18" />
+          }
+          <mat-autocomplete #clienteAutocomplete="matAutocomplete">
             @for (cliente of clientes(); track cliente.idCliente) {
-              <mat-option [value]="cliente.idCliente">{{ cliente.ruc }} - {{ cliente.razonSocial }}</mat-option>
+              <mat-option
+                [value]="clientLabel(cliente)"
+                (onSelectionChange)="selectCliente(cliente, $event.isUserInput)"
+              >
+                {{ clientLabel(cliente) }}
+              </mat-option>
+            } @empty {
+              <mat-option disabled>Sin clientes encontrados</mat-option>
             }
-          </mat-select>
+          </mat-autocomplete>
           <mat-error>El cliente es obligatorio.</mat-error>
         </mat-form-field>
 

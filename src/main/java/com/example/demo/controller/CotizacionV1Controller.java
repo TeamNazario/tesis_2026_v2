@@ -9,6 +9,7 @@ import com.example.demo.dto.CotizacionCalcularResumenResponse;
 import com.example.demo.dto.CotizacionPdfResponse;
 import com.example.demo.dto.CotizacionPrecioProductoResponse;
 import com.example.demo.dto.CotizacionV1Response;
+import com.example.demo.security.AuthenticatedUser;
 import com.example.demo.service.CotizacionPdfService;
 import com.example.demo.service.CotizacionV1Service;
 import jakarta.validation.Valid;
@@ -17,6 +18,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.core.io.Resource;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -66,23 +68,39 @@ public class CotizacionV1Controller {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public CotizacionV1Response create(@Valid @RequestBody CotizacionCreateRequest request) { return service.create(request); }
+    public CotizacionV1Response create(
+            @Valid @RequestBody CotizacionCreateRequest request,
+            @AuthenticationPrincipal AuthenticatedUser user
+    ) {
+        return service.create(request, resolveActor(user));
+    }
 
     @PatchMapping("/{id}/estado")
     public CotizacionV1Response patchEstado(
             @PathVariable Integer id,
-            @Valid @RequestBody CotizacionEstadoUpdateRequest request
+            @Valid @RequestBody CotizacionEstadoUpdateRequest request,
+            @AuthenticationPrincipal AuthenticatedUser user
     ) {
-        return service.patchEstado(id, request.idEstadoCotizacion());
+        return service.patchEstado(id, request.idEstadoCotizacion(), resolveActor(user));
     }
 
     @PostMapping("/{id}/generar-pdf")
-    public CotizacionPdfResponse generarPdf(@PathVariable Integer id) {
-        return pdfService.generarPdfCotizacion(id);
+    public CotizacionPdfResponse generarPdf(
+            @PathVariable Integer id,
+            @AuthenticationPrincipal AuthenticatedUser user
+    ) {
+        return pdfService.generarPdfCotizacion(id, resolveActor(user));
     }
 
     @GetMapping("/{id}/pdf")
     public ResponseEntity<Resource> descargarPdf(@PathVariable Integer id) {
         return pdfService.descargarPdfCotizacion(id);
+    }
+
+    private String resolveActor(AuthenticatedUser user) {
+        if (user != null && user.getUsuario() != null && user.getUsuario().correo != null) {
+            return user.getUsuario().correo;
+        }
+        return "system";
     }
 }

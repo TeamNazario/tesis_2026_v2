@@ -123,12 +123,13 @@ public class CotizacionV1Service {
     }
 
     @Transactional
-    public CotizacionV1Response create(CotizacionCreateRequest request) {
+    public CotizacionV1Response create(CotizacionCreateRequest request, String actor) {
         Cliente cliente = findCliente(request.idCliente());
         Usuario vendedor = findUsuario(request.idVendedor());
         EstadoCotizacion estado = estadoCotizacionRepository.findById(request.idEstadoCotizacion())
                 .orElseThrow(() -> new ResourceNotFoundException("EstadoCotizacion", request.idEstadoCotizacion()));
         validateFechaVencimiento(request.fechaVencimiento());
+        LocalDateTime now = LocalDateTime.now();
 
         List<CotizacionResumenDetalleRequest> resumenDetalles = request.detalles().stream()
                 .map(detalle -> new CotizacionResumenDetalleRequest(detalle.idProducto(), detalle.cantidad()))
@@ -138,7 +139,7 @@ public class CotizacionV1Service {
         Cotizacion cotizacion = new Cotizacion();
         cotizacion.cliente = cliente;
         cotizacion.vendedor = vendedor;
-        cotizacion.fechaEmision = LocalDateTime.now();
+        cotizacion.fechaEmision = now;
         cotizacion.fechaVencimiento = request.fechaVencimiento();
         cotizacion.moneda = request.moneda();
         cotizacion.subtotal = resumen.subtotal();
@@ -149,23 +150,29 @@ public class CotizacionV1Service {
         cotizacion.flagCubierto = request.flagCubierto() == null ? 0 : request.flagCubierto();
         cotizacion.observaciones = request.observaciones();
         cotizacion.estadoCotizacion = estado;
-        cotizacion.detalles = buildDetalles(cotizacion, request.detalles(), resumen.items());
+        cotizacion.usuRegistro = actor;
+        cotizacion.fecRegistro = now;
+        cotizacion.usuActualiza = null;
+        cotizacion.fecActualiza = null;
+        cotizacion.detalles = buildDetalles(cotizacion, request.detalles(), resumen.items(), actor, now);
 
         return map(cotizacionRepository.save(cotizacion));
     }
 
     @Transactional
-    public CotizacionV1Response patchEstado(Integer id, Integer estadoId) {
+    public CotizacionV1Response patchEstado(Integer id, Integer estadoId, String actor) {
         Cotizacion cotizacion = findEntity(id);
         cotizacion.estadoCotizacion = estadoCotizacionRepository.findById(estadoId)
                 .orElseThrow(() -> new ResourceNotFoundException("EstadoCotizacion", estadoId));
+        markUpdated(cotizacion, actor);
         return map(cotizacionRepository.save(cotizacion));
     }
 
     @Transactional
-    public void updatePdfPath(Integer idCotizacion, String pdfPath) {
+    public void updatePdfPath(Integer idCotizacion, String pdfPath, String actor) {
         Cotizacion cotizacion = findEntity(idCotizacion);
         cotizacion.pdfPath = pdfPath;
+        markUpdated(cotizacion, actor);
         cotizacionRepository.save(cotizacion);
     }
 
@@ -200,7 +207,9 @@ public class CotizacionV1Service {
     private List<CotizacionDetalle> buildDetalles(
             Cotizacion cotizacion,
             List<DetalleCotizacionRequest> requestDetalles,
-            List<CotizacionCalcularItemResponse> items
+            List<CotizacionCalcularItemResponse> items,
+            String actor,
+            LocalDateTime now
     ) {
         List<CotizacionDetalle> detalles = new ArrayList<>();
         for (int i = 0; i < requestDetalles.size(); i++) {
@@ -211,9 +220,18 @@ public class CotizacionV1Service {
             detalle.producto = findProducto(request.idProducto());
             detalle.cantidad = request.cantidad();
             detalle.precioUni = item.precioUnitario();
+            detalle.usuRegistro = actor;
+            detalle.fecRegistro = now;
+            detalle.usuActualiza = null;
+            detalle.fecActualiza = null;
             detalles.add(detalle);
         }
         return detalles;
+    }
+
+    private void markUpdated(Cotizacion cotizacion, String actor) {
+        cotizacion.usuActualiza = actor;
+        cotizacion.fecActualiza = LocalDateTime.now();
     }
 
     private CotizacionCalcularItemResponse buildItem(Producto producto, Integer cantidad, BigDecimal precioUnitario, String moneda) {

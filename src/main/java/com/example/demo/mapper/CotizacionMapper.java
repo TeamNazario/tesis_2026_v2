@@ -12,53 +12,6 @@ public class CotizacionMapper {
         this.referenceMapper = referenceMapper;
     }
 
-    public Cotizacion toEntity(
-            CotizacionRequest request,
-            Cliente cliente,
-            ZonaDespacho zona,
-            Usuario vendedor
-    ) {
-        Cotizacion cotizacion = new Cotizacion();
-        updateEntity(cotizacion, request, cliente, zona, vendedor);
-        return cotizacion;
-    }
-
-    public void updateEntity(
-            Cotizacion cotizacion,
-            CotizacionRequest request,
-            Cliente cliente,
-            ZonaDespacho zona,
-            Usuario vendedor
-    ) {
-        cotizacion.cliente = cliente;
-        cotizacion.zona = zona;
-        cotizacion.vendedor = vendedor;
-        cotizacion.fechaEmision = request.fechaEmision();
-        cotizacion.fechaVencimiento = request.fechaVencimiento();
-        cotizacion.origenCotizacion = request.origenCotizacion();
-        cotizacion.estadoCotizacion = request.estadoCotizacion();
-        cotizacion.pdfPath = request.pdfPath();
-    }
-
-    public CotizacionResponse toResponse(Cotizacion cotizacion, List<CotizacionDetalle> detalles) {
-        return new CotizacionResponse(
-                cotizacion.idCotizacion,
-                cotizacion.uuidPublico,
-                referenceMapper.toReference(cotizacion.cliente),
-                referenceMapper.toReference(cotizacion.zona),
-                referenceMapper.toReference(cotizacion.vendedor),
-                cotizacion.fechaEmision,
-                cotizacion.fechaVencimiento,
-                cotizacion.subtotal,
-                cotizacion.igv,
-                cotizacion.montoTotal,
-                cotizacion.origenCotizacion,
-                cotizacion.estadoCotizacion,
-                cotizacion.pdfPath,
-                detalles.stream().map(this::toDetalleResponse).toList()
-        );
-    }
-
     public CotizacionDetalleResponse toDetalleResponse(CotizacionDetalle detalle) {
         java.math.BigDecimal precio = detalle.precioUni == null ? java.math.BigDecimal.ZERO : detalle.precioUni;
         java.math.BigDecimal subtotal = precio.multiply(java.math.BigDecimal.valueOf(detalle.cantidad == null ? 0 : detalle.cantidad));
@@ -69,16 +22,5 @@ public class CotizacionMapper {
                 precio,
                 subtotal
         );
-    }
-
-    private Integer parseEstadoCotizacion(String estadoCotizacion) {
-        if (estadoCotizacion == null || estadoCotizacion.isBlank()) {
-            return null;
-        }
-        try {
-            return Integer.parseInt(estadoCotizacion.trim());
-        } catch (NumberFormatException ex) {
-            return 1;
-        }
     }
 }

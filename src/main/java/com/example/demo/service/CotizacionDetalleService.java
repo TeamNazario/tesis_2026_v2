@@ -12,6 +12,7 @@ import com.example.demo.repository.CotizacionDetalleRepository;
 import com.example.demo.repository.ProductoRepository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -56,29 +57,36 @@ public class CotizacionDetalleService extends CrudService<CotizacionDetalle, Int
     }
 
     @Transactional
-    public CotizacionDetalleResponse create(CotizacionDetalleUpsertRequest request) {
+    public CotizacionDetalleResponse create(CotizacionDetalleUpsertRequest request, String actor) {
         CotizacionDetalle detalle = new CotizacionDetalle();
         apply(detalle, request);
+        LocalDateTime now = LocalDateTime.now();
+        detalle.usuRegistro = actor;
+        detalle.fecRegistro = now;
+        detalle.usuActualiza = null;
+        detalle.fecActualiza = null;
         CotizacionDetalle saved = detalleRepository.save(detalle);
-        recalculateCotizacionTotals(saved.cotizacion);
+        recalculateCotizacionTotals(saved.cotizacion, actor);
         return mapper.toDetalleResponse(saved);
     }
 
     @Transactional
-    public CotizacionDetalleResponse update(Integer id, CotizacionDetalleUpsertRequest request) {
+    public CotizacionDetalleResponse update(Integer id, CotizacionDetalleUpsertRequest request, String actor) {
         CotizacionDetalle detalle = findDetalle(id);
         apply(detalle, request);
+        detalle.usuActualiza = actor;
+        detalle.fecActualiza = LocalDateTime.now();
         CotizacionDetalle saved = detalleRepository.save(detalle);
-        recalculateCotizacionTotals(saved.cotizacion);
+        recalculateCotizacionTotals(saved.cotizacion, actor);
         return mapper.toDetalleResponse(saved);
     }
 
     @Transactional
-    public void deleteById(Integer id) {
+    public void deleteById(Integer id, String actor) {
         CotizacionDetalle detalle = findDetalle(id);
         Cotizacion cotizacion = detalle.cotizacion;
         detalleRepository.delete(detalle);
-        recalculateCotizacionTotals(cotizacion);
+        recalculateCotizacionTotals(cotizacion, actor);
     }
 
     private void apply(CotizacionDetalle detalle, CotizacionDetalleUpsertRequest request) {
@@ -106,7 +114,7 @@ public class CotizacionDetalleService extends CrudService<CotizacionDetalle, Int
                 .orElseThrow(() -> new ResourceNotFoundException("Producto", id));
     }
 
-    private void recalculateCotizacionTotals(Cotizacion cotizacion) {
+    private void recalculateCotizacionTotals(Cotizacion cotizacion, String actor) {
         if (cotizacion == null || cotizacion.idCotizacion == null) {
             return;
         }
@@ -121,6 +129,8 @@ public class CotizacionDetalleService extends CrudService<CotizacionDetalle, Int
         cotizacion.subtotal = subtotal;
         cotizacion.igv = igv;
         cotizacion.importeTotal = subtotal.add(igv).setScale(2, RoundingMode.HALF_UP);
+        cotizacion.usuActualiza = actor;
+        cotizacion.fecActualiza = LocalDateTime.now();
         cotizacionRepository.save(cotizacion);
     }
 }

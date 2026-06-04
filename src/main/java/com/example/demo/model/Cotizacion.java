@@ -11,7 +11,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -25,21 +24,13 @@ public class Cotizacion {
     @Column(name = "ID_COTIZACION")
     public Integer idCotizacion;
 
-    @Column(name = "uuid_publico", nullable = false, length = 36)
-    public String uuidPublico;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ID_CLIENTE", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     public Cliente cliente;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_zona", nullable = false)
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    public ZonaDespacho zona;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_vendedor")
+    @JoinColumn(name = "ID_VENDEDOR", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     public Usuario vendedor;
 
@@ -58,17 +49,40 @@ public class Cotizacion {
     @Column(name = "IGV", nullable = false, precision = 18, scale = 2)
     public BigDecimal igv;
 
-    @Column(name = "monto_total", nullable = false, precision = 38, scale = 2)
-    public BigDecimal montoTotal;
+    @Column(name = "IMPORTE_TOTAL", nullable = false, precision = 18, scale = 2)
+    public BigDecimal importeTotal;
 
-    @Column(name = "origen_cotizacion", nullable = false, length = 10)
-    public String origenCotizacion;
+    @Column(name = "DIRECCION_DESPACHO")
+    public String direccionDespacho;
 
-    @Column(name = "estado_cotizacion", nullable = false, length = 10)
-    public String estadoCotizacion;
+    @Column(name = "DEP_PROV_DIS", length = 150)
+    public String depProvDis;
+
+    @Column(name = "FLAG_CUBIERTO")
+    public Integer flagCubierto;
+
+    @Column(name = "OBSERVACIONES", length = 500)
+    public String observaciones;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ID_ESTADO_COTIZACION", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    public EstadoCotizacion estadoCotizacion;
 
     @Column(name = "PDF_PATH")
     public String pdfPath;
+
+    @Column(name = "USU_REGISTRO", length = 50)
+    public String usuRegistro;
+
+    @Column(name = "FEC_REGISTRO")
+    public LocalDateTime fecRegistro;
+
+    @Column(name = "USU_ACTUALIZA", length = 50)
+    public String usuActualiza;
+
+    @Column(name = "FEC_ACTUALIZA")
+    public LocalDateTime fecActualiza;
 
     @OneToMany(mappedBy = "cotizacion", cascade = jakarta.persistence.CascadeType.ALL, orphanRemoval = true)
     public List<CotizacionDetalle> detalles = new ArrayList<>();

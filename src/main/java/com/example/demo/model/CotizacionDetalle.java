@@ -10,16 +10,16 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "cotizacion_detalle")
+@Table(name = "DETALLE_COTIZACION")
 public class CotizacionDetalle {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_detalle")
-    public Integer idDetalle;
+    @Column(name = "ID_DETALLE_COTI")
+    public Integer idDetalleCoti;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ID_COTIZACION", nullable = false)
@@ -34,9 +34,18 @@ public class CotizacionDetalle {
     @Column(name = "CANTIDAD", nullable = false)
     public Integer cantidad;
 
-    @Column(name = "precio_unitario_aplicado", nullable = false, precision = 38, scale = 2)
-    public BigDecimal precioUnitarioAplicado;
+    @Column(name = "PRECIO_UNI", nullable = false, precision = 18, scale = 2)
+    public BigDecimal precioUni;
 
-    @Column(name = "subtotal_linea", nullable = false, precision = 38, scale = 2)
-    public BigDecimal subtotalLinea;
+    @Column(name = "USU_REGISTRO", length = 50)
+    public String usuRegistro;
+
+    @Column(name = "FEC_REGISTRO")
+    public LocalDateTime fecRegistro;
+
+    @Column(name = "USU_ACTUALIZA", length = 50)
+    public String usuActualiza;
+
+    @Column(name = "FEC_ACTUALIZA")
+    public LocalDateTime fecActualiza;
 }

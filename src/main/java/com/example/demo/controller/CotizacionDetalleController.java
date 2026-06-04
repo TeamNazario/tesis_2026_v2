@@ -2,10 +2,12 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.CotizacionDetalleResponse;
 import com.example.demo.dto.CotizacionDetalleUpsertRequest;
+import com.example.demo.security.AuthenticatedUser;
 import com.example.demo.service.CotizacionDetalleService;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,21 +39,35 @@ public class CotizacionDetalleController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public CotizacionDetalleResponse create(@Valid @RequestBody CotizacionDetalleUpsertRequest request) {
-        return service.create(request);
+    public CotizacionDetalleResponse create(
+            @Valid @RequestBody CotizacionDetalleUpsertRequest request,
+            @AuthenticationPrincipal AuthenticatedUser user
+    ) {
+        return service.create(request, resolveActor(user));
     }
 
     @PutMapping("/{id}")
     public CotizacionDetalleResponse update(
             @PathVariable Integer id,
-            @Valid @RequestBody CotizacionDetalleUpsertRequest request
+            @Valid @RequestBody CotizacionDetalleUpsertRequest request,
+            @AuthenticationPrincipal AuthenticatedUser user
     ) {
-        return service.update(id, request);
+        return service.update(id, request, resolveActor(user));
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Integer id) {
-        service.deleteById(id);
+    public void delete(
+            @PathVariable Integer id,
+            @AuthenticationPrincipal AuthenticatedUser user
+    ) {
+        service.deleteById(id, resolveActor(user));
+    }
+
+    private String resolveActor(AuthenticatedUser user) {
+        if (user != null && user.getUsuario() != null && user.getUsuario().correo != null) {
+            return user.getUsuario().correo;
+        }
+        return "system";
     }
 }

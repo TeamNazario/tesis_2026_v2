@@ -58,7 +58,7 @@ public class CotizacionPdfService {
     }
 
     @Transactional
-    public CotizacionPdfResponse generarPdfCotizacion(Integer idCotizacion) {
+    public CotizacionPdfResponse generarPdfCotizacion(Integer idCotizacion, String actor) {
         Cotizacion cotizacion = cotizacionService.findEntity(idCotizacion);
         String fileName = construirNombreArchivo(cotizacion);
         Path file = storageDir.resolve(fileName).normalize();
@@ -71,7 +71,7 @@ public class CotizacionPdfService {
             throw new IllegalStateException("No fue posible generar el PDF de la cotizacion.");
         }
         String relativePath = "cotizaciones/" + fileName;
-        cotizacionService.updatePdfPath(idCotizacion, relativePath);
+        cotizacionService.updatePdfPath(idCotizacion, relativePath, actor);
         return new CotizacionPdfResponse(idCotizacion, relativePath, fileName, "PDF generado correctamente.");
     }
 

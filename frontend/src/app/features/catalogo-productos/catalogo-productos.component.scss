@@ -140,21 +140,6 @@ td {
   font-weight: 900;
 }
 
-.stock-detail {
-  display: inline-grid;
-  gap: 0.15rem;
-  vertical-align: middle;
-}
-
-.stock-detail strong {
-  color: var(--bio-on-surface);
-}
-
-.stock-detail span {
-  color: var(--bio-on-surface-variant);
-  font-size: 0.9rem;
-}
-
 .state-chip.active,
 .stock-chip {
   background: rgba(0, 110, 37, 0.15);

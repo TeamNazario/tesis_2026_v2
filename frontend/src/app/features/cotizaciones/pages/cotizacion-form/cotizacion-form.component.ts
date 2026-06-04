@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { finalize, forkJoin, switchMap } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, finalize, forkJoin, of, switchMap } from 'rxjs';
 import { UsuarioResponse } from '../../../../core/auth/models/auth.models';
 import { CatalogoItem, ClienteV1 } from '../../../../core/models/v1.models';
 import { CatalogoV1Service } from '../../../../core/services/catalogo-v1.service';
@@ -37,6 +37,7 @@ export class CotizacionFormComponent implements OnInit {
   private readonly notifications = inject(NotificationService);
 
   readonly clientes = signal<ClienteV1[]>([]);
+  private readonly allClientes = signal<ClienteV1[]>([]);
   readonly productos = signal<ProductResponse[]>([]);
   readonly vendedores = signal<UsuarioResponse[]>([]);
   readonly estados = signal<CatalogoItem[]>([]);
@@ -45,6 +46,9 @@ export class CotizacionFormComponent implements OnInit {
   readonly isLoading = signal(false);
   readonly isCalculating = signal(false);
   readonly isSaving = signal(false);
+  readonly isSearchingClientes = signal(false);
+
+  readonly clienteSearch = this.fb.nonNullable.control('');
 
   readonly selectedCliente = computed(() => {
     const id = this.form.controls.idCliente.value;
@@ -70,6 +74,23 @@ export class CotizacionFormComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadCatalogs();
+    this.clienteSearch.valueChanges
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        switchMap((value) =>
+          this.searchClientes(value).pipe(
+            catchError(() => {
+              this.notifications.error('No se pudo buscar clientes.');
+              this.isSearchingClientes.set(false);
+              return of([]);
+            }),
+          ),
+        ),
+      )
+      .subscribe({
+        next: (clientes) => this.clientes.set(clientes),
+      });
     this.form.controls.idCliente.valueChanges.subscribe((idCliente) => this.applyClienteDefaults(idCliente));
     this.form.controls.moneda.valueChanges.subscribe(() => this.clearItems());
   }
@@ -140,6 +161,18 @@ export class CotizacionFormComponent implements OnInit {
     return [user.nombres, user.apellidoPaterno, user.apellidoMaterno].filter(Boolean).join(' ');
   }
 
+  clientLabel(cliente: ClienteV1): string {
+    return `${cliente.ruc} - ${cliente.razonSocial}`;
+  }
+
+  selectCliente(cliente: ClienteV1, isUserInput = true): void {
+    if (!isUserInput) {
+      return;
+    }
+    this.clienteSearch.setValue(this.clientLabel(cliente), { emitEvent: false });
+    this.form.patchValue({ idCliente: cliente.idCliente });
+  }
+
   private loadCatalogs(): void {
     this.isLoading.set(true);
     forkJoin({
@@ -151,6 +184,7 @@ export class CotizacionFormComponent implements OnInit {
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: ({ clientes, productos, vendedores, estados }) => {
+          this.allClientes.set(clientes);
           this.clientes.set(clientes);
           this.productos.set(productos);
           this.vendedores.set(vendedores);
@@ -195,6 +229,20 @@ export class CotizacionFormComponent implements OnInit {
   private clearItems(): void {
     this.items.set([]);
     this.resumen.set(null);
+  }
+
+  private searchClientes(value: string) {
+    const query = value.trim();
+    this.form.patchValue({ idCliente: 0 }, { emitEvent: false });
+    this.clearItems();
+    if (!query) {
+      this.isSearchingClientes.set(false);
+      return of(this.allClientes());
+    }
+    this.isSearchingClientes.set(true);
+    const ruc = /^\d+$/.test(query) ? query : undefined;
+    const razonSocial = ruc ? undefined : query;
+    return this.clienteService.buscar(ruc, razonSocial).pipe(finalize(() => this.isSearchingClientes.set(false)));
   }
 
   private buildRequest(): CotizacionCreateRequest {

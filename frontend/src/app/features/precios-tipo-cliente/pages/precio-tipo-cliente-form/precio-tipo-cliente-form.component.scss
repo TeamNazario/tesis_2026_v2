@@ -37,7 +37,7 @@
 
 .summary-card strong {
   color: var(--bio-on-surface);
-  font-family: Manrope, sans-serif;
+  font-family: var(--bf-font-title);
 }
 
 .form-shell {
@@ -63,7 +63,7 @@
 .help-card h4 {
   margin: 0 0 0.7rem;
   color: var(--bio-on-surface);
-  font-family: Manrope, sans-serif;
+  font-family: var(--bf-font-title);
 }
 
 .help-card ul {
@@ -83,7 +83,7 @@
 .form-section h3 {
   margin: 0 0 0.75rem;
   color: var(--bio-on-surface);
-  font-family: Manrope, sans-serif;
+  font-family: var(--bf-font-title);
 }
 
 .form-grid {

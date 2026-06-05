@@ -15,7 +15,7 @@
 
 .chip-state {
   border-radius: 999px;
-  background: #eff6e9;
+  background: var(--bf-blue-soft);
   color: #171d16;
 }
 
@@ -37,7 +37,7 @@
 }
 
 .feedback-info {
-  color: #006e25;
+  color: var(--bf-blue-strong);
 }
 
 .feedback-error {
@@ -45,7 +45,7 @@
 }
 
 .feedback-warn {
-  color: #ab2d57;
+  color: var(--bf-danger);
 }
 
 @media (max-width: 900px) {

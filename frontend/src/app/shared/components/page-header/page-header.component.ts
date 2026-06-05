@@ -22,17 +22,17 @@ import { Component, input } from '@angular/core';
       margin-bottom: 1.5rem;
     }
     .eyebrow {
-      color: var(--bio-primary);
+      color: var(--bf-blue);
       font-weight: 800;
       text-transform: uppercase;
       font-size: .75rem;
     }
     h1 {
       margin: .2rem 0;
-      font-family: Manrope, sans-serif;
+      font-family: var(--bf-font-title);
       font-size: clamp(1.8rem, 4vw, 2.7rem);
       color: var(--bio-on-surface);
-      letter-spacing: -.02em;
+      letter-spacing: 0;
     }
     p {
       margin: 0;

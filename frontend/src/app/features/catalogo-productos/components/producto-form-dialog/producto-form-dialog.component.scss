@@ -25,17 +25,17 @@
 }
 
 .section-copy span {
-  color: #006e25;
+  color: var(--bf-blue-strong);
   font-size: 0.78rem;
   font-weight: 900;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
 .section-copy h3 {
   margin: 0.35rem 0;
   color: var(--bio-on-surface);
-  font-family: Manrope, sans-serif;
+  font-family: var(--bf-font-title);
 }
 
 .section-copy p {
@@ -79,8 +79,8 @@
 }
 
 .stock-preview strong {
-  color: #006e25;
-  font-family: Manrope, sans-serif;
+  color: var(--bf-blue-strong);
+  font-family: var(--bf-font-title);
   font-size: 1.6rem;
   line-height: 1;
 }

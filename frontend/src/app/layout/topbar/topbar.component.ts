@@ -37,10 +37,10 @@ import { MaterialModule } from '../../shared/material/material.module';
       position: sticky;
       top: 0;
       z-index: 10;
-      background: rgba(244, 252, 239, .9);
+      background: rgba(245, 249, 251, .92);
       backdrop-filter: blur(16px);
       color: var(--bio-on-surface);
-      border-bottom: 1px solid rgba(189, 202, 185, .45);
+      border-bottom: 1px solid var(--bf-line);
     }
     .context {
       display: grid;
@@ -51,7 +51,7 @@ import { MaterialModule } from '../../shared/material/material.module';
       color: var(--bio-on-surface-variant);
     }
     .context strong {
-      font-family: Manrope, sans-serif;
+      font-family: var(--bf-font-title);
       font-size: 1rem;
     }
     .spacer {

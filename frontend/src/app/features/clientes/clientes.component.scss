@@ -1,4 +1,4 @@
-﻿:host {
+:host {
   display: block;
 }
 
@@ -46,12 +46,12 @@ table {
 
 .state-chip.active {
   background: rgba(0, 110, 37, 0.16);
-  color: #006e25;
+  color: var(--bf-blue-strong);
 }
 
 .state-chip.inactive {
   background: rgba(171, 45, 87, 0.15);
-  color: #ab2d57;
+  color: var(--bf-danger);
 }
 
 .state-chip.blocked {

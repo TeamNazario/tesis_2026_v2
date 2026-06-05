@@ -42,7 +42,7 @@
 .field strong,
 .audit-list strong {
   color: var(--bio-on-surface);
-  font-family: Manrope, sans-serif;
+  font-family: var(--bf-font-title);
 }
 
 .detail-card p {
@@ -67,7 +67,7 @@
 .currency-chip.ok,
 .state-chip.active {
   background: rgba(0, 110, 37, 0.15);
-  color: #006e25;
+  color: var(--bf-blue-strong);
 }
 
 .currency-chip.warn,
@@ -78,7 +78,7 @@
 
 .state-chip.blocked {
   background: rgba(171, 45, 87, 0.12);
-  color: #ab2d57;
+  color: var(--bf-danger);
 }
 
 .detail-shell {

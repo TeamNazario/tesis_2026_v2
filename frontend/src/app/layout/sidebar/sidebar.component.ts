@@ -15,7 +15,7 @@ interface NavItem {
   template: `
     <aside class="sidebar">
       <div class="brand">
-        <div class="mark">B32</div>
+        <img class="brand-logo" src="assets/images/biofluid-d32-logo.png" alt="BioFluid D-32" />
         <div>
           <strong>BIOFLUID D32 E.I.R.L.</strong>
         </div>

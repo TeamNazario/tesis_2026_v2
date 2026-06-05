@@ -16,25 +16,27 @@ import { MaterialModule } from '../../material/material.module';
     .kpi-card {
       min-height: 150px;
       padding: 1.25rem;
-      border-radius: 1rem;
-      background: linear-gradient(145deg, #ffffff, #eff6e9);
+      border: 1px solid var(--bf-line);
+      border-radius: var(--bf-radius);
+      background: linear-gradient(145deg, #ffffff, #f4fbff);
+      box-shadow: var(--bf-shadow-soft);
       display: grid;
       gap: .45rem;
     }
     .icon {
       width: 2.6rem;
       height: 2.6rem;
-      border-radius: .8rem;
+      border-radius: var(--bf-radius);
       display: grid;
       place-items: center;
-      color: #006e25;
-      background: #dff4df;
+      color: var(--bf-blue-strong);
+      background: var(--bf-blue-soft);
     }
     span, small {
       color: var(--bio-on-surface-variant);
     }
     strong {
-      font-family: Manrope, sans-serif;
+      font-family: var(--bf-font-title);
       font-size: 2rem;
       color: var(--bio-on-surface);
     }

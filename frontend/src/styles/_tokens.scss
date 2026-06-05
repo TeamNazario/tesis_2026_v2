@@ -1,0 +1,39 @@
+:root {
+  --bf-blue: #0077b6;
+  --bf-blue-strong: #005f99;
+  --bf-blue-soft: #e5f4fb;
+  --bf-green: #56b82e;
+  --bf-green-strong: #2f8f22;
+  --bf-green-soft: #edf8e9;
+  --bf-ink: #17202a;
+  --bf-muted: #617183;
+  --bf-line: #d8e2ea;
+  --bf-bg: #f5f9fb;
+  --bf-panel: #ffffff;
+  --bf-panel-subtle: #f9fcfd;
+  --bf-warn: #b7791f;
+  --bf-warn-soft: #fff6db;
+  --bf-danger: #b42318;
+  --bf-danger-soft: #fee4e2;
+  --bf-success-soft: #e7f6e5;
+  --bf-radius: 8px;
+  --bf-radius-sm: 6px;
+  --bf-shadow: 0 10px 30px rgba(23, 32, 42, .08);
+  --bf-shadow-soft: 0 6px 18px rgba(23, 32, 42, .06);
+  --bf-font-title: 'Outfit', Inter, sans-serif;
+  --bf-font-body: Inter, Arial, sans-serif;
+
+  --bio-primary: var(--bf-blue);
+  --bio-primary-container: var(--bf-blue-soft);
+  --bio-secondary: var(--bf-green);
+  --bio-secondary-container: var(--bf-green-soft);
+  --bio-surface: var(--bf-bg);
+  --bio-surface-low: var(--bf-panel-subtle);
+  --bio-surface-lowest: var(--bf-panel);
+  --bio-surface-high: #eef5f8;
+  --bio-on-surface: var(--bf-ink);
+  --bio-on-surface-variant: var(--bf-muted);
+  --bio-accent: var(--bf-green);
+  --bio-error: var(--bf-danger);
+  --bio-outline-variant: var(--bf-line);
+}

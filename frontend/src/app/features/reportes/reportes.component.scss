@@ -35,28 +35,28 @@
   gap: .2rem .75rem;
   width: 100%;
   padding: .9rem;
-  border: 1px solid rgba(19, 70, 36, .12);
-  border-radius: 8px;
-  background: #ffffff;
+  border: 1px solid var(--bf-line);
+  border-radius: var(--bf-radius);
+  background: var(--bf-panel);
   color: var(--bio-on-surface);
   text-align: left;
   cursor: pointer;
 }
 
 .report-card.active {
-  border-color: #006e25;
-  box-shadow: inset 4px 0 0 #006e25;
+  border-color: var(--bf-blue-strong);
+  box-shadow: inset 4px 0 0 var(--bf-blue-strong);
 }
 
 .report-card mat-icon {
   grid-row: span 2;
   width: 42px;
   height: 42px;
-  border-radius: 8px;
+  border-radius: var(--bf-radius);
   display: grid;
   place-items: center;
-  color: #006e25;
-  background: #eff6e9;
+  color: var(--bf-blue-strong);
+  background: var(--bf-blue-soft);
 }
 
 .report-card span {
@@ -75,9 +75,10 @@
   display: grid;
   gap: 1rem;
   padding: 1rem;
-  border: 1px solid rgba(19, 70, 36, .1);
-  border-radius: 8px;
-  background: #ffffff;
+  border: 1px solid var(--bf-line);
+  border-radius: var(--bf-radius);
+  background: var(--bf-panel);
+  box-shadow: var(--bf-shadow-soft);
 }
 
 .report-panel header {
@@ -92,14 +93,14 @@
   height: 48px;
   display: grid;
   place-items: center;
-  border-radius: 8px;
-  color: #006e25;
-  background: #eff6e9;
+  border-radius: var(--bf-radius);
+  color: var(--bf-blue-strong);
+  background: var(--bf-blue-soft);
   font-size: 28px;
 }
 
 .eyebrow {
-  color: #006e25;
+  color: var(--bf-blue-strong);
   font-size: .78rem;
   font-weight: 900;
   text-transform: uppercase;
@@ -107,7 +108,7 @@
 
 .report-panel h2 {
   margin: .25rem 0;
-  font-family: Manrope, sans-serif;
+  font-family: var(--bf-font-title);
   font-size: 1.35rem;
 }
 

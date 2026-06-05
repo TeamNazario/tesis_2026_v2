@@ -47,10 +47,10 @@
   gap: 1rem;
   min-width: 0;
   padding: 1rem;
-  border: 1px solid rgba(19, 70, 36, .1);
-  border-radius: 8px;
-  background: #ffffff;
-  box-shadow: 0 8px 22px rgba(17, 36, 24, .06);
+  border: 1px solid var(--bf-line);
+  border-radius: var(--bf-radius);
+  background: var(--bf-panel);
+  box-shadow: var(--bf-shadow-soft);
 }
 
 .panel-wide {
@@ -66,7 +66,7 @@
 .panel h2 {
   margin: 0;
   color: var(--bio-on-surface);
-  font-family: Manrope, sans-serif;
+  font-family: var(--bf-font-title);
   font-size: 1.05rem;
 }
 
@@ -106,14 +106,14 @@
   height: .7rem;
   overflow: hidden;
   border-radius: 999px;
-  background: #edf3ed;
+  background: var(--bf-blue-soft);
 }
 
 .bar-track i {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #007a2b, #74b72e);
+  background: linear-gradient(90deg, var(--bf-blue), var(--bf-green));
 }
 
 .status-list > div,
@@ -123,9 +123,9 @@
   gap: .4rem;
   min-width: 0;
   padding: .8rem;
-  border: 1px solid rgba(19, 70, 36, .08);
-  border-radius: 8px;
-  background: #fbfdf9;
+  border: 1px solid var(--bf-line);
+  border-radius: var(--bf-radius);
+  background: var(--bf-panel-subtle);
 }
 
 .status-list span,
@@ -159,7 +159,7 @@
   min-width: 0;
   padding: 1rem;
   border-radius: 8px;
-  background: #eff6e9;
+  background: var(--bf-blue-soft);
 }
 
 .inventory strong,
@@ -168,8 +168,8 @@
 }
 
 .inventory strong {
-  color: #006e25;
-  font-family: Manrope, sans-serif;
+  color: var(--bf-blue-strong);
+  font-family: var(--bf-font-title);
   font-size: 1.6rem;
 }
 

@@ -14,7 +14,8 @@ import { MaterialModule } from '../../material/material.module';
   styles: `
     .empty-state {
       padding: 2rem;
-      border-radius: 1rem;
+      border: 1px dashed var(--bf-line);
+      border-radius: var(--bf-radius);
       background: var(--bio-surface-lowest);
       text-align: center;
       color: var(--bio-on-surface-variant);
@@ -23,11 +24,11 @@ import { MaterialModule } from '../../material/material.module';
       width: 3rem;
       height: 3rem;
       font-size: 3rem;
-      color: var(--bio-primary);
+      color: var(--bf-blue);
     }
     h3 {
       margin: .75rem 0 .25rem;
-      font-family: Manrope, sans-serif;
+      font-family: var(--bf-font-title);
       color: var(--bio-on-surface);
     }
     p {

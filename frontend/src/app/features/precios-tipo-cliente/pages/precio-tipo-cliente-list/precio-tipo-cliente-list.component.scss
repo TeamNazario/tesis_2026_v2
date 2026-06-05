@@ -27,14 +27,14 @@
   color: var(--bio-on-surface-variant);
   font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
 }
 
 .metric-card strong {
   display: block;
   margin-top: 0.35rem;
   color: var(--bio-on-surface);
-  font-family: Manrope, sans-serif;
+  font-family: var(--bf-font-title);
   font-size: clamp(1.9rem, 4vw, 2.8rem);
   line-height: 1;
 }
@@ -94,7 +94,7 @@ td {
 .price-card h3 {
   margin: 0;
   color: var(--bio-on-surface);
-  font-family: Manrope, sans-serif;
+  font-family: var(--bf-font-title);
 }
 
 .product-cell span,
@@ -119,7 +119,7 @@ td {
 .currency-chip.ok,
 .state-chip.active {
   background: rgba(0, 110, 37, 0.15);
-  color: #006e25;
+  color: var(--bf-blue-strong);
 }
 
 .currency-chip.warn,
@@ -130,7 +130,7 @@ td {
 
 .state-chip.blocked {
   background: rgba(171, 45, 87, 0.12);
-  color: #ab2d57;
+  color: var(--bf-danger);
 }
 
 .loading {

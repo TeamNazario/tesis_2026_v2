@@ -26,13 +26,13 @@ import { TopbarComponent } from '../topbar/topbar.component';
     .shell {
       min-height: 100vh;
       background:
-        linear-gradient(135deg, rgba(40, 167, 69, .08), transparent 32%),
-        var(--bio-surface);
+        linear-gradient(135deg, rgba(0, 119, 182, .07), transparent 32%),
+        var(--bf-bg);
     }
     .drawer {
       width: 280px;
       border-right: 0;
-      box-shadow: 18px 0 60px rgba(23, 29, 22, .08);
+      box-shadow: 14px 0 40px rgba(23, 32, 42, .08);
     }
     .content {
       width: min(1440px, calc(100% - 2rem));

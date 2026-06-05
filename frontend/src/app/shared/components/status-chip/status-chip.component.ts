@@ -13,20 +13,20 @@ import { Component, computed, input } from '@angular/core';
       border-radius: 999px;
       font-size: .78rem;
       font-weight: 800;
-      background: #eff6e9;
-      color: #3e4a3c;
+      background: #f2f7fa;
+      color: var(--bf-muted);
     }
     .ok {
-      background: #dff4df;
-      color: #006e25;
+      background: var(--bf-success-soft);
+      color: var(--bf-green-strong);
     }
     .warn {
-      background: #fff2cc;
-      color: #6b5200;
+      background: var(--bf-warn-soft);
+      color: var(--bf-warn);
     }
     .danger {
-      background: #ffe1e8;
-      color: #ab2d57;
+      background: var(--bf-danger-soft);
+      color: var(--bf-danger);
     }
   `,
 })

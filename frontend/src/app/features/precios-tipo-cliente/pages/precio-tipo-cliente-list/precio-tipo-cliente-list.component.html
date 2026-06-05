@@ -27,13 +27,13 @@
   <article class="metric-card">
     <span>Tipos de cliente</span>
     <strong>{{ tiposCliente().length }}</strong>
-    <p>Segmentos comerciales activos para la matriz de precios.</p>
+    <p>Segmentos comerciales activos.</p>
   </article>
 </section>
 
 <section class="filters-card" [formGroup]="filtersForm">
   <mat-form-field appearance="outline" class="search-field">
-    <mat-label>Buscar precio, producto o tipo de cliente</mat-label>
+    <mat-label>Buscar producto o tipo de cliente</mat-label>
     <input matInput formControlName="search" />
     <mat-icon matSuffix>search</mat-icon>
   </mat-form-field>

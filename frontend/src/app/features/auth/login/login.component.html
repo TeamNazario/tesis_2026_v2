@@ -1,6 +1,8 @@
 <main class="login-shell">
   <section class="hero-panel">
-    <div class="brand-mark">B32</div>
+    <div class="brand-mark" aria-label="BioFluid D-32">
+      <!--<img src="assets/images/biofluid-d32-logo.png" alt="BioFluid D-32" /> -->
+    </div>
     <h1>BIOFLUID D32 E.I.R.L.</h1>
     <p>Plataforma administrativa para cotizaciones AUS-32.</p>
     <div class="metric-strip">
@@ -12,7 +14,6 @@
   </section>
 
   <section class="login-panel">
-    <span class="eyebrow">BIOFLUID D32 E.I.R.L.</span>
     <h2>Iniciar sesión</h2>
     <form [formGroup]="form" (ngSubmit)="submit()">
       <mat-form-field appearance="outline">

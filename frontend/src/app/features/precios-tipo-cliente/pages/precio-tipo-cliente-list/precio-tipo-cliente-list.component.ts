@@ -5,7 +5,7 @@ import { PageEvent } from '@angular/material/paginator';
 import { Sort } from '@angular/material/sort';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Subject, debounceTime, distinctUntilChanged, finalize, forkJoin, takeUntil } from 'rxjs';
-import { AuthService } from '../../../../core/auth/services/auth.service';
+import { PermissionService } from '../../../../core/auth/services/permission.service';
 import { CatalogoV1Service } from '../../../../core/services/catalogo-v1.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { ProductService } from '../../../../core/services/product.service';
@@ -25,7 +25,7 @@ export class PrecioTipoClienteListComponent implements OnInit, OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly auth = inject(AuthService);
+  private readonly permissions = inject(PermissionService);
   private readonly notifications = inject(NotificationService);
   private readonly preciosService = inject(PrecioTipoClienteService);
   private readonly productosService = inject(ProductService);
@@ -65,9 +65,7 @@ export class PrecioTipoClienteListComponent implements OnInit, OnDestroy {
     moneda: ['ALL'],
   });
 
-  readonly canManagePrices = computed(() =>
-    this.auth.hasRole(['SISTEMAS', 'JEFE DE VENTAS', 'ADMINISTRATIVO']),
-  );
+  readonly canManagePrices = computed(() => this.permissions.canEditPrices());
 
   ngOnInit(): void {
     this.bindFilters();

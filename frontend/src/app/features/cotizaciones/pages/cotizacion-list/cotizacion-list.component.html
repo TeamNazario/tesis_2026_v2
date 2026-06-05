@@ -1,17 +1,16 @@
 <app-page-header
   title="Cotizaciones"
-  description="Gestiona, consulta y genera cotizaciones comerciales de BIOFLUID D32."
->
+  >
   <button mat-flat-button color="primary" routerLink="/cotizaciones/nueva">
     <mat-icon>add</mat-icon>
-    Nueva cotizacion
+    Nueva cotización
   </button>
 </app-page-header>
 
 <section class="filters-panel" [formGroup]="filtersForm">
   <mat-form-field appearance="outline" class="search-field">
-    <mat-label>Buscar cliente o RUC</mat-label>
-    <input matInput formControlName="search" (keyup.enter)="loadCotizaciones()" />
+    <mat-label>Buscar por cliente o RUC</mat-label>
+    <input matInput formControlName="search" />
     <mat-icon matSuffix>search</mat-icon>
   </mat-form-field>
 
@@ -25,15 +24,17 @@
     </mat-select>
   </mat-form-field>
 
-  <mat-form-field appearance="outline">
-    <mat-label>Vendedor</mat-label>
-    <mat-select formControlName="idVendedor">
-      <mat-option value="ALL">Todos</mat-option>
-      @for (vendedor of vendedores(); track vendedor.idUsuario) {
-        <mat-option [value]="vendedor.idUsuario">{{ userLabel(vendedor) }}</mat-option>
-      }
-    </mat-select>
-  </mat-form-field>
+  @if (permissions.canViewAllSellers()) {
+    <mat-form-field appearance="outline">
+      <mat-label>Vendedor</mat-label>
+      <mat-select formControlName="idVendedor">
+        <mat-option value="ALL">Todos</mat-option>
+        @for (vendedor of vendedores(); track vendedor.idUsuario) {
+          <mat-option [value]="vendedor.idUsuario">{{ userLabel(vendedor) }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  }
 
   <mat-form-field appearance="outline">
     <mat-label>Estado</mat-label>
@@ -42,6 +43,15 @@
       @for (estado of estados(); track estado.id) {
         <mat-option [value]="estado.id">{{ estado.descripcion }}</mat-option>
       }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Moneda</mat-label>
+    <mat-select formControlName="moneda">
+      <mat-option value="ALL">Todas</mat-option>
+      <mat-option value="SOLES">Soles</mat-option>
+      <mat-option value="DOLARES">Dólares</mat-option>
     </mat-select>
   </mat-form-field>
 
@@ -56,13 +66,12 @@
   </mat-form-field>
 
   <div class="filter-actions">
-    <button mat-flat-button color="primary" (click)="loadCotizaciones()">
-      <mat-icon>filter_alt</mat-icon>
-      Filtrar
-    </button>
     <button mat-stroked-button (click)="clearFilters()">
       <mat-icon>filter_alt_off</mat-icon>
       Limpiar
+    </button>
+    <button mat-icon-button matTooltip="Refrescar listado" (click)="loadCotizaciones()">
+      <mat-icon>refresh</mat-icon>
     </button>
   </div>
 </section>
@@ -73,47 +82,59 @@
       <mat-spinner diameter="36" />
       <span>Cargando cotizaciones...</span>
     </div>
-  } @else if (cotizaciones().length) {
-    <table mat-table [dataSource]="cotizaciones()">
+  } @else if (filteredCotizaciones().length) {
+    <div class="table-scroll">
+      <table mat-table [dataSource]="dataSource" matSort>
       <ng-container matColumnDef="numero">
-        <th mat-header-cell *matHeaderCellDef>Nro.</th>
-        <td mat-cell *matCellDef="let item">C001-{{ item.idCotizacion.toString().padStart(6, '0') }}</td>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Nro.</th>
+        <td mat-cell *matCellDef="let item">{{ quoteNumber(item) }}</td>
       </ng-container>
 
       <ng-container matColumnDef="cliente">
-        <th mat-header-cell *matHeaderCellDef>Cliente</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Cliente</th>
         <td mat-cell *matCellDef="let item">
           <strong>{{ item.razonSocialCliente }}</strong>
         </td>
       </ng-container>
 
       <ng-container matColumnDef="ruc">
-        <th mat-header-cell *matHeaderCellDef>RUC</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>RUC</th>
         <td mat-cell *matCellDef="let item">{{ item.rucCliente }}</td>
       </ng-container>
 
       <ng-container matColumnDef="vendedor">
-        <th mat-header-cell *matHeaderCellDef>Vendedor</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Vendedor</th>
         <td mat-cell *matCellDef="let item">{{ item.nombreVendedor }}</td>
       </ng-container>
 
       <ng-container matColumnDef="fechaEmision">
-        <th mat-header-cell *matHeaderCellDef>Emision</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Emisión</th>
         <td mat-cell *matCellDef="let item">{{ formatDate(item.fechaEmision) }}</td>
       </ng-container>
 
       <ng-container matColumnDef="fechaVencimiento">
-        <th mat-header-cell *matHeaderCellDef>Vencimiento</th>
-        <td mat-cell *matCellDef="let item">{{ formatDate(item.fechaVencimiento) }}</td>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Vencimiento</th>
+        <td mat-cell *matCellDef="let item">
+          <span class="due-date" [class.expired]="isExpired(item)">
+            {{ formatDate(item.fechaVencimiento) }}
+          </span>
+        </td>
       </ng-container>
 
       <ng-container matColumnDef="moneda">
-        <th mat-header-cell *matHeaderCellDef>Moneda</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Moneda</th>
         <td mat-cell *matCellDef="let item">{{ item.moneda }}</td>
       </ng-container>
 
+      <ng-container matColumnDef="tiempoRestante">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Vigencia</th>
+        <td mat-cell *matCellDef="let item">
+          <span class="due-date" [class.expired]="isExpired(item)">{{ formatRemaining(item) }}</span>
+        </td>
+      </ng-container>
+
       <ng-container matColumnDef="importeTotal">
-        <th mat-header-cell *matHeaderCellDef>Total</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Total</th>
         <td mat-cell *matCellDef="let item">
           <strong>{{ formatMoney(item.importeTotal, item.moneda) }}</strong>
         </td>
@@ -129,7 +150,7 @@
       <ng-container matColumnDef="pdf">
         <th mat-header-cell *matHeaderCellDef>PDF</th>
         <td mat-cell *matCellDef="let item">
-          @if (item.pdfPath) {
+          @if (hasPdf(item)) {
             <button mat-icon-button matTooltip="Descargar PDF" [disabled]="pdfLoadingId() === item.idCotizacion" (click)="downloadPdf(item)">
               <mat-icon>download</mat-icon>
             </button>
@@ -147,13 +168,67 @@
           <button mat-icon-button matTooltip="Ver detalle" [routerLink]="['/cotizaciones', item.idCotizacion]">
             <mat-icon>visibility</mat-icon>
           </button>
+          <button
+            mat-icon-button
+            matTooltip="Cambiar estado"
+            [matMenuTriggerFor]="estadoMenu"
+            [disabled]="statusLoadingId() === item.idCotizacion || !availableStates(item).length"
+          >
+            <mat-icon>published_with_changes</mat-icon>
+          </button>
+          <mat-menu #estadoMenu="matMenu">
+            @for (estado of availableStates(item); track estado.id) {
+              <button mat-menu-item (click)="changeStatus(item, estado)">
+                <mat-icon>label</mat-icon>
+                <span>{{ estado.descripcion }}</span>
+              </button>
+            }
+          </mat-menu>
         </td>
       </ng-container>
 
       <tr mat-header-row *matHeaderRowDef="columns"></tr>
       <tr mat-row *matRowDef="let row; columns: columns"></tr>
     </table>
+    </div>
+
+    <div class="mobile-cards">
+      @for (item of filteredCotizaciones(); track item.idCotizacion) {
+        <article class="quote-card">
+          <div class="quote-card__head">
+            <div>
+              <strong>{{ quoteNumber(item) }}</strong>
+              <span>{{ item.razonSocialCliente }}</span>
+            </div>
+            <app-status-chip [label]="item.descEstadoCotizacion" />
+          </div>
+          <dl>
+            <div><dt>RUC</dt><dd>{{ item.rucCliente }}</dd></div>
+            <div><dt>Vendedor</dt><dd>{{ item.nombreVendedor }}</dd></div>
+            <div><dt>Vence</dt><dd [class.expired]="isExpired(item)">{{ formatDate(item.fechaVencimiento) }}</dd></div>
+            <div><dt>Vigencia</dt><dd [class.expired]="isExpired(item)">{{ formatRemaining(item) }}</dd></div>
+            <div><dt>Total</dt><dd>{{ formatMoney(item.importeTotal, item.moneda) }}</dd></div>
+          </dl>
+          <div class="quote-card__actions">
+            <button mat-icon-button matTooltip="Ver detalle" [routerLink]="['/cotizaciones', item.idCotizacion]">
+              <mat-icon>visibility</mat-icon>
+            </button>
+            @if (hasPdf(item)) {
+              <button mat-icon-button matTooltip="Descargar PDF" [disabled]="pdfLoadingId() === item.idCotizacion" (click)="downloadPdf(item)">
+                <mat-icon>download</mat-icon>
+              </button>
+            } @else {
+              <button mat-icon-button matTooltip="Generar PDF" [disabled]="pdfLoadingId() === item.idCotizacion" (click)="generatePdf(item)">
+                <mat-icon>picture_as_pdf</mat-icon>
+              </button>
+            }
+          </div>
+        </article>
+      }
+    </div>
+
+    <mat-paginator [pageSize]="10" [pageSizeOptions]="[5, 10, 25]" showFirstLastButtons />
   } @else {
-    <app-empty-state title="Sin cotizaciones" description="Las cotizaciones apareceran cuando existan registros." />
+    <app-empty-state [title]="emptyTitle()" [description]="emptyDescription()" />
   }
 </section>

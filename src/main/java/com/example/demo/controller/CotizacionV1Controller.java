@@ -84,6 +84,11 @@ public class CotizacionV1Controller {
         return service.patchEstado(id, request.idEstadoCotizacion(), resolveActor(user));
     }
 
+    @PostMapping("/procesar-vencidas")
+    public Integer procesarVencidas(@AuthenticationPrincipal AuthenticatedUser user) {
+        return service.procesarCotizacionesVencidas(resolveActor(user));
+    }
+
     @PostMapping("/{id}/generar-pdf")
     public CotizacionPdfResponse generarPdf(
             @PathVariable Integer id,

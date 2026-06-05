@@ -11,6 +11,7 @@ export interface DetalleCotizacionResponse {
 
 export interface CotizacionResponse {
   idCotizacion: number;
+  numeroCotizacion?: string;
   idCliente: number;
   rucCliente: string;
   razonSocialCliente: string;
@@ -29,6 +30,9 @@ export interface CotizacionResponse {
   observaciones?: string;
   idEstadoCotizacion: number;
   descEstadoCotizacion: string;
+  vencida?: boolean;
+  puedeAprobarse?: boolean;
+  tiempoRestanteSegundos?: number;
   pdfPath?: string;
   detalles: DetalleCotizacionResponse[];
 }
@@ -42,13 +46,13 @@ export interface DetalleCotizacionCreateRequest {
 export interface CotizacionCreateRequest {
   idCliente: number;
   idVendedor: number;
-  fechaVencimiento: string;
+  fechaVencimiento?: string;
   moneda: string;
   direccionDespacho?: string;
   depProvDis?: string;
   flagCubierto?: number;
   observaciones?: string;
-  idEstadoCotizacion: number;
+  idEstadoCotizacion?: number;
   detalles: DetalleCotizacionCreateRequest[];
 }
 
@@ -59,6 +63,10 @@ export interface CotizacionFilter {
   idEstadoCotizacion?: number | null;
   fechaInicio?: string | null;
   fechaFin?: string | null;
+  moneda?: string | null;
+  page?: number | null;
+  size?: number | null;
+  sort?: string | null;
 }
 
 export interface CotizacionEstadoUpdateRequest {
@@ -114,4 +122,13 @@ export interface CotizacionPdfResponse {
   pdfPath: string;
   fileName: string;
   message: string;
+}
+
+export interface CotizacionFieldErrors {
+  [field: string]: string;
+}
+
+export interface CotizacionApiError {
+  message?: string;
+  fieldErrors?: CotizacionFieldErrors;
 }

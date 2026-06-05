@@ -34,7 +34,17 @@ export class AuthService {
   }
 
   hasRole(roles: string[]): boolean {
-    const role = this.currentUser()?.perfil?.nombre?.toUpperCase();
-    return !roles.length || roles.some((allowed) => role?.includes(allowed.toUpperCase()));
+    const role = this.normalizeRole(this.currentUser()?.perfil?.nombre);
+    return !roles.length || roles.map((allowed) => this.normalizeRole(allowed)).includes(role);
+  }
+
+  private normalizeRole(value: string | null | undefined): string {
+    const normalized = (value ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^A-Za-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .toUpperCase();
+    return normalized === 'JEFE_DE_VENTAS' ? 'JEFE_VENTAS' : normalized;
   }
 }

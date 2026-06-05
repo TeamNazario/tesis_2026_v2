@@ -19,7 +19,7 @@ public interface CotizacionRepository extends JpaRepository<Cotizacion, Integer>
 
     @EntityGraph(attributePaths = {"cliente", "vendedor", "estadoCotizacion"})
     @Query("""
-            SELECT c
+            SELECT DISTINCT c
             FROM Cotizacion c
             JOIN c.cliente cliente
             JOIN c.vendedor vendedor
@@ -40,5 +40,18 @@ public interface CotizacionRepository extends JpaRepository<Cotizacion, Integer>
             @Param("idEstadoCotizacion") Integer idEstadoCotizacion,
             @Param("fechaInicio") LocalDateTime fechaInicio,
             @Param("fechaFin") LocalDateTime fechaFin
+    );
+
+    @EntityGraph(attributePaths = {"estadoCotizacion", "detalles", "detalles.producto"})
+    @Query("""
+            SELECT c
+            FROM Cotizacion c
+            JOIN c.estadoCotizacion estado
+            WHERE estado.idEstadoCotizacion = :idEstadoGenerada
+              AND c.fechaVencimiento <= :now
+            """)
+    List<Cotizacion> findVencidasGeneradas(
+            @Param("idEstadoGenerada") Integer idEstadoGenerada,
+            @Param("now") LocalDateTime now
     );
 }

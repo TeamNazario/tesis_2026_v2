@@ -15,12 +15,14 @@ public class ContactoClienteV1Service {
     private final ClienteRepository clienteRepository;
     private final TipoDocumentoRepository tipoDocumentoRepository;
     private final EstadoClienteContactoRepository estadoClienteContactoRepository;
+    private final AuditoriaService auditoriaService;
 
-    public ContactoClienteV1Service(ContactoClienteRepository contactoRepository, ClienteRepository clienteRepository, TipoDocumentoRepository tipoDocumentoRepository, EstadoClienteContactoRepository estadoClienteContactoRepository) {
+    public ContactoClienteV1Service(ContactoClienteRepository contactoRepository, ClienteRepository clienteRepository, TipoDocumentoRepository tipoDocumentoRepository, EstadoClienteContactoRepository estadoClienteContactoRepository, AuditoriaService auditoriaService) {
         this.contactoRepository = contactoRepository;
         this.clienteRepository = clienteRepository;
         this.tipoDocumentoRepository = tipoDocumentoRepository;
         this.estadoClienteContactoRepository = estadoClienteContactoRepository;
+        this.auditoriaService = auditoriaService;
     }
 
     @Transactional(readOnly = true)
@@ -47,7 +49,9 @@ public class ContactoClienteV1Service {
         c.usuActualiza = null;
         c.fecActualiza = null;
         ContactoCliente saved = contactoRepository.save(c);
-        return mapWithFallback(saved, request.idTipoDoc(), tipoDocumento.descTipoDoc, request.idEstadoClienteContacto(), estadoClienteContacto.desEstadoClienteContacto);
+        ContactoClienteV1Response response = mapWithFallback(saved, request.idTipoDoc(), tipoDocumento.descTipoDoc, request.idEstadoClienteContacto(), estadoClienteContacto.desEstadoClienteContacto);
+        auditoriaService.registrarCreacion("CONTACTO_CLIENTE", String.valueOf(response.idContacto()), response, "CONTACTOS_CLIENTE", "Creacion de contacto de cliente");
+        return response;
     
     }
 
@@ -60,6 +64,7 @@ public class ContactoClienteV1Service {
     ) {
         ContactoCliente c = contactoRepository.findById(contactoId).orElseThrow(() -> new ResourceNotFoundException("ContactoCliente", contactoId));
         if (!c.cliente.idCliente.equals(clienteId)) throw new ResourceNotFoundException("ContactoCliente", contactoId);
+        ContactoClienteV1Response anterior = map(c);
         Integer resolvedTipoDocId = c.tipoDocumento != null ? c.tipoDocumento.idTipoDoc : c.idTipoDoc;
         String resolvedTipoDoc = c.tipoDocumento != null ? c.tipoDocumento.descTipoDoc : resolveTipoDocumento(resolvedTipoDocId);
         if (request.idTipoDoc() != null) {
@@ -85,17 +90,22 @@ public class ContactoClienteV1Service {
         c.usuActualiza = actor;
         c.fecActualiza = LocalDateTime.now();
         ContactoCliente saved = contactoRepository.save(c);
-        return mapWithFallback(saved, resolvedTipoDocId, resolvedTipoDoc, resolvedEstadoId, resolvedEstado);
+        ContactoClienteV1Response nuevo = mapWithFallback(saved, resolvedTipoDocId, resolvedTipoDoc, resolvedEstadoId, resolvedEstado);
+        auditoriaService.registrarActualizacion("CONTACTO_CLIENTE", String.valueOf(contactoId), anterior, nuevo, "CONTACTOS_CLIENTE", "Actualizacion de contacto de cliente");
+        return nuevo;
     }
 
     @Transactional
     public ContactoClienteV1Response patchEstado(Integer clienteId, Integer contactoId, Integer estadoId, String actor) {
         ContactoCliente c = contactoRepository.findById(contactoId).orElseThrow(() -> new ResourceNotFoundException("ContactoCliente", contactoId));
         if (!c.cliente.idCliente.equals(clienteId)) throw new ResourceNotFoundException("ContactoCliente", contactoId);
+        ContactoClienteV1Response anterior = map(c);
         c.estadoClienteContacto = estadoClienteContactoRepository.findById(estadoId).orElseThrow(() -> new ResourceNotFoundException("EstadoClienteContacto", estadoId));
         c.usuActualiza = actor;
         c.fecActualiza = LocalDateTime.now();
-        return saveAndMap(c);
+        ContactoClienteV1Response nuevo = saveAndMap(c);
+        auditoriaService.registrarCambioEstado("CONTACTO_CLIENTE", String.valueOf(contactoId), anterior, nuevo, "CONTACTOS_CLIENTE", "Cambio de estado de contacto de cliente");
+        return nuevo;
     }
 
     private ContactoClienteV1Response saveAndMap(ContactoCliente contacto) {

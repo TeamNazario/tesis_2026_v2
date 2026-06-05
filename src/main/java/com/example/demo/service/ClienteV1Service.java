@@ -18,12 +18,16 @@ public class ClienteV1Service {
     private final UsuarioRepository usuarioRepository;
     private final TipoClienteRepository tipoClienteRepository;
     private final EstadoClienteContactoRepository estadoClienteContactoRepository;
+    private final AuditoriaService auditoriaService;
+    private final AccessControlService accessControlService;
 
-    public ClienteV1Service(ClienteRepository clienteRepository, UsuarioRepository usuarioRepository, TipoClienteRepository tipoClienteRepository, EstadoClienteContactoRepository estadoClienteContactoRepository) {
+    public ClienteV1Service(ClienteRepository clienteRepository, UsuarioRepository usuarioRepository, TipoClienteRepository tipoClienteRepository, EstadoClienteContactoRepository estadoClienteContactoRepository, AuditoriaService auditoriaService, AccessControlService accessControlService) {
         this.clienteRepository = clienteRepository;
         this.usuarioRepository = usuarioRepository;
         this.tipoClienteRepository = tipoClienteRepository;
         this.estadoClienteContactoRepository = estadoClienteContactoRepository;
+        this.auditoriaService = auditoriaService;
+        this.accessControlService = accessControlService;
     }
 
     @Transactional(readOnly = true)
@@ -52,20 +56,25 @@ public class ClienteV1Service {
         c.provincia = request.provincia();
         c.distrito = request.distrito();
         c.ubigeo = request.ubigeo();
-        c.vendedorAsignado = usuarioRepository.findById(request.idVendedorAsignado())
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario", request.idVendedorAsignado()));
+        Integer idVendedorAsignado = accessControlService.vendedorParaCrearCliente(request.idVendedorAsignado());
+        c.vendedorAsignado = usuarioRepository.findById(idVendedorAsignado)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario", idVendedorAsignado));
         c.tipoCliente = tipoClienteRepository.findById(request.idTipoCliente()).orElseThrow(() -> new ResourceNotFoundException("TipoCliente", request.idTipoCliente()));
         c.estadoClienteContacto = estadoClienteContactoRepository.findById(request.idEstadoClienteContacto()).orElseThrow(() -> new ResourceNotFoundException("EstadoClienteContacto", request.idEstadoClienteContacto()));
         c.usuarioRegistro = actor;
         c.fechaRegistro = LocalDateTime.now();
         c.usuActualiza = null;
         c.fecActualiza = null;
-        return saveAndMap(c);
+        ClienteV1Response response = saveAndMap(c);
+        auditoriaService.registrarCreacion("CLIENTE", String.valueOf(response.idCliente()), response, "CLIENTES", "Creacion de cliente");
+        return response;
     }
 
     @Transactional
     public ClienteV1Response update(Integer id, ClienteUpdateRequest request, String actor) {
+        accessControlService.validarPuedeEditarCliente(id);
         Cliente c = findEntity(id);
+        ClienteV1Response anterior = map(c);
         if (request.razonSocial() != null) c.razonSocial = request.razonSocial();
         if (request.condicionSunat() != null) c.condicionSunat = request.condicionSunat();
         if (request.estadoSunat() != null) c.estadoSunat = request.estadoSunat();
@@ -74,21 +83,35 @@ public class ClienteV1Service {
         if (request.provincia() != null) c.provincia = request.provincia();
         if (request.distrito() != null) c.distrito = request.distrito();
         if (request.ubigeo() != null) c.ubigeo = request.ubigeo();
-        if (request.idVendedorAsignado() != null) c.vendedorAsignado = usuarioRepository.findById(request.idVendedorAsignado()).orElseThrow(() -> new ResourceNotFoundException("Usuario", request.idVendedorAsignado()));
+        if (request.idVendedorAsignado() != null && !accessControlService.esVendedor()) c.vendedorAsignado = usuarioRepository.findById(request.idVendedorAsignado()).orElseThrow(() -> new ResourceNotFoundException("Usuario", request.idVendedorAsignado()));
         if (request.idTipoCliente() != null) c.tipoCliente = tipoClienteRepository.findById(request.idTipoCliente()).orElseThrow(() -> new ResourceNotFoundException("TipoCliente", request.idTipoCliente()));
-        if (request.idEstadoClienteContacto() != null) c.estadoClienteContacto = estadoClienteContactoRepository.findById(request.idEstadoClienteContacto()).orElseThrow(() -> new ResourceNotFoundException("EstadoClienteContacto", request.idEstadoClienteContacto()));
+        if (request.idEstadoClienteContacto() != null) {
+            Integer estadoActual = c.estadoClienteContacto != null
+                    ? c.estadoClienteContacto.idEstadoClienteContacto
+                    : c.idEstadoClienteContacto;
+            if (!request.idEstadoClienteContacto().equals(estadoActual)) {
+                accessControlService.validarPuedeCambiarEstadoCliente();
+            }
+            c.estadoClienteContacto = estadoClienteContactoRepository.findById(request.idEstadoClienteContacto()).orElseThrow(() -> new ResourceNotFoundException("EstadoClienteContacto", request.idEstadoClienteContacto()));
+        }
         c.usuActualiza = actor;
         c.fecActualiza = LocalDateTime.now();
-        return saveAndMap(c);
+        ClienteV1Response nuevo = saveAndMap(c);
+        auditoriaService.registrarActualizacion("CLIENTE", String.valueOf(id), anterior, nuevo, "CLIENTES", "Actualizacion de cliente");
+        return nuevo;
     }
 
     @Transactional
     public ClienteV1Response patchEstado(Integer id, Integer idEstadoClienteContacto, String actor) {
+        accessControlService.validarPuedeCambiarEstadoCliente();
         Cliente c = findEntity(id);
+        ClienteV1Response anterior = map(c);
         c.estadoClienteContacto = estadoClienteContactoRepository.findById(idEstadoClienteContacto).orElseThrow(() -> new ResourceNotFoundException("EstadoClienteContacto", idEstadoClienteContacto));
         c.usuActualiza = actor;
         c.fecActualiza = LocalDateTime.now();
-        return saveAndMap(c);
+        ClienteV1Response nuevo = saveAndMap(c);
+        auditoriaService.registrarCambioEstado("CLIENTE", String.valueOf(id), anterior, nuevo, "CLIENTES", "Cambio de estado de cliente");
+        return nuevo;
     }
 
     private ClienteV1Response saveAndMap(Cliente cliente) {

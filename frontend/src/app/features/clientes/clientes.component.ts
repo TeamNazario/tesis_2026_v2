@@ -5,6 +5,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { PageEvent } from '@angular/material/paginator';
 import { catchError, debounceTime, distinctUntilChanged, finalize, forkJoin, map, of, Subject, takeUntil } from 'rxjs';
 import { ClienteCreateRequest, ClienteFilter, ClienteResponseVm, ClienteUpdateRequest } from '../../core/models/cliente.models';
+import { PermissionService } from '../../core/auth/services/permission.service';
 import { ContactoClienteResponseVm } from '../../core/models/contacto-cliente.models';
 import { ClienteService } from '../../core/services/cliente.service';
 import { ContactoClienteService } from '../../core/services/contacto-cliente.service';
@@ -23,6 +24,7 @@ import { ClienteFormDialogComponent } from './components/cliente-form-dialog/cli
 })
 export class ClientesComponent implements OnInit, OnDestroy {
   readonly clienteService = inject(ClienteService);
+  readonly permissions = inject(PermissionService);
   private readonly contactoService = inject(ContactoClienteService);
   private readonly notifications = inject(NotificationService);
   private readonly dialog = inject(MatDialog);
@@ -96,6 +98,10 @@ export class ClientesComponent implements OnInit, OnDestroy {
   }
 
   openCreateCliente(): void {
+    if (!this.permissions.canCreateClient()) {
+      this.notifications.error('No tienes permisos para crear clientes.');
+      return;
+    }
     const dialogRef = this.dialog.open(ClienteFormDialogComponent, {
       width: '1020px',
       maxWidth: '95vw',
@@ -121,6 +127,10 @@ export class ClientesComponent implements OnInit, OnDestroy {
   }
 
   openEditCliente(cliente: ClienteResponseVm): void {
+    if (!this.permissions.canEditClient(cliente)) {
+      this.notifications.error('Solo puedes editar clientes asignados a tu usuario.');
+      return;
+    }
     const dialogRef = this.dialog.open(ClienteFormDialogComponent, {
       width: '1020px',
       maxWidth: '95vw',

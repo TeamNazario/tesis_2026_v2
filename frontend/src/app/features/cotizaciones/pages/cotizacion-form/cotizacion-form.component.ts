@@ -1,9 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { catchError, debounceTime, distinctUntilChanged, finalize, forkJoin, of, switchMap } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, finalize, forkJoin, map, of, switchMap } from 'rxjs';
 import { UsuarioResponse } from '../../../../core/auth/models/auth.models';
+import { AuthService } from '../../../../core/auth/services/auth.service';
+import { PermissionService } from '../../../../core/auth/services/permission.service';
 import { CatalogoItem, ClienteV1 } from '../../../../core/models/v1.models';
 import { CatalogoV1Service } from '../../../../core/services/catalogo-v1.service';
 import { ClienteV1Service } from '../../../../core/services/cliente-v1.service';
@@ -16,6 +19,7 @@ import { MaterialModule } from '../../../../shared/material/material.module';
 import {
   CotizacionCalcularItemResponse,
   CotizacionCalcularResumenResponse,
+  CotizacionApiError,
   CotizacionCreateRequest,
 } from '../../models/cotizacion.model';
 import { CotizacionService } from '../../services/cotizacion.service';
@@ -35,6 +39,8 @@ export class CotizacionFormComponent implements OnInit {
   private readonly catalogoService = inject(CatalogoV1Service);
   private readonly domainApi = inject(DomainApiService);
   private readonly notifications = inject(NotificationService);
+  private readonly auth = inject(AuthService);
+  readonly permissions = inject(PermissionService);
 
   readonly clientes = signal<ClienteV1[]>([]);
   private readonly allClientes = signal<ClienteV1[]>([]);
@@ -47,11 +53,16 @@ export class CotizacionFormComponent implements OnInit {
   readonly isCalculating = signal(false);
   readonly isSaving = signal(false);
   readonly isSearchingClientes = signal(false);
+  readonly editingProductId = signal<number | null>(null);
+  readonly selectedClientId = signal(0);
+  readonly selectedProductId = signal(0);
+
+  readonly itemColumns = ['item', 'producto', 'unidad', 'cantidad', 'precio', 'importe', 'acciones'];
 
   readonly clienteSearch = this.fb.nonNullable.control('');
 
   readonly selectedCliente = computed(() => {
-    const id = this.form.controls.idCliente.value;
+    const id = this.selectedClientId() || this.form.controls.idCliente.value;
     return this.clientes().find((cliente) => cliente.idCliente === id) ?? null;
   });
 
@@ -59,12 +70,12 @@ export class CotizacionFormComponent implements OnInit {
     idCliente: [0, [Validators.required, Validators.min(1)]],
     idVendedor: [0, [Validators.required, Validators.min(1)]],
     moneda: ['SOLES', [Validators.required]],
-    fechaVencimiento: ['', [Validators.required]],
+    fechaVencimiento: [''],
     direccionDespacho: [''],
     depProvDis: [''],
     flagCubierto: [false],
     observaciones: [''],
-    idEstadoCotizacion: [0, [Validators.required, Validators.min(1)]],
+    idEstadoCotizacion: [0],
   });
 
   readonly productForm = this.fb.nonNullable.group({
@@ -73,6 +84,13 @@ export class CotizacionFormComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    if (this.permissions.isSeller()) {
+      this.form.controls.idVendedor.disable({ emitEvent: false });
+      const idUsuario = this.permissions.currentUserId();
+      if (idUsuario) {
+        this.form.controls.idVendedor.setValue(idUsuario, { emitEvent: false });
+      }
+    }
     this.loadCatalogs();
     this.clienteSearch.valueChanges
       .pipe(
@@ -90,39 +108,76 @@ export class CotizacionFormComponent implements OnInit {
       )
       .subscribe({
         next: (clientes) => this.clientes.set(clientes),
-      });
-    this.form.controls.idCliente.valueChanges.subscribe((idCliente) => this.applyClienteDefaults(idCliente));
+    });
+    this.form.controls.idCliente.valueChanges.subscribe((idCliente) => {
+      this.selectedClientId.set(this.toNumber(idCliente));
+      this.applyClienteDefaults(this.toNumber(idCliente));
+    });
     this.form.controls.moneda.valueChanges.subscribe(() => this.clearItems());
+    this.productForm.controls.idProducto.valueChanges.subscribe((idProducto) =>
+      this.selectedProductId.set(this.toNumber(idProducto)),
+    );
   }
 
   addItem(): void {
-    if (this.form.controls.idCliente.invalid || this.productForm.invalid) {
+    this.ensureSelectedClienteFromSearch();
+    if (this.form.controls.idCliente.invalid) {
+      this.form.markAllAsTouched();
+      this.notifications.error('Selecciona un cliente antes de agregar productos.');
+      return;
+    }
+    if (this.productForm.invalid) {
       this.form.markAllAsTouched();
       this.productForm.markAllAsTouched();
       return;
     }
     const raw = this.productForm.getRawValue();
+    const idProducto = this.toNumber(raw.idProducto);
+    const cantidad = this.toNumber(raw.cantidad);
+    const validationMessage = this.validateProductSelection(idProducto, cantidad);
+    if (validationMessage) {
+      this.notifications.error(validationMessage);
+      return;
+    }
     this.isCalculating.set(true);
     this.service
       .calcularItem({
         idCliente: this.form.controls.idCliente.value,
-        idProducto: raw.idProducto,
-        cantidad: raw.cantidad,
+        idProducto,
+        cantidad,
         moneda: this.form.controls.moneda.value,
       })
       .pipe(finalize(() => this.isCalculating.set(false)))
       .subscribe({
         next: (item) => {
-          this.items.update((current) => [...current.filter((existing) => existing.idProducto !== item.idProducto), item]);
-          this.productForm.reset({ idProducto: 0, cantidad: 1 });
+          this.items.update((current) => {
+            const nextItems = current.filter((existing) => existing.idProducto !== item.idProducto);
+            return [...nextItems, item];
+          });
+          this.clearProductForm();
           this.refreshResumen();
         },
-        error: () => this.notifications.error('No se pudo calcular el producto seleccionado.'),
+        error: (error: HttpErrorResponse) => {
+          this.applyFieldErrors(error);
+          this.notifications.error(error.error?.message ?? 'No se pudo calcular el producto seleccionado.');
+        },
       });
+  }
+
+  editItem(item: CotizacionCalcularItemResponse): void {
+    this.editingProductId.set(item.idProducto);
+    this.productForm.setValue({ idProducto: item.idProducto, cantidad: item.cantidad });
+  }
+
+  cancelEdit(): void {
+    this.clearProductForm();
   }
 
   removeItem(idProducto: number): void {
     this.items.update((current) => current.filter((item) => item.idProducto !== idProducto));
+    if (this.editingProductId() === idProducto) {
+      this.clearProductForm();
+    }
     this.refreshResumen();
   }
 
@@ -136,15 +191,22 @@ export class CotizacionFormComponent implements OnInit {
     const request = this.buildRequest();
     const create$ = this.service.createCotizacion(request);
     const flow$ = generatePdf
-      ? create$.pipe(switchMap((cotizacion) => this.service.generarPdf(cotizacion.idCotizacion).pipe(switchMap(() => [cotizacion]))))
+      ? create$.pipe(switchMap((cotizacion) => this.service.generarPdf(cotizacion.idCotizacion).pipe(map(() => cotizacion))))
       : create$;
 
     flow$.pipe(finalize(() => this.isSaving.set(false))).subscribe({
       next: (cotizacion) => {
-        this.notifications.success(generatePdf ? 'Cotizacion registrada y PDF generado.' : 'Cotizacion registrada correctamente.');
+        this.notifications.success(
+          generatePdf
+            ? 'Cotizacion generada correctamente. El stock fue reservado por 24 horas y el PDF fue generado.'
+            : 'Cotizacion generada correctamente. El stock fue reservado por 24 horas.',
+        );
         this.router.navigate(['/cotizaciones', cotizacion.idCotizacion]);
       },
-      error: () => this.notifications.error('No se pudo registrar la cotizacion.'),
+      error: (error: HttpErrorResponse) => {
+        this.applyFieldErrors(error);
+        this.notifications.error(error.error?.message ?? 'No se pudo registrar la cotización.');
+      },
     });
   }
 
@@ -155,6 +217,18 @@ export class CotizacionFormComponent implements OnInit {
 
   productName(idProducto: number): string {
     return this.productos().find((producto) => producto.id === idProducto)?.nombre ?? `Producto #${idProducto}`;
+  }
+
+  productMinimumLabel(): string {
+    const product = this.currentProduct();
+    if (!product) {
+      return 'Selecciona un producto para ver condiciones de venta.';
+    }
+    return `Mínimo ${product.cantMinVenta}. Stock disponible ${product.stockDisponible}.`;
+  }
+
+  canSave(): boolean {
+    return this.form.valid && this.items().length > 0 && !this.isSaving();
   }
 
   userLabel(user: UsuarioResponse): string {
@@ -170,6 +244,7 @@ export class CotizacionFormComponent implements OnInit {
       return;
     }
     this.clienteSearch.setValue(this.clientLabel(cliente), { emitEvent: false });
+    this.selectedClientId.set(cliente.idCliente);
     this.form.patchValue({ idCliente: cliente.idCliente });
   }
 
@@ -178,7 +253,7 @@ export class CotizacionFormComponent implements OnInit {
     forkJoin({
       clientes: this.clienteService.findAll(),
       productos: this.productService.getProducts(),
-      vendedores: this.domainApi.getUsuarios(),
+      vendedores: this.permissions.canViewAllSellers() ? this.domainApi.getUsuarios() : of(this.currentUserAsVendedor()),
       estados: this.catalogoService.estadosCotizacion(),
     })
       .pipe(finalize(() => this.isLoading.set(false)))
@@ -187,26 +262,33 @@ export class CotizacionFormComponent implements OnInit {
           this.allClientes.set(clientes);
           this.clientes.set(clientes);
           this.productos.set(productos);
-          this.vendedores.set(vendedores);
+          const idUsuario = this.permissions.currentUserId();
+          this.vendedores.set(this.permissions.isSeller() && idUsuario
+            ? vendedores.filter((vendedor) => vendedor.idUsuario === idUsuario)
+            : vendedores);
           this.estados.set(estados);
           const firstEstado = estados[0]?.id ?? 0;
           this.form.patchValue({ idEstadoCotizacion: firstEstado });
         },
-        error: () => this.notifications.error('No se pudieron cargar los datos para crear la cotizacion.'),
+        error: () => this.notifications.error('No se pudieron cargar los datos para crear la cotización.'),
       });
   }
 
-  private applyClienteDefaults(idCliente: number): void {
+  private applyClienteDefaults(idCliente: number, clearProducts = true): void {
     const cliente = this.clientes().find((item) => item.idCliente === idCliente);
     if (!cliente) {
       return;
     }
     this.form.patchValue({
-      idVendedor: cliente.idVendedorAsignado ?? this.form.controls.idVendedor.value,
+      idVendedor: this.permissions.isSeller()
+        ? this.permissions.currentUserId() ?? this.form.controls.idVendedor.value
+        : cliente.idVendedorAsignado ?? this.form.controls.idVendedor.value,
       direccionDespacho: cliente.direccion ?? '',
       depProvDis: [cliente.departamento, cliente.provincia, cliente.distrito].filter(Boolean).join(' / '),
     });
-    this.clearItems();
+    if (clearProducts) {
+      this.clearItems();
+    }
   }
 
   private refreshResumen(): void {
@@ -222,17 +304,37 @@ export class CotizacionFormComponent implements OnInit {
       })
       .subscribe({
         next: (resumen) => this.resumen.set(resumen),
-        error: () => this.notifications.error('No se pudo recalcular el resumen de la cotizacion.'),
+        error: (error: HttpErrorResponse) =>
+          this.notifications.error(error.error?.message ?? 'No se pudo recalcular el resumen de la cotización.'),
       });
   }
 
   private clearItems(): void {
     this.items.set([]);
     this.resumen.set(null);
+    this.clearProductForm();
+  }
+
+  private clearProductForm(): void {
+    this.editingProductId.set(null);
+    this.selectedProductId.set(0);
+    this.productForm.reset({ idProducto: 0, cantidad: 1 });
   }
 
   private searchClientes(value: string) {
     const query = value.trim();
+    const selectedByText = this.findClienteByLabel(query);
+    if (selectedByText) {
+      this.selectedClientId.set(selectedByText.idCliente);
+      this.form.patchValue({ idCliente: selectedByText.idCliente }, { emitEvent: false });
+      this.isSearchingClientes.set(false);
+      return of(this.allClientes());
+    }
+    if (this.currentClienteMatches(query)) {
+      this.isSearchingClientes.set(false);
+      return of(this.allClientes());
+    }
+    this.selectedClientId.set(0);
     this.form.patchValue({ idCliente: 0 }, { emitEvent: false });
     this.clearItems();
     if (!query) {
@@ -249,14 +351,12 @@ export class CotizacionFormComponent implements OnInit {
     const raw = this.form.getRawValue();
     return {
       idCliente: raw.idCliente,
-      idVendedor: raw.idVendedor,
-      fechaVencimiento: `${raw.fechaVencimiento}T00:00:00`,
+      idVendedor: this.permissions.isSeller() ? this.permissions.currentUserId() ?? raw.idVendedor : raw.idVendedor,
       moneda: raw.moneda,
       direccionDespacho: raw.direccionDespacho || undefined,
       depProvDis: raw.depProvDis || undefined,
       flagCubierto: raw.flagCubierto ? 1 : 0,
       observaciones: raw.observaciones || undefined,
-      idEstadoCotizacion: raw.idEstadoCotizacion,
       detalles: this.items().map((item) => ({
         idProducto: item.idProducto,
         cantidad: item.cantidad,
@@ -267,5 +367,88 @@ export class CotizacionFormComponent implements OnInit {
 
   private normalize(value: string): string {
     return (value ?? '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  }
+
+  private validateProductSelection(idProducto: number, cantidad: number): string | null {
+    const product = this.productos().find((item) => item.id === idProducto);
+    if (!product) {
+      return 'Selecciona un producto válido.';
+    }
+    if (cantidad <= 0) {
+      return 'La cantidad debe ser mayor a cero.';
+    }
+    if (cantidad < product.cantMinVenta) {
+      return `La cantidad mínima de venta para ${product.nombre} es ${product.cantMinVenta}.`;
+    }
+    if (cantidad > product.stockDisponible) {
+      return `Stock insuficiente. Disponible: ${product.stockDisponible}.`;
+    }
+    const isEditingSameProduct = this.editingProductId() === idProducto;
+    const duplicated = this.items().some((item) => item.idProducto === idProducto);
+    if (duplicated && !isEditingSameProduct) {
+      return 'Este producto ya fue agregado. Edita la cantidad desde la tabla.';
+    }
+    return null;
+  }
+
+  private currentProduct(): ProductResponse | null {
+    const idProducto = this.selectedProductId() || this.toNumber(this.productForm.controls.idProducto.value);
+    return this.productos().find((producto) => producto.id === idProducto) ?? null;
+  }
+
+  private ensureSelectedClienteFromSearch(): void {
+    if (this.form.controls.idCliente.valid) {
+      return;
+    }
+    const cliente = this.findClienteByLabel(this.clienteSearch.value.trim());
+    if (!cliente) {
+      return;
+    }
+    this.selectedClientId.set(cliente.idCliente);
+    this.form.patchValue({ idCliente: cliente.idCliente }, { emitEvent: false });
+    this.applyClienteDefaults(cliente.idCliente, false);
+  }
+
+  private findClienteByLabel(value: string): ClienteV1 | null {
+    if (!value) {
+      return null;
+    }
+    const normalizedValue = this.normalize(value);
+    return (
+      this.allClientes().find((cliente) => this.normalize(this.clientLabel(cliente)) === normalizedValue) ??
+      this.clientes().find((cliente) => this.normalize(this.clientLabel(cliente)) === normalizedValue) ??
+      null
+    );
+  }
+
+  private currentClienteMatches(value: string): boolean {
+    const idCliente = this.selectedClientId() || this.toNumber(this.form.controls.idCliente.value);
+    const cliente = this.allClientes().find((item) => item.idCliente === idCliente);
+    return Boolean(cliente && this.normalize(this.clientLabel(cliente)) === this.normalize(value));
+  }
+
+  private toNumber(value: unknown): number {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  private currentUserAsVendedor(): UsuarioResponse[] {
+    const user = this.auth.currentUser();
+    return user ? [user] : [];
+  }
+
+  private applyFieldErrors(error: HttpErrorResponse): void {
+    const apiError = error.error as CotizacionApiError | undefined;
+    const fieldErrors = apiError?.fieldErrors;
+    if (!fieldErrors) {
+      return;
+    }
+    Object.entries(fieldErrors).forEach(([field, message]) => {
+      const formControl = this.form.get(field);
+      const productControl = this.productForm.get(field);
+      const control = formControl ?? productControl;
+      control?.setErrors({ backend: message });
+      control?.markAsTouched();
+    });
   }
 }

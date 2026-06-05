@@ -45,20 +45,24 @@ public class CotizacionPdfService {
 
     private final CotizacionV1Service cotizacionService;
     private final ContactoClienteRepository contactoRepository;
+    private final AccessControlService accessControlService;
     private final Path storageDir;
 
     public CotizacionPdfService(
             CotizacionV1Service cotizacionService,
             ContactoClienteRepository contactoRepository,
+            AccessControlService accessControlService,
             @Value("${app.files.cotizaciones-dir:storage/cotizaciones}") String storageDir
     ) {
         this.cotizacionService = cotizacionService;
         this.contactoRepository = contactoRepository;
+        this.accessControlService = accessControlService;
         this.storageDir = Path.of(storageDir);
     }
 
     @Transactional
     public CotizacionPdfResponse generarPdfCotizacion(Integer idCotizacion, String actor) {
+        accessControlService.validarPuedeGestionarCotizacion(idCotizacion);
         Cotizacion cotizacion = cotizacionService.findEntity(idCotizacion);
         String fileName = construirNombreArchivo(cotizacion);
         Path file = storageDir.resolve(fileName).normalize();
@@ -77,6 +81,7 @@ public class CotizacionPdfService {
 
     @Transactional(readOnly = true)
     public ResponseEntity<Resource> descargarPdfCotizacion(Integer idCotizacion) {
+        accessControlService.validarPuedeVerCotizacion(idCotizacion);
         Cotizacion cotizacion = cotizacionService.findEntity(idCotizacion);
         if (cotizacion.pdfPath == null || cotizacion.pdfPath.isBlank()) {
             throw new ResourceNotFoundException("PDF de cotizacion", idCotizacion);

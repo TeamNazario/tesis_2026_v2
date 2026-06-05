@@ -1,4 +1,4 @@
-﻿<app-page-header title="Gestion de clientes" description="Administra clientes, datos comerciales y contactos asociados">
+﻿<app-page-header title="Gestion de clientes">
   <button mat-flat-button type="button" (click)="openCreateCliente()" [disabled]="isSaving()">
     <mat-icon>add</mat-icon>
     Nuevo cliente
@@ -139,9 +139,11 @@
             <button mat-icon-button matTooltip="Ver detalle" (click)="openDetalleCliente(item)">
               <mat-icon>visibility</mat-icon>
             </button>
-            <button mat-icon-button matTooltip="Editar cliente" (click)="openEditCliente(item)">
-              <mat-icon>edit</mat-icon>
-            </button>
+            @if (permissions.canEditClient(item)) {
+              <button mat-icon-button matTooltip="Editar cliente" (click)="openEditCliente(item)">
+                <mat-icon>edit</mat-icon>
+              </button>
+            }
           </td>
         </ng-container>
 
@@ -181,7 +183,9 @@
         </mat-card-content>
         <mat-card-actions align="end">
           <button mat-button (click)="openDetalleCliente(item)">Detalle</button>
-          <button mat-button (click)="openEditCliente(item)">Editar</button>
+          @if (permissions.canEditClient(item)) {
+            <button mat-button (click)="openEditCliente(item)">Editar</button>
+          }
         </mat-card-actions>
       </mat-card>
     }

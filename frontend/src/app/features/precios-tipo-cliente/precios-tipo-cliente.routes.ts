@@ -9,14 +9,14 @@ export const PRECIO_TIPO_CLIENTE_ROUTES: Routes = [
   },
   {
     path: 'nuevo',
-    canActivate: [roleGuard(['SISTEMAS', 'JEFE DE VENTAS', 'ADMINISTRATIVO'])],
+    canActivate: [roleGuard(['SISTEMAS', 'GERENTE', 'ADMINISTRATIVO', 'ADMIN'])],
     loadComponent: () =>
       import('./pages/precio-tipo-cliente-form/precio-tipo-cliente-form.component').then((m) => m.PrecioTipoClienteFormComponent),
     data: { mode: 'create' },
   },
   {
     path: ':id/editar',
-    canActivate: [roleGuard(['SISTEMAS', 'JEFE DE VENTAS', 'ADMINISTRATIVO'])],
+    canActivate: [roleGuard(['SISTEMAS', 'GERENTE', 'ADMINISTRATIVO', 'ADMIN'])],
     loadComponent: () =>
       import('./pages/precio-tipo-cliente-form/precio-tipo-cliente-form.component').then((m) => m.PrecioTipoClienteFormComponent),
     data: { mode: 'edit' },

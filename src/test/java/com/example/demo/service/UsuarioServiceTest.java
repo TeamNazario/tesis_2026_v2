@@ -42,6 +42,9 @@ class UsuarioServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private AuditoriaService auditoriaService;
+
     private UsuarioService service;
 
     @BeforeEach
@@ -52,7 +55,8 @@ class UsuarioServiceTest {
                 tipoDocumentoRepository,
                 estadoUsuarioRepository,
                 new UsuarioMapper(new ReferenceMapper()),
-                passwordEncoder
+                passwordEncoder,
+                auditoriaService
         );
     }
 

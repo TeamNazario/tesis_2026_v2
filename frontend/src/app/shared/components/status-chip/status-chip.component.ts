@@ -34,8 +34,9 @@ export class StatusChipComponent {
   label = input.required<string>();
   tone = computed(() => {
     const value = this.label().toUpperCase();
-    if (value.includes('CONFIRM') || value.includes('ACTIVO') || value.includes('OK')) return 'ok';
-    if (value.includes('VENC') || value.includes('BAJO') || value.includes('ERROR')) return 'danger';
+    if (value.includes('APROBAD') || value.includes('CONFIRM') || value.includes('ACTIVO') || value.includes('OK')) return 'ok';
+    if (value.includes('VENC') || value.includes('RECHAZ') || value.includes('BAJO') || value.includes('ERROR')) return 'danger';
+    if (value.includes('ANUL')) return 'warn';
     return value.includes('PEND') || value.includes('PRELIM') ? 'warn' : '';
   });
 }

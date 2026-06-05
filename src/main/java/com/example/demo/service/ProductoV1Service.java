@@ -15,13 +15,19 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProductoV1Service {
     private final ProductoRepository repository;
     private final EstadoProductoRepository estadoProductoRepository;
+    private final AuditoriaService auditoriaService;
+    private final AccessControlService accessControlService;
 
     public ProductoV1Service(
             ProductoRepository repository,
-            EstadoProductoRepository estadoProductoRepository
+            EstadoProductoRepository estadoProductoRepository,
+            AuditoriaService auditoriaService,
+            AccessControlService accessControlService
     ) {
         this.repository = repository;
         this.estadoProductoRepository = estadoProductoRepository;
+        this.auditoriaService = auditoriaService;
+        this.accessControlService = accessControlService;
     }
 
     @Transactional(readOnly = true)
@@ -32,6 +38,7 @@ public class ProductoV1Service {
 
     @Transactional
     public ProductoV1Response create(ProductoCreateRequest request, String actor) {
+        accessControlService.validarPuedeGestionarProductos();
         validateStocks(request.stockFisico(), request.stockReservado(), request.stockDisponible());
         Producto p = new Producto();
         p.nombreProducto = request.nombreProducto();
@@ -46,12 +53,16 @@ public class ProductoV1Service {
         p.estadoProducto = estadoProductoRepository.findById(request.idEstadoProducto()).orElseThrow(() -> new ResourceNotFoundException("EstadoProducto", request.idEstadoProducto()));
         p.usuRegistro = actor;
         p.fecRegistro = LocalDateTime.now();
-        return map(repository.save(p));
+        ProductoV1Response response = map(repository.save(p));
+        auditoriaService.registrarCreacion("PRODUCTO", String.valueOf(response.idProducto()), response, "PRODUCTOS", "Creacion de producto");
+        return response;
     }
 
     @Transactional
     public ProductoV1Response update(Integer id, ProductoUpdateRequest request, String actor) {
+        accessControlService.validarPuedeGestionarProductos();
         Producto p = findEntity(id);
+        ProductoV1Response anterior = map(p);
         if (request.nombreProducto() != null) p.nombreProducto = request.nombreProducto();
         if (request.unidadMedida() != null) p.unidadMedida = request.unidadMedida();
         if (request.peso() != null) p.peso = request.peso();
@@ -65,16 +76,22 @@ public class ProductoV1Service {
         if (request.idEstadoProducto() != null) p.estadoProducto = estadoProductoRepository.findById(request.idEstadoProducto()).orElseThrow(() -> new ResourceNotFoundException("EstadoProducto", request.idEstadoProducto()));
         p.usuActualiza = actor;
         p.fecActualiza = LocalDateTime.now();
-        return map(repository.save(p));
+        ProductoV1Response nuevo = map(repository.save(p));
+        auditoriaService.registrarActualizacion("PRODUCTO", String.valueOf(id), anterior, nuevo, "PRODUCTOS", "Actualizacion de producto");
+        return nuevo;
     }
 
     @Transactional
     public ProductoV1Response patchEstado(Integer id, Integer estadoId, String actor) {
+        accessControlService.validarPuedeGestionarProductos();
         Producto p = findEntity(id);
+        ProductoV1Response anterior = map(p);
         p.estadoProducto = estadoProductoRepository.findById(estadoId).orElseThrow(() -> new ResourceNotFoundException("EstadoProducto", estadoId));
         p.usuActualiza = actor;
         p.fecActualiza = LocalDateTime.now();
-        return map(repository.save(p));
+        ProductoV1Response nuevo = map(repository.save(p));
+        auditoriaService.registrarCambioEstado("PRODUCTO", String.valueOf(id), anterior, nuevo, "PRODUCTOS", "Cambio de estado de producto");
+        return nuevo;
     }
 
     private Producto findEntity(Integer id) { return repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Producto", id)); }

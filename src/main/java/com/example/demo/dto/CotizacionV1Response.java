@@ -24,6 +24,9 @@ public record CotizacionV1Response(
         String observaciones,
         Integer idEstadoCotizacion,
         String descEstadoCotizacion,
+        Boolean vencida,
+        Boolean puedeAprobarse,
+        Long tiempoRestanteSegundos,
         String pdfPath,
         List<DetalleCotizacionV1Response> detalles
 ) {}

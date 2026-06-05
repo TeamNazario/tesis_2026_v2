@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subject, catchError, finalize, forkJoin, of, takeUntil } from 'rxjs';
-import { AuthService } from '../../../../core/auth/services/auth.service';
+import { PermissionService } from '../../../../core/auth/services/permission.service';
 import { CatalogoV1Service } from '../../../../core/services/catalogo-v1.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { ProductService } from '../../../../core/services/product.service';
@@ -20,16 +20,15 @@ import { PrecioTipoClienteService } from '../../services/precio-tipo-cliente.ser
 })
 export class PrecioTipoClienteDetailComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
-  private readonly auth = inject(AuthService);
+  private readonly permissions = inject(PermissionService);
   private readonly notifications = inject(NotificationService);
   private readonly pricesService = inject(PrecioTipoClienteService);
   private readonly productsService = inject(ProductService);
   private readonly catalogosService = inject(CatalogoV1Service);
   private readonly destroy$ = new Subject<void>();
-  private readonly allowedRoles = ['SISTEMAS', 'JEFE DE VENTAS', 'ADMINISTRATIVO'];
   private readonly priceId = Number(this.route.snapshot.paramMap.get('id') ?? 0);
 
-  readonly canManagePrices = computed(() => this.auth.hasRole(this.allowedRoles));
+  readonly canManagePrices = computed(() => this.permissions.canEditPrices());
   readonly isLoading = signal(false);
   readonly hasError = signal(false);
   readonly catalogError = signal<string | null>(null);

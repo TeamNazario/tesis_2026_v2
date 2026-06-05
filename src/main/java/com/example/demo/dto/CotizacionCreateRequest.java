@@ -8,12 +8,12 @@ import java.util.List;
 public record CotizacionCreateRequest(
         @NotNull Integer idCliente,
         @NotNull Integer idVendedor,
-        @NotNull LocalDateTime fechaVencimiento,
+        LocalDateTime fechaVencimiento,
         @NotBlank String moneda,
         String direccionDespacho,
         String depProvDis,
         Integer flagCubierto,
         String observaciones,
-        @NotNull Integer idEstadoCotizacion,
+        Integer idEstadoCotizacion,
         @NotEmpty List<@Valid DetalleCotizacionRequest> detalles
 ) {}

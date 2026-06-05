@@ -15,12 +15,16 @@ public class PrecioTipoClienteService {
     private final TipoClienteRepository tipoClienteRepository;
     private final EstadoProductoRepository estadoProductoRepository;
     private final ProductoRepository productoRepository;
+    private final AuditoriaService auditoriaService;
+    private final AccessControlService accessControlService;
 
-    public PrecioTipoClienteService(PrecioTipoClienteRepository repository, TipoClienteRepository tipoClienteRepository, EstadoProductoRepository estadoProductoRepository, ProductoRepository productoRepository) {
+    public PrecioTipoClienteService(PrecioTipoClienteRepository repository, TipoClienteRepository tipoClienteRepository, EstadoProductoRepository estadoProductoRepository, ProductoRepository productoRepository, AuditoriaService auditoriaService, AccessControlService accessControlService) {
         this.repository = repository;
         this.tipoClienteRepository = tipoClienteRepository;
         this.estadoProductoRepository = estadoProductoRepository;
         this.productoRepository = productoRepository;
+        this.auditoriaService = auditoriaService;
+        this.accessControlService = accessControlService;
     }
 
     @Transactional(readOnly = true)
@@ -45,6 +49,7 @@ public class PrecioTipoClienteService {
 
     @Transactional
     public PrecioTipoClienteResponse create(PrecioTipoClienteCreateRequest request, String actor) {
+        accessControlService.validarPuedeGestionarPrecios();
         PrecioTipoCliente p = new PrecioTipoCliente();
         p.precioUnitario = request.precioUnitario();
         p.moneda = request.moneda();
@@ -53,12 +58,16 @@ public class PrecioTipoClienteService {
         p.producto = productoRepository.findById(request.idProducto()).orElseThrow(() -> new ResourceNotFoundException("Producto", request.idProducto()));
         p.usuRegistro = actor;
         p.fecRegistro = LocalDateTime.now();
-        return map(repository.save(p));
+        PrecioTipoClienteResponse response = map(repository.save(p));
+        auditoriaService.registrarCreacion("PRECIO_TIPO_CLIENTE", String.valueOf(response.idPrecio()), response, "PRECIOS_TIPO_CLIENTE", "Creacion de precio por tipo de cliente");
+        return response;
     }
 
     @Transactional
     public PrecioTipoClienteResponse update(Integer id, PrecioTipoClienteUpdateRequest request, String actor) {
+        accessControlService.validarPuedeGestionarPrecios();
         PrecioTipoCliente p = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("PrecioTipoCliente", id));
+        PrecioTipoClienteResponse anterior = map(p);
         if (request.precioUnitario() != null) p.precioUnitario = request.precioUnitario();
         if (request.moneda() != null) p.moneda = request.moneda();
         if (request.idTipoCliente() != null) p.tipoCliente = tipoClienteRepository.findById(request.idTipoCliente()).orElseThrow(() -> new ResourceNotFoundException("TipoCliente", request.idTipoCliente()));
@@ -66,7 +75,9 @@ public class PrecioTipoClienteService {
         if (request.idProducto() != null) p.producto = productoRepository.findById(request.idProducto()).orElseThrow(() -> new ResourceNotFoundException("Producto", request.idProducto()));
         p.usuActualiza = actor;
         p.fecActualiza = LocalDateTime.now();
-        return map(repository.save(p));
+        PrecioTipoClienteResponse nuevo = map(repository.save(p));
+        auditoriaService.registrarActualizacion("PRECIO_TIPO_CLIENTE", String.valueOf(id), anterior, nuevo, "PRECIOS_TIPO_CLIENTE", "Actualizacion de precio por tipo de cliente");
+        return nuevo;
     }
 
     private PrecioTipoClienteResponse map(PrecioTipoCliente p) {

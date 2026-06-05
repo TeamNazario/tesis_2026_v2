@@ -27,6 +27,7 @@ import com.example.demo.repository.ProductoRepository;
 import com.example.demo.repository.UsuarioRepository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -38,7 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CotizacionV1Service {
-    private static final int ESTADO_ACTIVO = 1;
+    private static final int VIGENCIA_HORAS = 24;
 
     private final CotizacionRepository cotizacionRepository;
     private final CotizacionDetalleRepository detalleRepository;
@@ -47,6 +48,9 @@ public class CotizacionV1Service {
     private final ProductoRepository productoRepository;
     private final EstadoCotizacionRepository estadoCotizacionRepository;
     private final PrecioTipoClienteRepository precioTipoClienteRepository;
+    private final ProductoStockService productoStockService;
+    private final AuditoriaService auditoriaService;
+    private final AccessControlService accessControlService;
     private final BigDecimal igvRate;
 
     public CotizacionV1Service(
@@ -57,6 +61,9 @@ public class CotizacionV1Service {
             ProductoRepository productoRepository,
             EstadoCotizacionRepository estadoCotizacionRepository,
             PrecioTipoClienteRepository precioTipoClienteRepository,
+            ProductoStockService productoStockService,
+            AuditoriaService auditoriaService,
+            AccessControlService accessControlService,
             @Value("${app.business.igv-rate:0.18}") BigDecimal igvRate
     ) {
         this.cotizacionRepository = cotizacionRepository;
@@ -66,6 +73,9 @@ public class CotizacionV1Service {
         this.productoRepository = productoRepository;
         this.estadoCotizacionRepository = estadoCotizacionRepository;
         this.precioTipoClienteRepository = precioTipoClienteRepository;
+        this.productoStockService = productoStockService;
+        this.auditoriaService = auditoriaService;
+        this.accessControlService = accessControlService;
         this.igvRate = igvRate;
     }
 
@@ -80,7 +90,8 @@ public class CotizacionV1Service {
     ) {
         LocalDateTime inicio = fechaInicio == null ? null : fechaInicio.atStartOfDay();
         LocalDateTime fin = fechaFin == null ? null : fechaFin.atTime(LocalTime.MAX);
-        return cotizacionRepository.buscar(normalizeText(search), idCliente, idVendedor, idEstadoCotizacion, inicio, fin)
+        Integer vendedorPermitido = accessControlService.vendedorPermitido(idVendedor);
+        return cotizacionRepository.buscar(normalizeText(search), idCliente, vendedorPermitido, idEstadoCotizacion, inicio, fin)
                 .stream()
                 .map(this::map)
                 .toList();
@@ -88,6 +99,7 @@ public class CotizacionV1Service {
 
     @Transactional(readOnly = true)
     public CotizacionV1Response findById(Integer id) {
+        accessControlService.validarPuedeVerCotizacion(id);
         return map(findEntity(id));
     }
 
@@ -125,11 +137,11 @@ public class CotizacionV1Service {
     @Transactional
     public CotizacionV1Response create(CotizacionCreateRequest request, String actor) {
         Cliente cliente = findCliente(request.idCliente());
-        Usuario vendedor = findUsuario(request.idVendedor());
-        EstadoCotizacion estado = estadoCotizacionRepository.findById(request.idEstadoCotizacion())
-                .orElseThrow(() -> new ResourceNotFoundException("EstadoCotizacion", request.idEstadoCotizacion()));
-        validateFechaVencimiento(request.fechaVencimiento());
+        Integer idVendedor = accessControlService.vendedorParaCrearCotizacion(request.idVendedor());
+        Usuario vendedor = findUsuario(idVendedor);
+        EstadoCotizacion estado = findEstado(CotizacionEstadoNames.GENERADA);
         LocalDateTime now = LocalDateTime.now();
+        LocalDateTime fechaVencimiento = now.plusHours(VIGENCIA_HORAS);
 
         List<CotizacionResumenDetalleRequest> resumenDetalles = request.detalles().stream()
                 .map(detalle -> new CotizacionResumenDetalleRequest(detalle.idProducto(), detalle.cantidad()))
@@ -140,7 +152,7 @@ public class CotizacionV1Service {
         cotizacion.cliente = cliente;
         cotizacion.vendedor = vendedor;
         cotizacion.fechaEmision = now;
-        cotizacion.fechaVencimiento = request.fechaVencimiento();
+        cotizacion.fechaVencimiento = fechaVencimiento;
         cotizacion.moneda = request.moneda();
         cotizacion.subtotal = resumen.subtotal();
         cotizacion.igv = resumen.igv();
@@ -155,25 +167,55 @@ public class CotizacionV1Service {
         cotizacion.usuActualiza = null;
         cotizacion.fecActualiza = null;
         cotizacion.detalles = buildDetalles(cotizacion, request.detalles(), resumen.items(), actor, now);
+        reservarStock(cotizacion, actor);
 
-        return map(cotizacionRepository.save(cotizacion));
+        CotizacionV1Response response = map(cotizacionRepository.save(cotizacion));
+        auditoriaService.registrarCreacion("COTIZACION", String.valueOf(response.idCotizacion()), response, "COTIZACIONES", "Creacion de cotizacion y reserva de stock");
+        return response;
     }
 
     @Transactional
     public CotizacionV1Response patchEstado(Integer id, Integer estadoId, String actor) {
+        accessControlService.validarPuedeGestionarCotizacion(id);
         Cotizacion cotizacion = findEntity(id);
-        cotizacion.estadoCotizacion = estadoCotizacionRepository.findById(estadoId)
+        CotizacionV1Response anterior = map(cotizacion);
+        EstadoCotizacion nuevoEstado = estadoCotizacionRepository.findById(estadoId)
                 .orElseThrow(() -> new ResourceNotFoundException("EstadoCotizacion", estadoId));
+        aplicarCambioEstado(cotizacion, nuevoEstado, actor);
+        cotizacion.estadoCotizacion = nuevoEstado;
         markUpdated(cotizacion, actor);
-        return map(cotizacionRepository.save(cotizacion));
+        CotizacionV1Response nuevo = map(cotizacionRepository.save(cotizacion));
+        String accion = same(nuevo.descEstadoCotizacion(), CotizacionEstadoNames.APROBADA) ? "APPROVE_QUOTATION" : "CHANGE_STATUS";
+        auditoriaService.registrarAccion("COTIZACION", String.valueOf(id), accion, anterior, nuevo, "COTIZACIONES", "Cambio de estado de cotizacion");
+        return nuevo;
+    }
+
+    @Transactional
+    public int procesarCotizacionesVencidas(String actor) {
+        EstadoCotizacion generada = findEstado(CotizacionEstadoNames.GENERADA);
+        EstadoCotizacion vencida = findEstado(CotizacionEstadoNames.VENCIDA);
+        List<Cotizacion> vencidas = cotizacionRepository.findVencidasGeneradas(generada.idEstadoCotizacion, LocalDateTime.now());
+        for (Cotizacion cotizacion : vencidas) {
+            CotizacionV1Response anterior = map(cotizacion);
+            productoStockService.liberarStockReservado(cotizacion, actor);
+            cotizacion.estadoCotizacion = vencida;
+            markUpdated(cotizacion, actor);
+            CotizacionV1Response nuevo = map(cotizacion);
+            auditoriaService.registrarAccion("COTIZACION", String.valueOf(cotizacion.idCotizacion), "EXPIRE_QUOTATION", anterior, nuevo, "COTIZACIONES", "Proceso automatico de vencimiento de cotizaciones");
+        }
+        cotizacionRepository.saveAll(vencidas);
+        return vencidas.size();
     }
 
     @Transactional
     public void updatePdfPath(Integer idCotizacion, String pdfPath, String actor) {
+        accessControlService.validarPuedeGestionarCotizacion(idCotizacion);
         Cotizacion cotizacion = findEntity(idCotizacion);
+        CotizacionV1Response anterior = map(cotizacion);
         cotizacion.pdfPath = pdfPath;
         markUpdated(cotizacion, actor);
-        cotizacionRepository.save(cotizacion);
+        CotizacionV1Response nuevo = map(cotizacionRepository.save(cotizacion));
+        auditoriaService.registrarAccion("COTIZACION", String.valueOf(idCotizacion), "GENERATE_PDF", anterior, nuevo, "COTIZACIONES", "Generacion de PDF de cotizacion");
     }
 
     @Transactional(readOnly = true)
@@ -193,7 +235,7 @@ public class CotizacionV1Service {
         BigDecimal subtotal = BigDecimal.ZERO;
         for (CotizacionResumenDetalleRequest detalle : detalles) {
             Producto producto = findProducto(detalle.idProducto());
-            validateProducto(producto, detalle.cantidad());
+            productoStockService.validarProductoCotizable(producto, detalle.cantidad());
             PrecioTipoCliente precio = findPrecio(cliente, producto, moneda);
             CotizacionCalcularItemResponse item = buildItem(producto, detalle.cantidad(), precio.precioUnitario, moneda);
             items.add(item);
@@ -262,21 +304,12 @@ public class CotizacionV1Service {
     }
 
     private void validateProducto(Producto producto, Integer cantidad) {
-        if (cantidad == null || cantidad <= 0) {
-            throw new IllegalArgumentException("La cantidad debe ser mayor a cero.");
-        }
-        Integer estadoId = producto.estadoProducto == null ? producto.idEstadoProducto : producto.estadoProducto.idEstadoProducto;
-        if (estadoId != null && estadoId != ESTADO_ACTIVO) {
-            throw new IllegalStateException("El producto no se encuentra activo.");
-        }
-        if (producto.cantMinVenta != null && cantidad < producto.cantMinVenta) {
-            throw new IllegalStateException("La cantidad no cumple la cantidad minima de venta del producto.");
-        }
+        productoStockService.validarProductoCotizable(producto, cantidad);
         Integer stockDisponible = producto.stockDisponible != null
                 ? producto.stockDisponible
                 : (producto.stockFisico == null || producto.stockReservado == null ? null : producto.stockFisico - producto.stockReservado);
         if (stockDisponible != null && cantidad > stockDisponible) {
-            throw new IllegalStateException("El stock disponible del producto no es suficiente.");
+            throw new IllegalStateException("Stock insuficiente para el producto " + producto.nombreProducto + ".");
         }
     }
 
@@ -322,6 +355,9 @@ public class CotizacionV1Service {
                 c.observaciones,
                 c.estadoCotizacion == null ? null : c.estadoCotizacion.idEstadoCotizacion,
                 c.estadoCotizacion == null ? null : c.estadoCotizacion.descEstadoCotizacion,
+                isVencida(c),
+                puedeAprobarse(c),
+                tiempoRestanteSegundos(c),
                 c.pdfPath,
                 detalles.stream().map(this::mapDetalle).toList()
         );
@@ -372,5 +408,70 @@ public class CotizacionV1Service {
 
     private BigDecimal money(BigDecimal value) {
         return (value == null ? BigDecimal.ZERO : value).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private void reservarStock(Cotizacion cotizacion, String actor) {
+        for (CotizacionDetalle detalle : cotizacion.detalles) {
+            Producto producto = productoStockService.findForUpdate(detalle.producto.idProducto);
+            productoStockService.reservarStock(producto, detalle.cantidad, actor);
+        }
+    }
+
+    private void aplicarCambioEstado(Cotizacion cotizacion, EstadoCotizacion nuevoEstado, String actor) {
+        String actual = estadoNombre(cotizacion.estadoCotizacion);
+        String nuevo = estadoNombre(nuevoEstado);
+
+        if (same(nuevo, CotizacionEstadoNames.APROBADA)) {
+            if (!same(actual, CotizacionEstadoNames.GENERADA)) {
+                throw new IllegalArgumentException("Transicion de estado no permitida.");
+            }
+            if (cotizacion.fechaVencimiento != null && !LocalDateTime.now().isBefore(cotizacion.fechaVencimiento)) {
+                throw new IllegalStateException("No se puede aprobar una cotizacion vencida.");
+            }
+            productoStockService.confirmarSalidaReservada(cotizacion, actor);
+            return;
+        }
+        if (same(nuevo, CotizacionEstadoNames.RECHAZADA)
+                || same(nuevo, CotizacionEstadoNames.ANULADA)
+                || same(nuevo, CotizacionEstadoNames.VENCIDA)) {
+            if (same(actual, CotizacionEstadoNames.GENERADA)) {
+                productoStockService.liberarStockReservado(cotizacion, actor);
+            }
+            return;
+        }
+        if (!same(nuevo, actual)) {
+            throw new IllegalArgumentException("Transicion de estado no permitida.");
+        }
+    }
+
+    private EstadoCotizacion findEstado(String descripcion) {
+        return estadoCotizacionRepository.findByDescEstadoCotizacionIgnoreCase(descripcion)
+                .orElseThrow(() -> new IllegalStateException("No existe el estado de cotizacion " + descripcion + "."));
+    }
+
+    private boolean isVencida(Cotizacion cotizacion) {
+        return same(estadoNombre(cotizacion.estadoCotizacion), CotizacionEstadoNames.VENCIDA)
+                || (same(estadoNombre(cotizacion.estadoCotizacion), CotizacionEstadoNames.GENERADA)
+                && cotizacion.fechaVencimiento != null
+                && !LocalDateTime.now().isBefore(cotizacion.fechaVencimiento));
+    }
+
+    private boolean puedeAprobarse(Cotizacion cotizacion) {
+        return same(estadoNombre(cotizacion.estadoCotizacion), CotizacionEstadoNames.GENERADA) && !isVencida(cotizacion);
+    }
+
+    private Long tiempoRestanteSegundos(Cotizacion cotizacion) {
+        if (cotizacion.fechaVencimiento == null || isVencida(cotizacion)) {
+            return 0L;
+        }
+        return Math.max(0L, Duration.between(LocalDateTime.now(), cotizacion.fechaVencimiento).getSeconds());
+    }
+
+    private String estadoNombre(EstadoCotizacion estado) {
+        return estado == null ? "" : estado.descEstadoCotizacion;
+    }
+
+    private boolean same(String a, String b) {
+        return a != null && b != null && a.trim().equalsIgnoreCase(b.trim());
     }
 }

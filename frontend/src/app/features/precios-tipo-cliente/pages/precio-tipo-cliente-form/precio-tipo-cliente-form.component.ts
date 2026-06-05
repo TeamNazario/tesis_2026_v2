@@ -4,7 +4,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subject, catchError, finalize, forkJoin, of, switchMap, takeUntil, throwError } from 'rxjs';
 import { ApiError } from '../../../../core/http/api-error.model';
-import { AuthService } from '../../../../core/auth/services/auth.service';
+import { PermissionService } from '../../../../core/auth/services/permission.service';
 import { CatalogoV1Service } from '../../../../core/services/catalogo-v1.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { ProductService } from '../../../../core/services/product.service';
@@ -31,7 +31,7 @@ export class PrecioTipoClienteFormComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
   private readonly destroy$ = new Subject<void>();
-  private readonly auth = inject(AuthService);
+  private readonly permissions = inject(PermissionService);
   private readonly pricesService = inject(PrecioTipoClienteService);
   private readonly productsService = inject(ProductService);
   private readonly catalogosService = inject(CatalogoV1Service);
@@ -54,11 +54,10 @@ export class PrecioTipoClienteFormComponent implements OnInit, OnDestroy {
     idEstadoProducto: [0, [Validators.required, Validators.min(1)]],
   });
 
-  private readonly allowedRoles = ['SISTEMAS', 'JEFE DE VENTAS', 'ADMINISTRATIVO'];
   private readonly priceId = Number(this.route.snapshot.paramMap.get('id') ?? 0);
   readonly mode: FormMode = (this.route.snapshot.data['mode'] as FormMode) ?? (this.priceId > 0 ? 'edit' : 'create');
 
-  readonly canManagePrices = signal(this.auth.hasRole(this.allowedRoles));
+  readonly canManagePrices = signal(this.permissions.canEditPrices());
 
   ngOnInit(): void {
     if (!this.canManagePrices()) {

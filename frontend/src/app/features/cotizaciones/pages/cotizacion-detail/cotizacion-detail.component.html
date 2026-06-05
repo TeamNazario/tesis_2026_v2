@@ -1,5 +1,5 @@
 <app-page-header
-  title="Detalle de cotizacion"
+  title="Detalle de cotización"
   description="Consulta cabecera, productos, totales y documento PDF generado por backend."
 >
   <button mat-stroked-button routerLink="/cotizaciones">
@@ -11,18 +11,36 @@
 @if (isLoading()) {
   <section class="panel loading-state">
     <mat-spinner diameter="38" />
-    <span>Cargando cotizacion...</span>
+    <span>Cargando cotización...</span>
   </section>
 } @else if (cotizacion()) {
   <section class="detail-layout">
     <div class="panel main-panel">
       <div class="title-row">
         <div>
-          <span class="eyebrow">C001-{{ cotizacion()!.idCotizacion.toString().padStart(6, '0') }}</span>
+          <span class="eyebrow">{{ quoteNumber(cotizacion()!) }}</span>
           <h2>{{ cotizacion()!.razonSocialCliente }}</h2>
-          <p>{{ cotizacion()!.rucCliente }} · {{ cotizacion()!.direccionCliente || 'Sin direccion registrada' }}</p>
+          <p>{{ cotizacion()!.rucCliente }} - {{ cotizacion()!.direccionCliente || 'Sin dirección registrada' }}</p>
         </div>
-        <app-status-chip [label]="cotizacion()!.descEstadoCotizacion" />
+        <div class="title-actions">
+          <app-status-chip [label]="cotizacion()!.descEstadoCotizacion" />
+          <button
+            mat-stroked-button
+            [matMenuTriggerFor]="estadoMenu"
+            [disabled]="isStatusLoading() || !availableStates(cotizacion()!).length"
+          >
+            <mat-icon>published_with_changes</mat-icon>
+            Cambiar estado
+          </button>
+          <mat-menu #estadoMenu="matMenu">
+            @for (estado of availableStates(cotizacion()!); track estado.id) {
+              <button mat-menu-item (click)="changeStatus(estado)">
+                <mat-icon>label</mat-icon>
+                <span>{{ estado.descripcion }}</span>
+              </button>
+            }
+          </mat-menu>
+        </div>
       </div>
 
       <div class="info-grid">
@@ -31,12 +49,16 @@
           <strong>{{ cotizacion()!.nombreVendedor }}</strong>
         </div>
         <div>
-          <span>Emision</span>
+          <span>Emisión</span>
           <strong>{{ formatDate(cotizacion()!.fechaEmision) }}</strong>
         </div>
         <div>
           <span>Vencimiento</span>
           <strong>{{ formatDate(cotizacion()!.fechaVencimiento) }}</strong>
+        </div>
+        <div>
+          <span>Vigencia</span>
+          <strong [class.expired-text]="isExpired(cotizacion()!)">{{ formatRemaining(cotizacion()!) }}</strong>
         </div>
         <div>
           <span>Moneda</span>
@@ -47,36 +69,55 @@
           <strong>{{ cotizacion()!.direccionDespacho || '-' }}</strong>
         </div>
         <div>
-          <span>Ubicacion despacho</span>
+          <span>Ubicación despacho</span>
           <strong>{{ cotizacion()!.depProvDis || '-' }}</strong>
         </div>
       </div>
 
+      @if (isExpired(cotizacion()!)) {
+        <div class="expired-alert">
+          <mat-icon>warning</mat-icon>
+          <span>Esta cotización venció y ya no puede ser aprobada.</span>
+        </div>
+      }
+
       <h3>Productos cotizados</h3>
-      <table mat-table [dataSource]="cotizacion()!.detalles">
-        <ng-container matColumnDef="producto">
-          <th mat-header-cell *matHeaderCellDef>Producto</th>
-          <td mat-cell *matCellDef="let item">{{ item.nombreProducto }}</td>
-        </ng-container>
-        <ng-container matColumnDef="unidad">
-          <th mat-header-cell *matHeaderCellDef>U.M.</th>
-          <td mat-cell *matCellDef="let item">{{ item.unidadMedida }}</td>
-        </ng-container>
-        <ng-container matColumnDef="cantidad">
-          <th mat-header-cell *matHeaderCellDef>Cantidad</th>
-          <td mat-cell *matCellDef="let item">{{ item.cantidad }}</td>
-        </ng-container>
-        <ng-container matColumnDef="precio">
-          <th mat-header-cell *matHeaderCellDef>P.U.</th>
-          <td mat-cell *matCellDef="let item">{{ formatMoney(item.precioUni, cotizacion()!.moneda) }}</td>
-        </ng-container>
-        <ng-container matColumnDef="importe">
-          <th mat-header-cell *matHeaderCellDef>Importe</th>
-          <td mat-cell *matCellDef="let item">{{ formatMoney(item.importe, cotizacion()!.moneda) }}</td>
-        </ng-container>
-        <tr mat-header-row *matHeaderRowDef="['producto', 'unidad', 'cantidad', 'precio', 'importe']"></tr>
-        <tr mat-row *matRowDef="let row; columns: ['producto', 'unidad', 'cantidad', 'precio', 'importe']"></tr>
-      </table>
+      <div class="products-table">
+        <table mat-table [dataSource]="cotizacion()!.detalles">
+          <ng-container matColumnDef="producto">
+            <th mat-header-cell *matHeaderCellDef>Producto</th>
+            <td mat-cell *matCellDef="let item">{{ item.nombreProducto }}</td>
+          </ng-container>
+          <ng-container matColumnDef="unidad">
+            <th mat-header-cell *matHeaderCellDef>U.M.</th>
+            <td mat-cell *matCellDef="let item">{{ item.unidadMedida }}</td>
+          </ng-container>
+          <ng-container matColumnDef="cantidad">
+            <th mat-header-cell *matHeaderCellDef>Cantidad</th>
+            <td mat-cell *matCellDef="let item">{{ item.cantidad }}</td>
+          </ng-container>
+          <ng-container matColumnDef="precio">
+            <th mat-header-cell *matHeaderCellDef>P.U.</th>
+            <td mat-cell *matCellDef="let item">{{ formatMoney(item.precioUni, cotizacion()!.moneda) }}</td>
+          </ng-container>
+          <ng-container matColumnDef="importe">
+            <th mat-header-cell *matHeaderCellDef>Importe</th>
+            <td mat-cell *matCellDef="let item">{{ formatMoney(item.importe, cotizacion()!.moneda) }}</td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="['producto', 'unidad', 'cantidad', 'precio', 'importe']"></tr>
+          <tr mat-row *matRowDef="let row; columns: ['producto', 'unidad', 'cantidad', 'precio', 'importe']"></tr>
+        </table>
+      </div>
+
+      <div class="product-cards">
+        @for (item of cotizacion()!.detalles; track item.idDetalleCoti) {
+          <article>
+            <strong>{{ item.nombreProducto }}</strong>
+            <span>{{ item.unidadMedida }} - Cant. {{ item.cantidad }}</span>
+            <b>{{ formatMoney(item.importe, cotizacion()!.moneda) }}</b>
+          </article>
+        }
+      </div>
 
       <div class="notes">
         <span>Observaciones</span>
@@ -99,7 +140,7 @@
         <strong>{{ formatMoney(cotizacion()!.importeTotal, cotizacion()!.moneda) }}</strong>
       </div>
 
-      @if (cotizacion()!.pdfPath) {
+      @if (hasPdf(cotizacion()!)) {
         <button mat-flat-button color="primary" [disabled]="isPdfLoading()" (click)="downloadPdf()">
           <mat-icon>download</mat-icon>
           Descargar PDF
@@ -113,5 +154,5 @@
     </aside>
   </section>
 } @else {
-  <app-empty-state title="Cotizacion no encontrada" description="No se encontro la cotizacion solicitada." />
+  <app-empty-state title="Cotización no encontrada" description="No se encontró la cotización solicitada." />
 }

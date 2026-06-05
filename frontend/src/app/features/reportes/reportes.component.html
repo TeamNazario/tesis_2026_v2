@@ -1,0 +1,200 @@
+<app-page-header
+  title="Reportes"
+/>
+
+<section class="report-shell">
+  <aside class="report-types">
+    @for (categoria of ['Comercial', 'Clientes', 'Productos y stock']; track categoria) {
+      <div class="category">
+        <h2>{{ categoria }}</h2>
+        <div class="type-list">
+          @for (reporte of reportes; track reporte.codigo) {
+            @if (reporte.categoria === categoria) {
+              <button
+                type="button"
+                class="report-card"
+                [class.active]="selectedCode() === reporte.codigo"
+                (click)="selectReporte(reporte.codigo)"
+              >
+                <mat-icon>{{ reporte.icono }}</mat-icon>
+                <span>{{ reporte.nombre }}</span>
+                <small>{{ reporte.descripcion }}</small>
+              </button>
+            }
+          }
+        </div>
+      </div>
+    }
+  </aside>
+
+  <section class="report-panel">
+    <header>
+      <div>
+        <span class="eyebrow">Excel .xlsx</span>
+        <h2>{{ selectedReporte().nombre }}</h2>
+        <p>{{ selectedReporte().descripcion }}</p>
+      </div>
+      <mat-icon>{{ selectedReporte().icono }}</mat-icon>
+    </header>
+
+    <form class="filters" [formGroup]="filtros" (ngSubmit)="exportar()">
+      @if (hasFilter('fechaInicio')) {
+        <mat-form-field appearance="outline">
+          <mat-label>Fecha inicio</mat-label>
+          <input matInput type="date" formControlName="fechaInicio" />
+        </mat-form-field>
+      }
+
+      @if (hasFilter('fechaFin')) {
+        <mat-form-field appearance="outline">
+          <mat-label>Fecha fin</mat-label>
+          <input matInput type="date" formControlName="fechaFin" />
+        </mat-form-field>
+      }
+
+      @if (hasFilter('idEstadoCotizacion')) {
+        <mat-form-field appearance="outline">
+          <mat-label>Estado cotizacion</mat-label>
+          <mat-select formControlName="idEstadoCotizacion">
+            <mat-option value="">Todos</mat-option>
+            @for (estado of catalogos().estadosCotizacion; track estado.id) {
+              <mat-option [value]="estado.id">{{ estado.descripcion }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      }
+
+      @if (hasFilter('idCliente')) {
+        <mat-form-field appearance="outline">
+          <mat-label>Cliente</mat-label>
+          <mat-select formControlName="idCliente">
+            <mat-option value="">Todos</mat-option>
+            @for (cliente of catalogos().clientes; track cliente.idCliente) {
+              <mat-option [value]="cliente.idCliente">{{ cliente.razonSocial }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      }
+
+      @if (hasFilter('idVendedor') && permissions.canViewAllSellers()) {
+        <mat-form-field appearance="outline">
+          <mat-label>Vendedor</mat-label>
+          <mat-select formControlName="idVendedor">
+            <mat-option value="">Todos</mat-option>
+            @for (vendedor of catalogos().vendedores; track vendedor.idUsuario) {
+              <mat-option [value]="vendedor.idUsuario">{{ nombreUsuario(vendedor) }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      }
+
+      @if (hasFilter('idProducto')) {
+        <mat-form-field appearance="outline">
+          <mat-label>Producto</mat-label>
+          <mat-select formControlName="idProducto">
+            <mat-option value="">Todos</mat-option>
+            @for (producto of catalogos().productos; track producto.idProducto) {
+              <mat-option [value]="producto.idProducto">{{ producto.nombreProducto }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      }
+
+      @if (hasFilter('idTipoCliente')) {
+        <mat-form-field appearance="outline">
+          <mat-label>Tipo cliente</mat-label>
+          <mat-select formControlName="idTipoCliente">
+            <mat-option value="">Todos</mat-option>
+            @for (tipo of catalogos().tiposCliente; track tipo.id) {
+              <mat-option [value]="tipo.id">{{ tipo.descripcion }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      }
+
+      @if (hasFilter('idEstadoProducto')) {
+        <mat-form-field appearance="outline">
+          <mat-label>Estado producto</mat-label>
+          <mat-select formControlName="idEstadoProducto">
+            <mat-option value="">Todos</mat-option>
+            @for (estado of catalogos().estadosProducto; track estado.id) {
+              <mat-option [value]="estado.id">{{ estado.descripcion }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      }
+
+      @if (hasFilter('moneda')) {
+        <mat-form-field appearance="outline">
+          <mat-label>Moneda</mat-label>
+          <mat-select formControlName="moneda">
+            <mat-option value="">Todas</mat-option>
+            <mat-option value="PEN">PEN</mat-option>
+            <mat-option value="USD">USD</mat-option>
+            <mat-option value="soles">Soles</mat-option>
+          </mat-select>
+        </mat-form-field>
+      }
+
+      @if (hasFilter('departamento')) {
+        <mat-form-field appearance="outline">
+          <mat-label>Departamento</mat-label>
+          <input matInput formControlName="departamento" />
+        </mat-form-field>
+      }
+
+      @if (hasFilter('provincia')) {
+        <mat-form-field appearance="outline">
+          <mat-label>Provincia</mat-label>
+          <input matInput formControlName="provincia" />
+        </mat-form-field>
+      }
+
+      @if (hasFilter('distrito')) {
+        <mat-form-field appearance="outline">
+          <mat-label>Distrito</mat-label>
+          <input matInput formControlName="distrito" />
+        </mat-form-field>
+      }
+
+      @if (hasFilter('stockBajo')) {
+        <mat-form-field appearance="outline">
+          <mat-label>Stock bajo</mat-label>
+          <mat-select formControlName="stockBajo">
+            <mat-option value="">Todos</mat-option>
+            <mat-option value="true">Si</mat-option>
+            <mat-option value="false">No</mat-option>
+          </mat-select>
+        </mat-form-field>
+      }
+
+      @if (hasFilter('search')) {
+        <mat-form-field appearance="outline">
+          <mat-label>Busqueda</mat-label>
+          <input matInput formControlName="search" />
+        </mat-form-field>
+      }
+
+      <div class="actions">
+        <button mat-flat-button color="primary" type="submit" [disabled]="exporting()">
+          @if (exporting()) {
+            <mat-spinner diameter="18" />
+          } @else {
+            <mat-icon>download</mat-icon>
+          }
+          Exportar Excel
+        </button>
+        <button mat-stroked-button type="button" (click)="limpiarFiltros()" [disabled]="exporting()">
+          <mat-icon>filter_alt_off</mat-icon>
+          Limpiar filtros
+        </button>
+      </div>
+    </form>
+
+    <app-empty-state
+      icon="table_chart"
+      title="Archivo generado por backend"
+      description="El Excel incluye titulo, filtros aplicados, usuario, fecha de generacion y datos reales del sistema."
+    />
+  </section>
+</section>

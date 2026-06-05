@@ -5,6 +5,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { PageEvent } from '@angular/material/paginator';
 import { Subject, debounceTime, distinctUntilChanged, finalize, takeUntil } from 'rxjs';
 import { ProductFilter, ProductResponse, ProductUpdateRequest } from '../../core/models/product.models';
+import { PermissionService } from '../../core/auth/services/permission.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { ProductService } from '../../core/services/product.service';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
@@ -21,6 +22,7 @@ import { ProductoFormDialogComponent } from './components/producto-form-dialog/p
 })
 export class CatalogoProductosComponent implements OnInit, OnDestroy {
   readonly api = inject(ProductService);
+  readonly permissions = inject(PermissionService);
   private readonly fb = inject(FormBuilder);
   private readonly notifications = inject(NotificationService);
   private readonly dialog = inject(MatDialog);

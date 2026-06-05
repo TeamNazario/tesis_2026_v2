@@ -14,5 +14,7 @@ export const API_ENDPOINTS = {
     productos: '/v1/productos',
     cotizaciones: '/v1/cotizaciones',
     preciosTipoCliente: '/v1/precios-tipo-cliente',
+    dashboard: '/v1/dashboard',
+    reportes: '/v1/reportes',
   },
 } as const;

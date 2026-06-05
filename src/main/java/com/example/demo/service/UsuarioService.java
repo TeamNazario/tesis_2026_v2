@@ -29,6 +29,7 @@ public class UsuarioService extends CrudService<Usuario, Integer> {
     private final EstadoUsuarioRepository estadoUsuarioRepository;
     private final UsuarioMapper mapper;
     private final PasswordEncoder passwordEncoder;
+    private final AuditoriaService auditoriaService;
 
     public UsuarioService(
             UsuarioRepository repository,
@@ -36,7 +37,8 @@ public class UsuarioService extends CrudService<Usuario, Integer> {
             TipoDocumentoRepository tipoDocumentoRepository,
             EstadoUsuarioRepository estadoUsuarioRepository,
             UsuarioMapper mapper,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder,
+            AuditoriaService auditoriaService
     ) {
         super(repository, "Usuario");
         this.usuarioRepository = repository;
@@ -45,6 +47,7 @@ public class UsuarioService extends CrudService<Usuario, Integer> {
         this.estadoUsuarioRepository = estadoUsuarioRepository;
         this.mapper = mapper;
         this.passwordEncoder = passwordEncoder;
+        this.auditoriaService = auditoriaService;
     }
 
     @Override
@@ -79,12 +82,15 @@ public class UsuarioService extends CrudService<Usuario, Integer> {
         usuario.usuarioRegistro = usuarioLogeado;
         usuario.usuarioActualiza = null;
         usuario.fechaActualiza = null;
-        return mapper.toResponse(usuarioRepository.save(usuario));
+        UsuarioResponse response = mapper.toResponse(usuarioRepository.save(usuario));
+        auditoriaService.registrarCreacion("USUARIO", String.valueOf(response.idUsuario()), response, "USUARIOS", "Creacion de usuario");
+        return response;
     }
 
     @Transactional
     public UsuarioResponse update(Integer id, UsuarioRequest request, String usuarioLogeado) {
         Usuario usuario = findUsuario(id);
+        UsuarioResponse anterior = mapper.toResponse(usuario);
         validateUnique(request.correo(), request.nroDocumento(), id);
         mapper.updateEntity(
                 usuario,
@@ -95,7 +101,12 @@ public class UsuarioService extends CrudService<Usuario, Integer> {
         );
         usuario.fechaActualiza = LocalDateTime.now();
         usuario.usuarioActualiza = usuarioLogeado;
-        return mapper.toResponse(usuarioRepository.save(usuario));
+        UsuarioResponse nuevo = mapper.toResponse(usuarioRepository.save(usuario));
+        String accion = request.idEstado() != null && anterior.estado() != null && !request.idEstado().equals(anterior.estado().id())
+                ? "CHANGE_STATUS"
+                : "UPDATE";
+        auditoriaService.registrarAccion("USUARIO", String.valueOf(id), accion, anterior, nuevo, "USUARIOS", "Actualizacion de usuario");
+        return nuevo;
     }
 
     private UsuarioRequest withEncodedPassword(UsuarioRequest request) {

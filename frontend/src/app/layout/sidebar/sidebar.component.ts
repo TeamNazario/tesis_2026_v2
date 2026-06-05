@@ -1,5 +1,6 @@
-import { Component, output } from '@angular/core';
+import { Component, computed, inject, output } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { PermissionService } from '../../core/auth/services/permission.service';
 import { MaterialModule } from '../../shared/material/material.module';
 
 interface NavItem {
@@ -21,7 +22,7 @@ interface NavItem {
       </div>
 
       <nav>
-        @for (item of navItems; track item.route) {
+        @for (item of navItems(); track item.route) {
           <a [routerLink]="item.route" routerLinkActive="active" (click)="navigate.emit()">
             <mat-icon>{{ item.icon }}</mat-icon>
             <span>{{ item.label }}</span>
@@ -33,8 +34,9 @@ interface NavItem {
   styleUrl: './sidebar.component.scss',
 })
 export class SidebarComponent {
+  private readonly permissions = inject(PermissionService);
   navigate = output<void>();
-  navItems: NavItem[] = [
+  private readonly allItems: NavItem[] = [
     { label: 'Dashboard', icon: 'space_dashboard', route: '/dashboard' },
     { label: 'Clientes', icon: 'business', route: '/clientes' },
     { label: 'Usuarios', icon: 'group', route: '/usuarios' },
@@ -42,6 +44,9 @@ export class SidebarComponent {
     { label: 'Precios por Tipo de Cliente', icon: 'price_change', route: '/precios-tipo-cliente' },
     { label: 'Cotizaciones', icon: 'request_quote', route: '/cotizaciones' },
     { label: 'Reportes', icon: 'bar_chart', route: '/reportes' },
-    { label: 'Configuracion', icon: 'tune', route: '/configuracion' },
   ];
+
+  readonly navItems = computed(() =>
+    this.allItems.filter((item) => item.route !== '/usuarios' || this.permissions.canAccessUsers()),
+  );
 }

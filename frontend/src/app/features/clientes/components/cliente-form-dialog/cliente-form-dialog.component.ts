@@ -4,6 +4,8 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Subject, catchError, debounceTime, distinctUntilChanged, filter, finalize, forkJoin, of, switchMap, takeUntil, tap } from 'rxjs';
 import { UsuarioResponse } from '../../../../core/auth/models/auth.models';
+import { AuthService } from '../../../../core/auth/services/auth.service';
+import { PermissionService } from '../../../../core/auth/services/permission.service';
 import { ClienteCreateRequest, ClienteResponseVm, ClienteUpdateRequest } from '../../../../core/models/cliente.models';
 import { RucConsultaResponse } from '../../../../core/models/documento.models';
 import { CatalogoItem } from '../../../../core/models/v1.models';
@@ -30,6 +32,8 @@ export class ClienteFormDialogComponent implements OnDestroy {
   private readonly documentoService = inject(DocumentoService);
   private readonly catalogos = inject(CatalogoV1Service);
   private readonly domainApi = inject(DomainApiService);
+  private readonly auth = inject(AuthService);
+  private readonly permissions = inject(PermissionService);
   private readonly destroy$ = new Subject<void>();
   private lastQueriedRuc = '';
   private readonly vendedorPerfilId = 4;
@@ -64,6 +68,13 @@ export class ClienteFormDialogComponent implements OnDestroy {
 
   constructor() {
     this.loadCatalogos();
+    if (this.permissions.isSeller()) {
+      const idUsuario = this.permissions.currentUserId();
+      if (idUsuario) {
+        this.form.controls.idVendedorAsignado.setValue(idUsuario, { emitEvent: false });
+        this.form.controls.idVendedorAsignado.disable({ emitEvent: false });
+      }
+    }
 
     if (this.data.cliente) {
       this.form.patchValue({
@@ -215,11 +226,14 @@ export class ClienteFormDialogComponent implements OnDestroy {
       return;
     }
     const value = this.form.getRawValue();
+    const idVendedorAsignado = this.permissions.isSeller()
+      ? this.permissions.currentUserId() ?? value.idVendedorAsignado
+      : value.idVendedorAsignado;
     const payload: ClienteCreateRequest | ClienteUpdateRequest = {
       ruc: value.ruc,
       razonSocial: value.razonSocial,
       idTipoCliente: value.idTipoCliente,
-      idVendedorAsignado: value.idVendedorAsignado,
+      idVendedorAsignado,
       direccionFiscal: value.direccionFiscal,
       departamento: value.departamento,
       provincia: value.provincia,
@@ -255,7 +269,7 @@ export class ClienteFormDialogComponent implements OnDestroy {
           return of([] as CatalogoItem[]);
         }),
       ),
-      vendedores: this.domainApi.getUsuarios().pipe(
+      vendedores: (this.permissions.isSeller() ? of(this.currentUserAsVendedor()) : this.domainApi.getUsuarios()).pipe(
         catchError(() => {
           this.vendedoresError.set('No se pudieron cargar los vendedores disponibles.');
           return of([] as UsuarioResponse[]);
@@ -306,6 +320,9 @@ export class ClienteFormDialogComponent implements OnDestroy {
   }
 
   private filterVendedores(usuarios: UsuarioResponse[]): UsuarioResponse[] {
+    if (this.permissions.isSeller()) {
+      return usuarios.filter((usuario) => usuario.idUsuario === this.permissions.currentUserId());
+    }
     const cleaned = usuarios.filter((usuario) => !!(usuario.nombres ?? '').trim());
 
     // Regla principal (según tu BD): perfil=4 (Vendedor) y estado=1 (Habilitado).
@@ -343,5 +360,10 @@ export class ClienteFormDialogComponent implements OnDestroy {
 
   private findEstadoActivo(estadosClienteContacto: CatalogoItem[]): CatalogoItem | undefined {
     return estadosClienteContacto.find((item) => item.descripcion.trim().toLowerCase() === 'activo');
+  }
+
+  private currentUserAsVendedor(): UsuarioResponse[] {
+    const user = this.auth.currentUser();
+    return user ? [user] : [];
   }
 }

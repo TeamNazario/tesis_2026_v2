@@ -56,6 +56,10 @@ export class CotizacionService {
     return this.api.post<CotizacionPdfResponse>(`${this.basePath}/${id}/generar-pdf`, {});
   }
 
+  procesarVencidas(): Observable<number> {
+    return this.api.post<number>(`${this.basePath}/procesar-vencidas`, {});
+  }
+
   descargarPdf(id: number): Observable<Blob> {
     return this.api.download(`${this.basePath}/${id}/pdf`);
   }
@@ -68,6 +72,8 @@ export class CotizacionService {
       idEstadoCotizacion: filters?.idEstadoCotizacion,
       fechaInicio: filters?.fechaInicio,
       fechaFin: filters?.fechaFin,
+      // The current Spring Boot endpoint filters these fields server-side only.
+      // Pagination, sort and moneda stay in the UI until the backend exposes them.
     };
   }
 }

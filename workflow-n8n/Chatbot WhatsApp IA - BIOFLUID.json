@@ -1,0 +1,545 @@
+{
+  "name": "Chatbot WhatsApp - Productos con IA",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const mensaje = $input.item.json.messages[0].text.body.toLowerCase();\nconst keywordsCotizacion = [\n  'cotiz','cotizacion','cotización',\n  'quiero comprar','quiero pedir','deseo comprar',\n  'necesito comprar','precio de',\n  'cuánto cuesta','cuanto cuesta','cuánto vale','cuanto vale',\n  'hacer pedido','realizar pedido','pedir',\n  'comprar','adquirir','solicitar',\n  'presupuesto','orden de compra'\n];\nconst esConsulta = !keywordsCotizacion.some(k => mensaje.includes(k));\nreturn {\n  json: {\n    ...($input.item.json),\n    intencion: esConsulta ? 'CONSULTA' : 'COTIZACION',\n    mensaje_original: $input.item.json.messages[0].text.body\n  }\n};"
+      },
+      "id": "7b96fbdb-4dc2-43b5-97c5-789287d95095",
+      "name": "Detectar Intencion",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -800,
+        -256
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.intencion }}",
+                    "rightValue": "CONSULTA",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "CONSULTA"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.intencion }}",
+                    "rightValue": "COTIZACION",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "COTIZACION"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e92bfbe6-e2ea-4d90-99ad-5ab66ed68f68",
+      "name": "Router Intencion",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        -576,
+        -256
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.mensaje_original }}",
+        "options": {
+          "systemMessage": "Eres *AsistenteVentas* 🤖, el asistente comercial de *Biofluid*, especializado en productos industriales y alimenticios.\n\nHerramienta disponible: 'consultar_productos'. Úsala para mostrar catálogo, precios y presentaciones.\n\n🚫 REGLA CRÍTICA: NUNCA muestres el campo 'stock' ni ningún número de inventario al cliente. Solo indica si está ✅ Disponible o ❌ Sin stock (cuando stock = 0).\n\nFORMATO DE RESPUESTA PARA CATÁLOGO:\n\n¡Hola! 👋 Con gusto te muestro nuestros productos 🌟\n\n_Estos son los productos disponibles en *Biofluid*:_\n\n━━━━━━━━━━━━━━━━\n📦 *NOMBRE DEL PRODUCTO*\n━━━━━━━━━━━━━━━━\n  🔹 Presentación → *S/ XX.XX* ✅\n  🔹 Presentación → *S/ XX.XX* ❌ _No disponible_\n\n💬 _¿Deseas cotizar? Solo dime los productos y cantidades_ 😊\n\nREGLAS:\n1. Precios en soles peruanos (S/).\n2. Responde en español, cálido y profesional.\n3. Si el cliente quiere pedir, dile que escriba 'quiero cotizar'.\n4. Sé conciso pero amable."
+        }
+      },
+      "id": "367f534a-5d82-4fa8-a9b9-cf57e471408c",
+      "name": "Agent Consulta",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        -352,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.mensaje_original }}",
+        "options": {
+          "systemMessage": "Eres *AsistenteVentas* 🤖, el asistente comercial de *Biofluid*, especializado en productos industriales .\n\nHerramientas disponibles:\n1. consultar_productos - Catálogo con IDs numéricos y precios reales.\n2. calcular_cotizacion - Calcula el total con IGV 18%.\n3. crear_cotizacion - Registra la cotización en el sistema.\n\nFLUJO OBLIGATORIO:\nPASO 1: Usa consultar_productos para obtener IDs numéricos y precios reales.\nPASO 2: Usa calcular_cotizacion con los IDs del PASO 1. Ej: {\"items\": [{\"producto_id\": 3, \"cantidad\": 50}]}\nPASO 3: Muestra el resumen al cliente y pide confirmación.\nPASO 4: Si confirma, usa crear_cotizacion con los datos reales del PASO 2.\n\n🚫 REGLA CRÍTICA DE DATOS: NUNCA muestres el stock al cliente. Solo usa el stock internamente para saber si hay disponibilidad.\n\nREGLAS CRÍTICAS DE TIPOS (OBLIGATORIO):\n- producto_id: entero real (ej: 1, 3, 7). NUNCA texto.\n- cantidad: entero real (ej: 50, 100). NUNCA texto.\n- precio_unitario: decimal real (ej: 25.5, 100.0). NUNCA texto.\n- subtotal: precio_unitario * cantidad. NUNCA texto.\n- precio_total: valor numérico de calcular_cotizacion.\nzona_despacho_id: 1=Lima, 2=Provincia. Pregunta si no se indicó.\nfecha_vencimiento: ISO 8601, exactamente 24 horas desde ahora.\n\nFORMATO DE COTIZACIÓN (usar exactamente este estilo):\n\n✨ *RESUMEN DE COTIZACIÓN* ✨\n━━━━━━━━━━━━━━━━━━━━\n📋 *Productos solicitados:*\n  🔹 [Nombre Producto] ([Presentación])\n     Cantidad: XX unidades\n     Precio unit.: *S/ XX.XX*\n     Subtotal: *S/ XX.XX*\n\n━━━━━━━━━━━━━━━━━━━━\n💰 *Subtotal:*    S/ XX.XX\n🏷️ *IGV (18%):*  S/ XX.XX\n✅ *TOTAL:*       *S/ XX.XX*\n━━━━━━━━━━━━━━━━━━━━\n🚚 *Zona de despacho:* [Lima/Provincia]\n⏰ *Vigencia:* 24 horas\n\n_¿Confirmas la cotización? Responde *SÍ* para registrarla_ 😊\n\nAL CONFIRMAR mostrar:\n🎉 *¡Cotización registrada exitosamente!*\n📌 *N° de Cotización: #[ID]*\n_Nuestro equipo se pondrá en contacto contigo pronto_ 📞\n\nREGLAS GENERALES:\n1. Responde en español, cálido y profesional.\n2. Precios siempre en S/.\n3. Si falta información, pregunta amablemente con emojis."
+        }
+      },
+      "id": "9923aea2-8f17-4a12-af3d-67af2f643414",
+      "name": "Agent Cotizacion",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        -352,
+        -16
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "4cb2d25b-ce5f-4e32-815c-c95389d0fd00",
+      "name": "Merge Respuestas",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        32,
+        -224
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "1081312675067807",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger1').item.json.messages[0].from }}",
+        "textBody": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "id": "13c617bb-3804-40dc-8445-228a1688bdf7",
+      "name": "WhatsApp Enviar Respuesta",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        416,
+        -224
+      ],
+      "webhookId": "95f6b366-b909-4dcb-b168-29d081bb72d5",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "SUDyl0qzBYcjOyxW",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o-mini",
+        "options": {
+          "maxTokens": 2000,
+          "temperature": 0.3
+        }
+      },
+      "id": "e09f455f-aada-4834-bc9b-75fe741af101",
+      "name": "OpenAI - Consulta",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        -528
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "LaSnjboahqCSI8c7",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=consulta_{{ $('WhatsApp Trigger1').item.json.contacts[0].wa_id }}",
+        "contextWindowLength": 10
+      },
+      "id": "13f5c91e-a00a-4360-aaa1-920fe21f4a1d",
+      "name": "Memory - Consulta",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -288,
+        -240
+      ]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o-mini",
+        "options": {
+          "maxTokens": 2000,
+          "temperature": 0.3
+        }
+      },
+      "id": "1c5def84-2371-4321-a27c-e7bce56ba554",
+      "name": "OpenAI - Cotizacion",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        224
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "LaSnjboahqCSI8c7",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=cotizacion_{{ $('WhatsApp Trigger1').item.json.contacts[0].wa_id }}",
+        "contextWindowLength": 15
+      },
+      "id": "ba2b7ef4-1a92-4c24-9bb9-d903c2d2c887",
+      "name": "Memory - Cotizacion",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -256,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ],
+        "options": {}
+      },
+      "id": "c9c8c3c8-5ba3-44d6-90b4-149412843b58",
+      "name": "WhatsApp Trigger1",
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1008,
+        -256
+      ],
+      "webhookId": "whatsapp-chatbot-productos-webhook",
+      "credentials": {
+        "whatsAppTriggerApi": {
+          "id": "RcdO0sSmbhETtMbn",
+          "name": "WhatsApp OAuth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Consulta el catálogo completo de productos con IDs, precios unitarios, stock y presentaciones. USAR SIEMPRE como primer paso antes de calcular o crear una cotización.",
+        "url": "https://4af7-186-148-196-19.ngrok-free.app/api/productos",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "id": "d66814fc-f002-447d-ab91-d645387f2b89",
+      "name": "consultar_productos (Cotizacion)",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        304,
+        208
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Dq88pnJP8LfcCKLm",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Calcula el precio total con IGV 18%. Recibe la lista de productos con sus IDs numéricos enteros y cantidades enteras. El body debe ser JSON válido con la clave 'items' (NO 'items_json'). Ejemplo un producto: {\"items\": [{\"producto_id\": 3, \"cantidad\": 50}]}. Ejemplo dos productos: {\"items\": [{\"producto_id\": 3, \"cantidad\": 50}, {\"producto_id\": 5, \"cantidad\": 20}]}. CRÍTICO: producto_id y cantidad son SIEMPRE números enteros reales, NUNCA strings ni texto.",
+        "method": "POST",
+        "url": "https://4af7-186-148-196-19.ngrok-free.app/api/productos/calcular-monto",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "model",
+        "placeholderDefinitions": {
+          "values": []
+        }
+      },
+      "id": "9518e763-3dd8-41e4-8232-c31685016c81",
+      "name": "calcular_cotizacion",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        128,
+        304
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Dq88pnJP8LfcCKLm",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Registra formalmente una cotización en el sistema. Usar SOLO después de calcular_cotizacion y confirmar con el cliente. El body debe ser JSON válido con esta estructura exacta: {\"usuario_id\": 1, \"zona_despacho_id\": 1, \"fecha_vencimiento\": \"2026-06-02T19:00:00\", \"precio_total\": 590.0, \"observaciones\": \"texto opcional\", \"detalles\": [{\"producto_id\": 3, \"cantidad\": 50, \"precio_unitario\": 10.0, \"subtotal\": 500.0}]}. CRÍTICO: usuario_id, zona_despacho_id, producto_id y cantidad son SIEMPRE enteros reales. precio_unitario, subtotal y precio_total son SIEMPRE decimales reales. fecha_vencimiento es ISO 8601 exactamente 24 horas desde ahora.",
+        "method": "POST",
+        "url": "http://4af7-186-148-196-19.ngrok-free.app/api/cotizaciones",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "model",
+        "placeholderDefinitions": {
+          "values": []
+        }
+      },
+      "id": "f0d513f6-fb20-41d9-bbc5-0cff589e1e14",
+      "name": "crear_cotizacion",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        -48,
+        336
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Dq88pnJP8LfcCKLm",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Consulta el catálogo completo de productos disponibles con sus precios, stock, presentaciones e IDs numéricos. Úsala siempre primero para obtener los datos actualizados.",
+        "url": "https://4af7-186-148-196-19.ngrok-free.app/api/productos",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "id": "6f85e2e3-ae20-44a4-a46b-bac5c2b22a55",
+      "name": "consultar_productos (Consulta)",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        -112,
+        -528
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Dq88pnJP8LfcCKLm",
+          "name": "Header Auth account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Detectar Intencion": {
+      "main": [
+        [
+          {
+            "node": "Router Intencion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Router Intencion": {
+      "main": [
+        [
+          {
+            "node": "Agent Consulta",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Agent Cotizacion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent Consulta": {
+      "main": [
+        [
+          {
+            "node": "Merge Respuestas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent Cotizacion": {
+      "main": [
+        [
+          {
+            "node": "Merge Respuestas",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Respuestas": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp Enviar Respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI - Consulta": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agent Consulta",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memory - Consulta": {
+      "ai_memory": [
+        [
+          {
+            "node": "Agent Consulta",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI - Cotizacion": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agent Cotizacion",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memory - Cotizacion": {
+      "ai_memory": [
+        [
+          {
+            "node": "Agent Cotizacion",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Detectar Intencion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "consultar_productos (Cotizacion)": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agent Cotizacion",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "calcular_cotizacion": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agent Cotizacion",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "crear_cotizacion": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agent Cotizacion",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "consultar_productos (Consulta)": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agent Consulta",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "6b29cff8-a7f9-4e45-9b46-455425293c3b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "389915c65b70c3a7951dbf6d64fdf979902a22331b55d23f811d7960df9744b7"
+  },
+  "nodeGroups": [],
+  "id": "LPm7HTRbLDSQDR9u",
+  "tags": [
+    {
+      "name": "AI Agent",
+      "id": "MocPi6KOHS2KJh0o",
+      "updatedAt": "2026-06-09T01:00:29.238Z",
+      "createdAt": "2026-06-09T01:00:29.238Z"
+    },
+    {
+      "name": "WhatsApp",
+      "id": "aMTdlF9D8aOPRg4w",
+      "updatedAt": "2026-06-09T01:00:29.215Z",
+      "createdAt": "2026-06-09T01:00:29.215Z"
+    },
+    {
+      "name": "Backend-N8N",
+      "id": "izTegCotx0sMgLvm",
+      "updatedAt": "2026-06-09T01:00:29.192Z",
+      "createdAt": "2026-06-09T01:00:29.192Z"
+    }
+  ]
+}

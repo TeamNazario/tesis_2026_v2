@@ -1,7 +1,10 @@
 package com.example.demo.config;
 
+import com.example.demo.security.ApiKeyAuthenticationFilter;
 import com.example.demo.security.TokenAuthenticationFilter;
+import java.util.Arrays;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -24,10 +27,15 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
+
+    @Value("${app.cors.allowed-origins:http://localhost:4200,http://localhost:3000,http://localhost:5173}")
+    private String allowedOriginsRaw;
+
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             TokenAuthenticationFilter tokenAuthenticationFilter,
+            ApiKeyAuthenticationFilter apiKeyAuthenticationFilter,
             AuthenticationProvider authenticationProvider
     ) throws Exception {
         http
@@ -54,6 +62,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/ubigeo/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/perfiles", "/api/perfiles/*")
                         .hasAnyRole("SISTEMAS", "GERENTE", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/perfiles")
@@ -112,6 +121,8 @@ public class SecurityConfig {
                         .hasAnyRole("SISTEMAS", "GERENTE", "ADMINISTRATIVO", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/v1/reportes/**")
                         .hasAnyRole("SISTEMAS", "GERENTE", "JEFE_VENTAS", "VENDEDOR", "ADMINISTRATIVO", "ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/cotizaciones/*")
+                        .hasAnyRole("SISTEMAS", "GERENTE", "JEFE_VENTAS", "VENDEDOR", "ADMINISTRATIVO", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/v1/cotizaciones", "/api/v1/cotizaciones/calcular-item", "/api/v1/cotizaciones/calcular-resumen", "/api/v1/cotizaciones/*/generar-pdf")
                         .hasAnyRole("SISTEMAS", "GERENTE", "JEFE_VENTAS", "VENDEDOR", "ADMINISTRATIVO", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/v1/cotizaciones/procesar-vencidas")
@@ -145,6 +156,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll()
                 )
+                .addFilterBefore(apiKeyAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -168,17 +180,19 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(
-                "http://localhost:3000",
-                "http://localhost:5173",
-                "http://localhost:4200"
-        ));
+
+        // Orígenes configurables desde variable de entorno APP_CORS_ALLOWED_ORIGINS
+        // Soporta localhost y dominios ngrok (https://xxxx.ngrok-free.app)
+        List<String> origins = Arrays.asList(allowedOriginsRaw.split(","));
+        configuration.setAllowedOriginPatterns(origins);
+
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
+        configuration.setExposedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/api/**", configuration);
+        source.registerCorsConfiguration("/**", configuration);
         return source;
     }
 }

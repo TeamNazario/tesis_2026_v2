@@ -5,6 +5,7 @@ import com.example.demo.dto.CotizacionCalcularItemResponse;
 import com.example.demo.dto.CotizacionCalcularResumenRequest;
 import com.example.demo.dto.CotizacionCalcularResumenResponse;
 import com.example.demo.dto.CotizacionCreateRequest;
+import com.example.demo.dto.CotizacionUpdateRequest;
 import com.example.demo.dto.CotizacionPrecioProductoResponse;
 import com.example.demo.dto.CotizacionResumenDetalleRequest;
 import com.example.demo.dto.CotizacionV1Response;
@@ -208,6 +209,102 @@ public class CotizacionV1Service {
     }
 
     @Transactional
+    public CotizacionV1Response update(Integer id, CotizacionUpdateRequest request, String actor) {
+        accessControlService.validarPuedeGestionarCotizacion(id);
+        Cotizacion cotizacion = findEntity(id);
+        CotizacionV1Response anterior = map(cotizacion);
+
+        // Actualizar cliente si se proporciona
+        if (request.idCliente() != null) {
+            cotizacion.cliente = findCliente(request.idCliente());
+        }
+
+        // Actualizar vendedor si se proporciona
+        if (request.idVendedor() != null) {
+            Integer idVendedor = accessControlService.vendedorParaCrearCotizacion(request.idVendedor());
+            cotizacion.vendedor = findUsuario(idVendedor);
+        }
+
+        // Actualizar campos del header
+        if (request.fechaVencimiento() != null) {
+            cotizacion.fechaVencimiento = request.fechaVencimiento();
+        }
+        if (request.moneda() != null) {
+            cotizacion.moneda = request.moneda();
+        }
+        if (request.direccionDespacho() != null) {
+            cotizacion.direccionDespacho = request.direccionDespacho();
+        }
+        if (request.depProvDis() != null) {
+            cotizacion.depProvDis = request.depProvDis();
+        }
+        if (request.flagCubierto() != null) {
+            cotizacion.flagCubierto = request.flagCubierto();
+        }
+        if (request.observaciones() != null) {
+            cotizacion.observaciones = request.observaciones();
+        }
+        if (request.idEstadoCotizacion() != null) {
+            EstadoCotizacion nuevoEstado = estadoCotizacionRepository.findById(request.idEstadoCotizacion())
+                    .orElseThrow(() -> new ResourceNotFoundException("EstadoCotizacion", request.idEstadoCotizacion()));
+            cotizacion.estadoCotizacion = nuevoEstado;
+        }
+
+        // Reemplazar detalles y recalcular totales si se proporcionan
+        if (request.detalles() != null && !request.detalles().isEmpty()) {
+            // Cargar los detalles actuales para operar sobre el stock
+            List<CotizacionDetalle> detallesActuales = detalleRepository.findByCotizacionIdCotizacion(cotizacion.idCotizacion);
+
+            // Liberar el stock reservado de los detalles anteriores
+            for (CotizacionDetalle detalle : detallesActuales) {
+                Producto prod = productoStockService.findForUpdate(detalle.producto.idProducto);
+                productoStockService.liberarStock(prod, detalle.cantidad, actor);
+            }
+
+            // Recargar cliente completo para asegurar que idTipoCliente este disponible
+            Integer idClienteActual = cotizacion.cliente == null ? null : cotizacion.cliente.idCliente;
+            Cliente clienteParaCalculo = idClienteActual != null
+                    ? findCliente(idClienteActual)
+                    : cotizacion.cliente;
+
+            // Recalcular totales con los nuevos detalles
+            List<CotizacionResumenDetalleRequest> resumenDetalles = request.detalles().stream()
+                    .map(d -> new CotizacionResumenDetalleRequest(d.idProducto(), d.cantidad()))
+                    .toList();
+            String moneda = request.moneda() != null ? request.moneda() : cotizacion.moneda;
+            CotizacionCalcularResumenResponse resumen = calcularResumen(clienteParaCalculo, moneda, resumenDetalles);
+
+            cotizacion.subtotal = resumen.subtotal();
+            cotizacion.igv = resumen.igv();
+            cotizacion.importeTotal = resumen.importeTotal();
+
+            // IMPORTANTE: Con orphanRemoval=true, NO reemplazar la coleccion con null/nueva.
+            // Usar clear() para que Hibernate gestione el borrado de orphans.
+            cotizacion.detalles.clear();
+
+            // Construir y agregar nuevos detalles a la coleccion gestionada por Hibernate
+            LocalDateTime now = LocalDateTime.now();
+            List<CotizacionDetalle> nuevosDetalles = buildDetalles(cotizacion, request.detalles(), resumen.items(), actor, now);
+            cotizacion.detalles.addAll(nuevosDetalles);
+
+            // Guardar para asegurar que los nuevos detalles tengan ID antes de reservar stock
+            cotizacionRepository.save(cotizacion);
+
+            // Reservar stock para los nuevos detalles
+            for (CotizacionDetalle detalle : nuevosDetalles) {
+                Producto prod = productoStockService.findForUpdate(detalle.producto.idProducto);
+                productoStockService.reservarStock(prod, detalle.cantidad, actor);
+            }
+        }
+
+        markUpdated(cotizacion, actor);
+        CotizacionV1Response nuevo = map(cotizacionRepository.save(cotizacion));
+        auditoriaService.registrarAccion("COTIZACION", String.valueOf(id), "UPDATE_QUOTATION", anterior, nuevo,
+                "COTIZACIONES", "Actualizacion completa de cotizacion");
+        return nuevo;
+    }
+
+    @Transactional
     public void updatePdfPath(Integer idCotizacion, String pdfPath, String actor) {
         accessControlService.validarPuedeGestionarCotizacion(idCotizacion);
         Cotizacion cotizacion = findEntity(idCotizacion);
@@ -291,7 +388,12 @@ public class CotizacionV1Service {
     }
 
     private PrecioTipoCliente findPrecio(Cliente cliente, Producto producto, String moneda) {
-        Integer idTipoCliente = cliente.tipoCliente == null ? cliente.idTipoCliente : cliente.tipoCliente.idTipoCliente;
+        // Usar el campo directo @Column primero (siempre disponible incluso con proxies lazy)
+        // Solo caer al relationship si el campo directo es null
+        Integer idTipoCliente = cliente.idTipoCliente;
+        if (idTipoCliente == null && cliente.tipoCliente != null) {
+            idTipoCliente = cliente.tipoCliente.idTipoCliente;
+        }
         if (idTipoCliente == null) {
             throw new IllegalStateException("El cliente no tiene tipo de cliente configurado.");
         }

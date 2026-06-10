@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.CotizacionCreateRequest;
+import com.example.demo.dto.CotizacionUpdateRequest;
 import com.example.demo.dto.CotizacionEstadoUpdateRequest;
 import com.example.demo.dto.CotizacionCalcularItemRequest;
 import com.example.demo.dto.CotizacionCalcularItemResponse;
@@ -12,10 +13,16 @@ import com.example.demo.dto.CotizacionV1Response;
 import com.example.demo.security.AuthenticatedUser;
 import com.example.demo.service.CotizacionPdfService;
 import com.example.demo.service.CotizacionV1Service;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.core.io.Resource;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -89,6 +96,15 @@ public class CotizacionV1Controller {
         return service.procesarCotizacionesVencidas(resolveActor(user));
     }
 
+    @PutMapping("/{id}")
+    public CotizacionV1Response update(
+            @PathVariable Integer id,
+            @Valid @RequestBody CotizacionUpdateRequest request,
+            @AuthenticationPrincipal AuthenticatedUser user
+    ) {
+        return service.update(id, request, resolveActor(user));
+    }
+
     @PostMapping("/{id}/generar-pdf")
     public CotizacionPdfResponse generarPdf(
             @PathVariable Integer id,
@@ -97,7 +113,21 @@ public class CotizacionV1Controller {
         return pdfService.generarPdfCotizacion(id, resolveActor(user));
     }
 
-    @GetMapping("/{id}/pdf")
+    @Operation(
+        summary = "Descargar PDF de cotizacion",
+        description = "Descarga el archivo PDF generado de una cotizacion. " +
+                      "Usar en n8n con Response Format = File o Binary."
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "200",
+            description = "Archivo PDF de la cotizacion",
+            content = @Content(mediaType = MediaType.APPLICATION_PDF_VALUE)
+        ),
+        @ApiResponse(responseCode = "404", description = "PDF no encontrado", content = @Content),
+        @ApiResponse(responseCode = "401", description = "No autorizado", content = @Content)
+    })
+    @GetMapping(value = "/{id}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
     public ResponseEntity<Resource> descargarPdf(@PathVariable Integer id) {
         return pdfService.descargarPdfCotizacion(id);
     }
